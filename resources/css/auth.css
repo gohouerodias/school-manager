@@ -1,0 +1,103 @@
+/*
+ * Styles spécifiques aux pages d'authentification (connexion, 2FA, changement
+ * de mot de passe). Basé sur files/connexion.html.
+ */
+
+.auth-shell { min-height: 100vh; position: relative; overflow-x: hidden; }
+
+.deco { position: fixed; pointer-events: none; opacity: .07; z-index: 0; }
+.deco.tl { top: -60px; left: -80px; width: 340px; transform: rotate(-12deg); }
+.deco.br { bottom: -90px; right: -100px; width: 420px; transform: rotate(168deg); }
+
+.auth-topbar {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 40px;
+}
+
+.auth-stage {
+    position: relative; z-index: 2;
+    min-height: calc(100vh - 90px);
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    padding: 20px 20px 60px;
+}
+
+.auth-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    width: 100%; max-width: 420px;
+    padding: 38px 36px 30px;
+    box-shadow: 0 20px 50px rgba(38, 89, 74, 0.08);
+}
+.card-icon {
+    width: 52px; height: 52px; border-radius: 50%; background: var(--green-tint);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;
+}
+.card-icon svg { width: 24px; height: 24px; color: var(--green-deep); }
+.auth-card h1 {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 23px; text-align: center;
+    margin: 0 0 6px; color: var(--ink);
+}
+.auth-card .sub { text-align: center; font-size: 13px; color: var(--ink-muted); margin: 0 0 28px; line-height: 1.5; }
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 9px;
+    font-family: 'Inter', sans-serif; font-size: 14px; background: var(--paper); color: var(--ink);
+    transition: border-color .15s ease;
+}
+.input-wrap input:focus { outline: none; border-color: var(--green); background: #fff; }
+.input-wrap svg.left-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--ink-muted);
+}
+.input-wrap input.with-icon { padding-left: 38px; }
+.toggle-pw {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--ink-muted); padding: 4px; display: flex;
+}
+.toggle-pw svg { width: 17px; height: 17px; }
+.toggle-pw .icon-eye-off { display: none; }
+.toggle-pw.is-visible .icon-eye { display: none; }
+.toggle-pw.is-visible .icon-eye-off { display: block; }
+
+.row-between { display: flex; justify-content: space-between; align-items: center; margin: -6px 0 20px; }
+.row-between .remember { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-muted); font-weight: 500; }
+.forgot { font-size: 12.5px; color: var(--green-deep); text-decoration: none; font-weight: 600; }
+.forgot:hover { text-decoration: underline; }
+
+.btn-submit {
+    width: 100%; padding: 13px; border: none; border-radius: 9px;
+    background: var(--green-deep); color: #fff; font-family: 'Inter', sans-serif;
+    font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity .15s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit:hover { opacity: .9; }
+.btn-submit svg { width: 15px; height: 15px; }
+
+.security-hint {
+    display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; padding: 11px 13px;
+    background: var(--gold-tint); border-radius: 9px; font-size: 11.5px; color: #8A5F17; line-height: 1.5;
+}
+.security-hint svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+
+.divider { display: flex; align-items: center; gap: 12px; margin: 26px 0 18px; }
+.divider .line { flex: 1; height: 1px; background: var(--line); }
+.divider span { font-size: 10.5px; color: var(--ink-muted); letter-spacing: .05em; }
+
+.no-account { text-align: center; font-size: 12.5px; color: var(--ink-muted); line-height: 1.6; }
+.no-account b { color: var(--ink); }
+.no-account a { color: var(--green-deep); font-weight: 600; text-decoration: none; }
+.no-account a:hover { text-decoration: underline; }
+
+.auth-logout-link { text-align: center; }
+.auth-logout-link button {
+    background: none; border: none; color: var(--ink-muted); font-size: 12.5px;
+    text-decoration: underline; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+
+.auth-footer { position: relative; z-index: 2; text-align: center; padding: 0 20px 30px; font-size: 11.5px; color: var(--ink-muted); }
+.auth-footer .stripe {
+    width: 64px; height: 4px; border-radius: 2px; margin: 0 auto 14px;
+    background: linear-gradient(90deg, var(--green) 33%, var(--gold) 33%, var(--gold) 66%, var(--red) 66%);
+}

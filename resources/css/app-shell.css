@@ -1,0 +1,51 @@
+/*
+ * Styles de l'interface applicative (post-connexion) : ossature de page,
+ * barre supérieure, cartes de contenu. Basé sur files/gestion-comptes2.html.
+ * Étendre ce fichier au fur et à mesure de la construction des écrans
+ * (gestion des comptes, dossiers élèves, etc.).
+ */
+
+.app-shell-inner { max-width: 1180px; margin: 0 auto; padding: 28px 32px 80px; position: relative; }
+
+.app-shell-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 20px; margin-bottom: 26px; border-bottom: 1px solid var(--line);
+}
+.user-chip { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-muted); }
+.avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--gold-tint);
+    color: var(--gold); display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 12px; flex-shrink: 0;
+}
+.user-chip .logout-btn { padding: 6px 12px; font-size: 12px; }
+
+.content-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; }
+.content-head h1 { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 600; margin: 0 0 4px; color: var(--green-deep); }
+.content-head p { margin: 0; font-size: 13.5px; color: var(--ink-muted); }
+
+.data-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+
+/* Table components, reusable for future list screens (comptes, élèves, classes...) */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+    text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--ink-muted); padding: 14px 20px; border-bottom: 1px solid var(--line); font-weight: 600;
+    background: #FAF8F2;
+}
+tbody td { padding: 14px 20px; border-bottom: 1px solid #F0EBDD; font-size: 13.5px; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+
+.role-badge { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-block; }
+.role-badge.admin { background: var(--red-tint); color: var(--red); }
+.role-badge.scol { background: var(--green-tint); color: var(--green); }
+.role-badge.ens { background: var(--blue-tint); color: var(--blue); }
+.role-badge.dir { background: var(--gold-tint); color: #8A6717; }
+
+.status { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.status .dot { width: 6px; height: 6px; border-radius: 50%; }
+.status.active .dot { background: var(--green); }
+.status.active { color: var(--green); }
+.status.pending-status .dot { background: var(--gold); }
+.status.pending-status { color: #8A6717; }
+.status.archived .dot { background: var(--ink-muted); }
+.status.archived { color: var(--ink-muted); }

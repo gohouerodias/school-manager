@@ -1,0 +1,72 @@
+/*
+ * CSCMT Design System — Complexe Scolaire Catholique Madre Trinidad
+ * Palette extraite du logo (turquoise, orange djembé, terracotta, anthracite).
+ * Variables et composants partagés entre les pages d'authentification (auth.css)
+ * et l'interface applicative (app-shell.css).
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+:root {
+    --paper: #FAF8F5;
+    --paper-raised: #FFFFFF;
+    --ink: #33383A;
+    --ink-muted: #787F82;
+    --line: #E2DFD8;
+    --green: #3D8B75;
+    --green-deep: #26594A;
+    --green-tint: #E5F1EC;
+    --gold: #EFA03B;
+    --gold-tint: #FCEEDA;
+    --red: #C6392F;
+    --red-tint: #FAE7E4;
+    --blue: #3B6EA5;
+    --blue-tint: #E7EEF6;
+}
+
+body.cscmt {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .logo-slot {
+    width: 42px; height: 42px; border-radius: 8px;
+    border: 1.5px dashed var(--line); background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-muted); font-size: 8px; text-align: center; line-height: 1.2; flex-shrink: 0;
+}
+.brand .name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 15px; color: var(--ink); line-height: 1.25; }
+.brand .name small { display: block; font-family: 'Inter', sans-serif; font-weight: 500; font-size: 10px; color: var(--ink-muted); letter-spacing: .03em; text-transform: uppercase; }
+.help-link { font-size: 13px; color: var(--ink-muted); text-decoration: none; font-weight: 500; }
+.help-link:hover { color: var(--green-deep); }
+
+.btn {
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    padding: 10px 18px; border-radius: 8px; border: 1px solid transparent;
+    cursor: pointer; white-space: nowrap; transition: opacity .15s ease;
+    display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+}
+.btn:hover { opacity: .88; }
+.btn.primary { background: var(--green); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink-muted); border-color: var(--line); }
+.btn.dark { background: var(--green-deep); color: #fff; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.field .error { color: var(--red); font-size: 12px; margin-top: 5px; }
+.field .hint { font-size: 11.5px; color: var(--ink-muted); margin-top: 5px; }
+
+.alert-error {
+    background: var(--red-tint); color: var(--red); border-radius: 9px;
+    padding: 11px 13px; font-size: 12.5px; margin-bottom: 18px; font-weight: 600;
+}
+
+.status-ok {
+    background: var(--green-tint); color: var(--green-deep); border-radius: 9px;
+    padding: 11px 13px; font-size: 12.5px; margin-bottom: 18px; font-weight: 600;
+}
