@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Gestion des comptes utilisateurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Palette extraite du logo CSCMT : turquoise (palmier), orange (djembé), terracotta (djembé), gris anthracite (texte) */
+    --paper:#FAF8F5;
+    --paper-raised:#FFFFFF;
+    --ink:#33383A;
+    --ink-muted:#787F82;
+    --line:#E2DFD8;
+    --green:#3D8B75;
+    --green-deep:#26594A;
+    --green-tint:#E5F1EC;
+    --gold:#EFA03B;
+    --gold-tint:#FCEEDA;
+    --red:#C6392F;
+    --red-tint:#FAE7E4;
+    --blue:#3B6EA5;
+    --blue-tint:#E7EEF6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:28px 32px 80px;position:relative;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:20px;margin-bottom:26px;border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .logo-slot{
+    width:44px;height:44px;border-radius:8px;
+    border:1.5px dashed var(--line);background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-muted);font-size:8.5px;text-align:center;line-height:1.2;flex-shrink:0;
+  }
+  .brand .name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--ink);line-height:1.25;}
+  .brand .name small{display:block;font-family:'Inter',sans-serif;font-weight:500;font-size:10.5px;color:var(--ink-muted);letter-spacing:.03em;text-transform:uppercase;}
+  .user-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);}
+  .avatar{
+    width:28px;height:28px;border-radius:50%;background:var(--gold-tint);
+    color:var(--gold);display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;
+  }
+
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;}
+  .page-head h1{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin:0 0 4px;color:var(--green-deep);}
+  .page-head p{margin:0;font-size:13.5px;color:var(--ink-muted);}
+  .btn{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+    padding:10px 18px;border-radius:8px;border:1px solid transparent;
+    cursor:pointer;white-space:nowrap;transition:opacity .15s ease;
+    display:inline-flex;align-items:center;gap:7px;
+  }
+  .btn:hover{opacity:.88;}
+  .btn.primary{background:var(--green);color:#fff;}
+  .btn.ghost{background:transparent;color:var(--ink-muted);border-color:var(--line);}
+  .btn.dark{background:var(--green-deep);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* Toolbar */
+  .toolbar{display:flex;gap:12px;margin-bottom:18px;align-items:center;}
+  .search{
+    flex:1;position:relative;
+  }
+  .search input{
+    width:100%;padding:10px 14px 10px 38px;border-radius:8px;border:1px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:13.5px;background:var(--paper-raised);
+  }
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-muted);}
+  .filter-select{
+    padding:10px 14px;border-radius:8px;border:1px solid var(--line);
+    background:var(--paper-raised);font-size:13px;font-weight:500;color:var(--ink);
+    font-family:'Inter',sans-serif;
+  }
+
+  /* Table */
+  .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-muted);padding:14px 20px;border-bottom:1px solid var(--line);font-weight:600;
+    background:#FAF8F2;
+  }
+  tbody td{padding:14px 20px;border-bottom:1px solid #F0EBDD;font-size:13.5px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.pending{background:var(--gold-tint);}
+  .name-cell{display:flex;align-items:center;gap:10px;}
+  .name-cell .av{
+    width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;flex-shrink:0;
+  }
+  .name-cell .info b{display:block;font-weight:600;color:var(--ink);}
+  .name-cell .info span{font-size:12px;color:var(--ink-muted);}
+  .role-badge{
+    font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-block;
+  }
+  .role-badge.admin{background:var(--red-tint);color:var(--red);}
+  .role-badge.scol{background:var(--green-tint);color:var(--green);}
+  .role-badge.ens{background:var(--blue-tint);color:var(--blue);}
+  .role-badge.dir{background:var(--gold-tint);color:#8A6717;}
+  .status{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;}
+  .status .dot{width:6px;height:6px;border-radius:50%;}
+  .status.active .dot{background:var(--green);}
+  .status.active{color:var(--green);}
+  .status.pending-status .dot{background:var(--gold);}
+  .status.pending-status{color:#8A6717;}
+  .status.archived .dot{background:var(--ink-muted);}
+  .status.archived{color:var(--ink-muted);}
+  .row-actions-wrap{position:relative;display:inline-block;}
+  .row-actions{
+    font-size:16px;color:var(--ink-muted);cursor:pointer;font-weight:700;
+    width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    border:none;background:none;
+  }
+  .row-actions:hover{background:var(--green-tint);color:var(--green-deep);}
+  .action-menu{
+    position:absolute;right:0;top:32px;background:#fff;border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 8px 24px rgba(38,89,74,.12);
+    min-width:190px;z-index:20;overflow:hidden;display:none;
+  }
+  .action-menu.show{display:block;}
+  .action-menu button{
+    width:100%;text-align:left;padding:10px 14px;font-size:12.5px;background:none;border:none;
+    cursor:pointer;font-family:'Inter',sans-serif;color:var(--ink);display:flex;align-items:center;gap:8px;
+  }
+  .action-menu button:hover{background:var(--paper);}
+  .action-menu button.danger{color:var(--red);}
+  .action-menu button.positive{color:var(--green);}
+  .action-menu hr{border:none;border-top:1px solid var(--line);margin:2px 0;}
+
+  /* Overlay + Side panel */
+  .overlay{
+    position:fixed;inset:0;background:rgba(18,52,30,0.25);
+    opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:40;
+  }
+  .overlay.show{opacity:1;pointer-events:auto;}
+  .panel{
+    position:fixed;top:0;right:0;height:100%;width:420px;background:var(--paper-raised);
+    box-shadow:-8px 0 30px rgba(18,52,30,0.12);
+    transform:translateX(100%);transition:transform .3s ease;z-index:50;
+    display:flex;flex-direction:column;
+  }
+  .panel.show{transform:translateX(0);}
+  .panel-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .panel-head h2{font-family:'Fraunces',serif;font-size:18px;margin:0;color:var(--green-deep);}
+  .panel-close{cursor:pointer;color:var(--ink-muted);font-size:20px;background:none;border:none;line-height:1;}
+  .panel-body{padding:22px 24px;flex:1;overflow-y:auto;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:13.5px;background:var(--paper);
+  }
+  .field .hint{font-size:11.5px;color:var(--ink-muted);margin-top:5px;}
+
+  .role-select{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:13.5px;background:var(--paper) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%23787F82" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>') no-repeat right 12px center;
+    appearance:none;-webkit-appearance:none;cursor:pointer;font-weight:600;color:var(--ink);
+  }
+  .role-desc-box{
+    margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    background:var(--green-tint);
+  }
+  .role-desc-box .rtitle{font-size:12.5px;font-weight:700;color:var(--green-deep);margin-bottom:3px;}
+  .role-desc-box .rdesc{font-size:11.5px;color:var(--ink-muted);line-height:1.45;}
+
+  .btn.add-pending{width:100%;justify-content:center;background:var(--green-deep);color:#fff;margin-top:4px;}
+
+  .pending-list-title{
+    font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-muted);margin:26px 0 10px;padding-top:20px;border-top:1px solid var(--line);
+  }
+  .pending-item{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--gold-tint);border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:12.5px;
+  }
+  .pending-item .pmail{font-weight:600;color:var(--ink);}
+  .pending-item .prole{color:#8A6717;font-size:11px;}
+  .pending-item .premove{cursor:pointer;color:var(--red);font-weight:700;font-size:14px;background:none;border:none;}
+
+  .panel-foot{
+    padding:18px 24px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;
+    position:relative;
+  }
+  .callout{
+    position:absolute;bottom:64px;right:24px;background:var(--green-deep);color:#fff;
+    padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;max-width:220px;
+    box-shadow:0 6px 20px rgba(18,52,30,.25);
+  }
+  .callout:after{
+    content:'';position:absolute;bottom:-6px;right:24px;width:12px;height:12px;
+    background:var(--green-deep);transform:rotate(45deg);
+  }
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--green-deep);color:#fff;padding:12px 22px;border-radius:10px;
+    font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s ease;z-index:60;
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo-slot">LOGO<br>CSCMT</div>
+      <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad — Registre numérique</small></div>
+    </div>
+    <div class="user-chip">
+      <div class="avatar">MB</div>
+      M. Bio · Administrateur
+    </div>
+  </div>
+
+  <div class="page-head">
+    <div>
+      <h1>Gestion des comptes utilisateurs</h1>
+      <p>7 comptes · 3 administrateurs, 2 agents de scolarité, 1 enseignant, 1 direction</p>
+    </div>
+    <button class="btn primary" onclick="openPanel()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Inviter un utilisateur
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Rechercher un utilisateur par nom ou email..." oninput="filterRows()">
+    </div>
+    <select class="filter-select" id="filterRole" onchange="filterRows()">
+      <option value="">Tous les profils</option>
+      <option value="Administrateur">Administrateur</option>
+      <option value="Agent de scolarité">Agent de scolarité</option>
+      <option value="Enseignant">Enseignant</option>
+      <option value="Direction">Direction</option>
+    </select>
+    <select class="filter-select" id="filterStatut" onchange="filterRows()">
+      <option value="">Tous les statuts</option>
+      <option value="Actif">Actif</option>
+      <option value="Invitation en attente">Invitation en attente</option>
+      <option value="Archivé">Archivé</option>
+    </select>
+  </div>
+
+  <p id="noResults" style="display:none; text-align:center; color:var(--ink-muted); font-size:13px; padding:30px 0;">
+    Aucun utilisateur ne correspond à votre recherche.
+  </p>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>Profil</th>
+          <th>Statut</th>
+          <th>Dernière connexion</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <tr data-role="Administrateur" data-statut="Actif">
+          <td class="name-cell">
+            <div class="av" style="background:var(--red-tint);color:var(--red);">MB</div>
+            <div class="info"><b>M. Bio</b><span>m.bio@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge admin">Administrateur</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>Aujourd'hui, 08:12</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Agent de scolarité" data-statut="Actif">
+          <td class="name-cell">
+            <div class="av" style="background:var(--green-tint);color:var(--green);">AT</div>
+            <div class="info"><b>Mme Traoré</b><span>a.traore@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge scol">Agent de scolarité</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>Aujourd'hui, 09:41</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Enseignant" data-statut="Actif">
+          <td class="name-cell">
+            <div class="av" style="background:var(--blue-tint);color:var(--blue);">KH</div>
+            <div class="info"><b>M. Houngbo</b><span>k.houngbo@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge ens">Enseignant</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>Hier, 16:20</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Direction" data-statut="Actif">
+          <td class="name-cell">
+            <div class="av" style="background:var(--gold-tint);color:#8A6717;">SD</div>
+            <div class="info"><b>Mme Dossou</b><span>s.dossou@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge dir">Direction</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>12/07/2026</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Enseignant" data-statut="Archivé">
+          <td class="name-cell">
+            <div class="av" style="background:#EDEAE0;color:var(--ink-muted);">RA</div>
+            <div class="info"><b>M. Adjovi</b><span>r.adjovi@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge ens">Enseignant</span></td>
+          <td><span class="status archived"><span class="dot"></span>Archivé</span></td>
+          <td>03/02/2026</td>
+          <td class="actions-cell" data-status="archived"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <h2>Inviter un utilisateur</h2>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="emailInput" placeholder="prenom.nom@ecole-madre-trinidad.bj">
+      <div class="hint">Un mot de passe temporaire sera envoyé à cette adresse.</div>
+    </div>
+
+    <div class="field">
+      <label>Profil</label>
+      <select class="role-select" id="roleSelect" onchange="updateRoleDesc()">
+        <option value="Administrateur">Administrateur</option>
+        <option value="Agent de scolarité" selected>Agent de scolarité</option>
+        <option value="Enseignant">Enseignant</option>
+        <option value="Direction">Direction</option>
+      </select>
+      <div class="role-desc-box">
+        <div class="rtitle" id="roleDescTitle">Agent de scolarité</div>
+        <div class="rdesc" id="roleDescText">Gère les fiches élèves, les documents, les inscriptions et génère les bulletins. Pas d'accès à la gestion des comptes.</div>
+      </div>
+    </div>
+
+    <button class="btn add-pending" onclick="addPending()">+ Ajouter à la liste</button>
+
+    <div id="pendingSection" style="display:none;">
+      <div class="pending-list-title">En attente d'enregistrement (<span id="pendingCount">0</span>)</div>
+      <div id="pendingList"></div>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <div class="callout" id="callout" style="display:none;">Cliquez sur <b>Enregistrer</b> pour envoyer les invitations</div>
+    <button class="btn ghost" onclick="closePanel()">Annuler</button>
+    <button class="btn dark" id="saveBtn" onclick="saveInvites()" disabled>Enregistrer</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Invitations envoyées avec succès</div>
+
+<script>
+let pending = [];
+
+const roleDescriptions = {
+  "Administrateur": "Accès complet : gestion des comptes, des classes, des documents et de tous les dossiers élèves.",
+  "Agent de scolarité": "Gère les fiches élèves, les documents, les inscriptions et génère les bulletins. Pas d'accès à la gestion des comptes.",
+  "Enseignant": "Saisit les notes et les observations pédagogiques, uniquement pour les classes qui lui sont assignées.",
+  "Direction": "Consultation des dossiers, accès aux rapports et statistiques de l'établissement."
+};
+
+function updateRoleDesc(){
+  const role = document.getElementById('roleSelect').value;
+  document.getElementById('roleDescTitle').textContent = role;
+  document.getElementById('roleDescText').textContent = roleDescriptions[role];
+}
+
+function filterRows(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const roleFilter = document.getElementById('filterRole').value;
+  const statutFilter = document.getElementById('filterStatut').value;
+  const rows = document.querySelectorAll('#userTableBody tr');
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const name = row.querySelector('.info b')?.textContent.toLowerCase() || '';
+    const email = row.querySelector('.info span')?.textContent.toLowerCase() || '';
+    const role = row.dataset.role || '';
+    const statut = row.dataset.statut || '';
+
+    const matchSearch = !search || name.includes(search) || email.includes(search);
+    const matchRole = !roleFilter || role === roleFilter;
+    const matchStatut = !statutFilter || statut === statutFilter;
+
+    const visible = matchSearch && matchRole && matchStatut;
+    row.style.display = visible ? '' : 'none';
+    if(visible) visibleCount++;
+  });
+
+  document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function menuHTML(status){
+  if(status === 'archived'){
+    return `
+      <div class="row-actions-wrap">
+        <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
+        <div class="action-menu">
+          <button onclick="alert('Réactiverait ce compte (démo)')">↺ Réactiver le compte</button>
+          <hr>
+          <button onclick="alert('Ouvrirait l\\'historique du compte (démo)')">🕐 Voir l'historique</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="row-actions-wrap">
+      <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
+      <div class="action-menu">
+        <button onclick="alert('Ouvrirait le formulaire de modification (démo)')">✎ Modifier le profil</button>
+        <button onclick="alert('Ouvrirait la réinitialisation (démo)')">🔑 Réinitialiser le mot de passe</button>
+        <hr>
+        <button class="danger" onclick="alert('Archiverait ce compte (démo)')">🗄 Archiver le compte</button>
+      </div>
+    </div>`;
+}
+
+function initActionMenus(scope){
+  (scope || document).querySelectorAll('.actions-cell').forEach(cell => {
+    if(cell.dataset.init) return;
+    cell.innerHTML = menuHTML(cell.dataset.status);
+    cell.dataset.init = "1";
+  });
+}
+
+function toggleMenu(btn){
+  const menu = btn.nextElementSibling;
+  const isOpen = menu.classList.contains('show');
+  document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  if(!isOpen) menu.classList.add('show');
+}
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.row-actions-wrap')){
+    document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  }
+});
+
+initActionMenus();
+
+function openPanel(){
+  document.getElementById('panel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closePanel(){
+  document.getElementById('panel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function addPending(){
+  const email = document.getElementById('emailInput').value.trim();
+  if(!email || !email.includes('@')){
+    document.getElementById('emailInput').style.borderColor = 'var(--red)';
+    return;
+  }
+  const role = document.getElementById('roleSelect').value;
+  pending.push({email, role});
+  renderPending();
+  document.getElementById('emailInput').value = '';
+  document.getElementById('emailInput').style.borderColor = 'var(--line)';
+}
+
+function removePending(i){
+  pending.splice(i,1);
+  renderPending();
+}
+
+function renderPending(){
+  const section = document.getElementById('pendingSection');
+  const list = document.getElementById('pendingList');
+  const count = document.getElementById('pendingCount');
+  const saveBtn = document.getElementById('saveBtn');
+  const callout = document.getElementById('callout');
+  count.textContent = pending.length;
+  section.style.display = pending.length ? 'block' : 'none';
+  saveBtn.disabled = pending.length === 0;
+  callout.style.display = pending.length ? 'block' : 'none';
+  list.innerHTML = pending.map((p,i) => `
+    <div class="pending-item">
+      <div><span class="pmail">${p.email}</span><br><span class="prole">${p.role}</span></div>
+      <button class="premove" onclick="removePending(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function saveInvites(){
+  const toast = document.getElementById('toast');
+  toast.textContent = `✓ ${pending.length} invitation${pending.length>1?'s':''} envoyée${pending.length>1?'s':''} avec succès`;
+  toast.classList.add('show');
+  pending.forEach(p => {
+    const tbody = document.getElementById('userTableBody');
+    const roleClass = {'Administrateur':'admin','Agent de scolarité':'scol','Enseignant':'ens','Direction':'dir'}[p.role];
+    const initials = p.email.substring(0,2).toUpperCase();
+    const row = document.createElement('tr');
+    row.className = 'pending';
+    row.dataset.role = p.role;
+    row.dataset.statut = 'Invitation en attente';
+    row.innerHTML = `
+      <td class="name-cell">
+        <div class="av" style="background:var(--gold-tint);color:#8A6717;">${initials}</div>
+        <div class="info"><b>—</b><span>${p.email}</span></div>
+      </td>
+      <td><span class="role-badge ${roleClass}">${p.role}</span></td>
+      <td><span class="status pending-status"><span class="dot"></span>Invitation en attente</span></td>
+      <td>—</td>
+      <td class="actions-cell" data-status="active"></td>
+    `;
+    tbody.appendChild(row);
+    initActionMenus(row);
+  });
+  pending = [];
+  renderPending();
+  setTimeout(() => { closePanel(); }, 600);
+  setTimeout(() => { toast.classList.remove('show'); }, 3200);
+}
+</script>
+</body>
+</html>
