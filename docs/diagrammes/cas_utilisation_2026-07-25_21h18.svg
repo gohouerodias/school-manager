@@ -1,0 +1,403 @@
+<svg viewBox="0 0 2180 2150" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Diagramme de cas d'utilisation (v12)</title>
+<desc>Diagramme UML des cas d'utilisation, version 6, reorganise en zones (Securite et administration, Dossier eleve et documents, Academique, Rapports, Authentification) avec un acteur abstrait Gestionnaire qui factorise les cas partages entre Administrateur et Agent de Scolarite, afin de reduire le nombre de lignes et les croisements.</desc>
+<rect x="0" y="0" width="2180" height="2150" fill="#ffffff"/>
+
+<defs>
+  <marker id="gen" markerWidth="16" markerHeight="14" refX="14" refY="7" orient="auto">
+    <path d="M0,0 L14,7 L0,14 Z" fill="#ffffff" stroke="#888888" stroke-width="1.3"/>
+  </marker>
+  <marker id="openarrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10" fill="none" stroke="#555555" stroke-width="1.4"/>
+  </marker>
+</defs>
+
+<rect x="276" y="269.0" width="248" height="860.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="288" y="285.0" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Securite &amp; administration</text>
+<rect x="276" y="1238.5" width="538" height="341.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="288" y="1254.5" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Gestion des comptes</text>
+<rect x="566" y="269.0" width="508" height="950.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="578" y="285.0" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Dossier eleve &amp; documents</text>
+<rect x="1086" y="269.0" width="248" height="520.5" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="1098" y="285.0" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Academique</text>
+<rect x="1346" y="258.5" width="248" height="521.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="1358" y="274.5" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Espace enseignant</text>
+<rect x="1776" y="258.5" width="248" height="240.5" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="1788" y="274.5" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Rapports</text>
+<rect x="766" y="1599.0" width="528" height="240.5" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<text x="778" y="1615.0" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Authentification</text>
+<line x1="126" y1="168" x2="316.701547657464" y2="330.63462987511116" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="329.03078452491104" y2="407.9447076379671" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="339.6481627000766" y2="502.09278180328363" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="348.1614427031238" y2="590.0698548745773" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="354.88389942405445" y2="669.3938629086354" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="360.2229606979414" y2="758.2544327675183" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="364.51896256156783" y2="847.4603079967177" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="862.3245480504465" y2="603.1671644436658" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="1375.2166379161015" y2="611.3933322107746" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="1120.8885233326919" y2="699.3531010334307" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="368.027373435512" y2="926.9394425131242" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="370.9344958958343" y2="1036.5110231909302" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="640.5749714621559" y2="1129.5738122192563" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="377.0493825923908" y2="1285.7145221548283" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="378.6210044177507" y2="1385.8092121746656" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="379.99541640122857" y2="1475.7074711082373" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="646.3346623551184" y2="1298.5129559926004" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="648.9271991680639" y2="1388.0884728288042" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="590.5246138261998" y2="353.5804084030641" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="590.1605701271653" y2="438.0173730238019" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="592.2605187932852" y2="522.6002201284987" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="596.3943928180513" y2="607.6852197643607" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="601.8427099225805" y2="693.4783234730794" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="607.8857469672427" y2="774.0320954416267" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="613.9792760695074" y2="867.2611770796558" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="619.789025379903" y2="947.6008718889602" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="625.1484188100775" y2="1035.3653461520983" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="850.2468092491159" y2="352.45751185951815" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="850.0753224850308" y2="438.64180049979655" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="408" x2="851.0783650141531" y2="524.8738424588645" stroke="#7c3aed" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="988" x2="1123.8188436650762" y2="367.7530001933473" stroke="#b45309" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="988" x2="1379.6618322216214" y2="369.51210321754877" stroke="#b45309" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="988" x2="1375.345071033779" y2="548.0633156110538" stroke="#b45309" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="988" x2="1373.550164004564" y2="627.1303985896626" stroke="#b45309" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="988" x2="1372.0729611911547" y2="719.2163624545616" stroke="#b45309" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="2054" y1="518" x2="789.8368951317452" y2="441.99820178672775" stroke="#dc2626" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="2054" y1="518" x2="789.9961302888725" y2="529.6920940269697" stroke="#dc2626" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="2054" y1="518" x2="1967.5724628517346" y2="383.54051337913376" stroke="#dc2626" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="890" y1="2018" x2="890.0" y2="1707.0" stroke="#6b7280" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="110" y1="218" x2="110" y2="370" stroke="#2563eb" stroke-width="1.4" stroke-opacity="0.8" marker-end="url(#gen)"/>
+<line x1="110" y1="600" x2="110" y2="458" stroke="#0d9488" stroke-width="1.4" stroke-opacity="0.8" marker-end="url(#gen)"/>
+<line x1="128" y1="466" x2="830" y2="1990" stroke="#7c3aed" stroke-width="1.4" stroke-opacity="0.8" marker-end="url(#gen)"/>
+<line x1="110" y1="950" x2="850" y2="2030" stroke="#b45309" stroke-width="1.4" stroke-opacity="0.8" marker-end="url(#gen)"/>
+<line x1="2070" y1="568" x2="980" y2="2010" stroke="#dc2626" stroke-width="1.4" stroke-opacity="0.8" marker-end="url(#gen)"/>
+<line x1="690.0" y1="495.0" x2="690.0" y2="475.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="690.0" y="479.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;extend&gt;&gt;</text>
+<line x1="790.0" y1="440.0" x2="850.0" y2="440.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="820.0" y="434.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="990.0" y1="1680.0" x2="1070.0" y2="1680.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="1030.0" y="1674.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="1210.0" y1="385.0" x2="1210.0" y2="405.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="1210.0" y="389.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="1210.0" y1="475.0" x2="1210.0" y2="495.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="1210.0" y="479.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="1210.0" y1="565.0" x2="1210.0" y2="574.5" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="1210.0" y="563.75" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="790.0" y1="350.0" x2="850.0" y2="350.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="820.0" y="344.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="690.0" y1="845.5" x2="690.0" y2="934.5" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="690.0" y="884.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;extend&gt;&gt;</text>
+<line x1="495.5064136811237" y1="1080.3739725205357" x2="594.4935863188763" y2="1149.6260274794643" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="545.0" y="1109.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="500.0" y1="1510.0" x2="590.0" y2="1510.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="545.0" y="1504.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="890.0" y1="1707.0" x2="890.0" y2="1724.5" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="890.0" y="1709.75" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;extend&gt;&gt;</text>
+<line x1="1470.0" y1="395.5" x2="1470.0" y2="394.5" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="1470.0" y="389.0" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+<line x1="1900.0" y1="395.5" x2="1900.0" y2="405.0" stroke="#555555" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#openarrow)"/><text x="1900.0" y="394.25" text-anchor="middle" font-size="9.5" font-style="italic" fill="#555555" font-family="sans-serif">&lt;&lt;include&gt;&gt;</text>
+
+<g>
+  <path d="M 1150 850 L 1436 850 L 1450 864 L 1450 934 L 1150 934 Z"
+        fill="#f5f5f5" stroke="#888888" stroke-width="1.2"/>
+  <path d="M 1436 850 L 1436 864 L 1450 864" fill="none" stroke="#888888" stroke-width="1.2"/>
+  <text x="1160" y="868" font-size="10.5" fill="#555555" font-family="sans-serif">Regles: trimestre actif requis.</text>
+  <text x="1160" y="884" font-size="10.5" fill="#555555" font-family="sans-serif">Moyenne/bulletin calcules</text>
+  <text x="1160" y="900" font-size="10.5" fill="#555555" font-family="sans-serif">seulement quand TOUTES les</text>
+  <text x="1160" y="916" font-size="10.5" fill="#555555" font-family="sans-serif">notes de la matiere sont saisies.</text>
+  <line x1="1190" y1="850" x2="1210" y2="475.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="3,3"/>
+</g>
+
+
+<g>
+  <path d="M 1480 850 L 1766 850 L 1780 864 L 1780 950 L 1480 950 Z"
+        fill="#f5f5f5" stroke="#888888" stroke-width="1.2"/>
+  <path d="M 1766 850 L 1766 864 L 1780 864" fill="none" stroke="#888888" stroke-width="1.2"/>
+  <text x="1490" y="868" font-size="10.5" fill="#555555" font-family="sans-serif">Enseignant: modification</text>
+  <text x="1490" y="884" font-size="10.5" fill="#555555" font-family="sans-serif">possible tant que le</text>
+  <text x="1490" y="900" font-size="10.5" fill="#555555" font-family="sans-serif">trimestre n'est pas cloture.</text>
+  <text x="1490" y="916" font-size="10.5" fill="#555555" font-family="sans-serif">Apres cloture: Administrateur</text>
+  <text x="1490" y="932" font-size="10.5" fill="#555555" font-family="sans-serif">uniquement.</text>
+  <line x1="1510" y1="850" x2="1470" y2="647" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="3,3"/>
+</g>
+
+<g>
+<rect x="1766" y="70" width="320" height="170" rx="8" fill="#f5f5f5" stroke="#888888" stroke-width="1.2"/>
+<text x="1780" y="90" font-size="12" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Legende (couleur = acteur)</text>
+<line x1="1780" y1="114" x2="1810" y2="114" stroke="#2563eb" stroke-width="3"/>
+<text x="1818" y="118" font-size="10.5" fill="#1a1a1a" font-family="sans-serif">Administrateur</text>
+<line x1="1780" y1="136" x2="1810" y2="136" stroke="#7c3aed" stroke-width="3"/>
+<text x="1818" y="140" font-size="10.5" fill="#1a1a1a" font-family="sans-serif">Gestionnaire (Admin + Agent Scolarite)</text>
+<line x1="1780" y1="158" x2="1810" y2="158" stroke="#0d9488" stroke-width="3"/>
+<text x="1818" y="162" font-size="10.5" fill="#1a1a1a" font-family="sans-serif">Agent de Scolarite</text>
+<line x1="1780" y1="180" x2="1810" y2="180" stroke="#b45309" stroke-width="3"/>
+<text x="1818" y="184" font-size="10.5" fill="#1a1a1a" font-family="sans-serif">Enseignant</text>
+<line x1="1780" y1="202" x2="1810" y2="202" stroke="#dc2626" stroke-width="3"/>
+<text x="1818" y="206" font-size="10.5" fill="#1a1a1a" font-family="sans-serif">Direction</text>
+<line x1="1780" y1="224" x2="1810" y2="224" stroke="#6b7280" stroke-width="3"/>
+<text x="1818" y="228" font-size="10.5" fill="#1a1a1a" font-family="sans-serif">Utilisateur (authentification)</text>
+</g>
+<rect x="250" y="40" width="1700" height="1900" rx="10" fill="#f5f5f5" fill-opacity="0.35" stroke="#888888" stroke-width="1.6"/>
+<text x="1100.0" y="66" text-anchor="middle" font-size="14.5" font-weight="600" fill="#1a1a1a" font-family="sans-serif">Systeme de gestion des dossiers eleves — CSC Madre Trinidad (v12)</text>
+
+  <g>
+    <circle cx="110" cy="144" r="14" fill="#ffffff" stroke="#2563eb" stroke-width="2.2"/>
+    <line x1="110" y1="158" x2="110" y2="192" stroke="#2563eb" stroke-width="2.2"/>
+    <line x1="94" y1="168" x2="126" y2="168" stroke="#2563eb" stroke-width="2.2"/>
+    <line x1="110" y1="192" x2="96" y2="218" stroke="#2563eb" stroke-width="2.2"/>
+    <line x1="110" y1="192" x2="124" y2="218" stroke="#2563eb" stroke-width="2.2"/>
+    <text x="110" y="236" text-anchor="middle" font-size="13"  fill="#1a1a1a" font-family="sans-serif">Administrateur</text>
+  </g>
+
+  <g>
+    <circle cx="110" cy="384" r="14" fill="#ffffff" stroke="#7c3aed" stroke-width="2.2"/>
+    <line x1="110" y1="398" x2="110" y2="432" stroke="#7c3aed" stroke-width="2.2"/>
+    <line x1="94" y1="408" x2="126" y2="408" stroke="#7c3aed" stroke-width="2.2"/>
+    <line x1="110" y1="432" x2="96" y2="458" stroke="#7c3aed" stroke-width="2.2"/>
+    <line x1="110" y1="432" x2="124" y2="458" stroke="#7c3aed" stroke-width="2.2"/>
+    <text x="110" y="476" text-anchor="middle" font-size="13" font-style="italic" fill="#1a1a1a" font-family="sans-serif">Gestionnaire</text>
+  </g>
+
+  <g>
+    <circle cx="110" cy="614" r="14" fill="#ffffff" stroke="#0d9488" stroke-width="2.2"/>
+    <line x1="110" y1="628" x2="110" y2="662" stroke="#0d9488" stroke-width="2.2"/>
+    <line x1="94" y1="638" x2="126" y2="638" stroke="#0d9488" stroke-width="2.2"/>
+    <line x1="110" y1="662" x2="96" y2="688" stroke="#0d9488" stroke-width="2.2"/>
+    <line x1="110" y1="662" x2="124" y2="688" stroke="#0d9488" stroke-width="2.2"/>
+    <text x="110" y="706" text-anchor="middle" font-size="13"  fill="#1a1a1a" font-family="sans-serif">Agent de Scolarite</text>
+  </g>
+
+  <g>
+    <circle cx="110" cy="964" r="14" fill="#ffffff" stroke="#b45309" stroke-width="2.2"/>
+    <line x1="110" y1="978" x2="110" y2="1012" stroke="#b45309" stroke-width="2.2"/>
+    <line x1="94" y1="988" x2="126" y2="988" stroke="#b45309" stroke-width="2.2"/>
+    <line x1="110" y1="1012" x2="96" y2="1038" stroke="#b45309" stroke-width="2.2"/>
+    <line x1="110" y1="1012" x2="124" y2="1038" stroke="#b45309" stroke-width="2.2"/>
+    <text x="110" y="1056" text-anchor="middle" font-size="13"  fill="#1a1a1a" font-family="sans-serif">Enseignant</text>
+  </g>
+
+  <g>
+    <circle cx="2070" cy="494" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2.2"/>
+    <line x1="2070" y1="508" x2="2070" y2="542" stroke="#dc2626" stroke-width="2.2"/>
+    <line x1="2054" y1="518" x2="2086" y2="518" stroke="#dc2626" stroke-width="2.2"/>
+    <line x1="2070" y1="542" x2="2056" y2="568" stroke="#dc2626" stroke-width="2.2"/>
+    <line x1="2070" y1="542" x2="2084" y2="568" stroke="#dc2626" stroke-width="2.2"/>
+    <text x="2070" y="586" text-anchor="middle" font-size="13"  fill="#1a1a1a" font-family="sans-serif">Direction</text>
+  </g>
+
+  <g>
+    <circle cx="890" cy="2034" r="14" fill="#ffffff" stroke="#6b7280" stroke-width="2.2"/>
+    <line x1="890" y1="2048" x2="890" y2="2082" stroke="#6b7280" stroke-width="2.2"/>
+    <line x1="874" y1="2058" x2="906" y2="2058" stroke="#6b7280" stroke-width="2.2"/>
+    <line x1="890" y1="2082" x2="876" y2="2108" stroke="#6b7280" stroke-width="2.2"/>
+    <line x1="890" y1="2082" x2="904" y2="2108" stroke="#6b7280" stroke-width="2.2"/>
+    <text x="890" y="2126" text-anchor="middle" font-size="13" font-style="italic" fill="#1a1a1a" font-family="sans-serif">Utilisateur</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="350" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="347.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Importer les</text><text x="400" y="360.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">donnees Excel</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="440" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="431.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter le</text><text x="400" y="444.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">journal des</text><text x="400" y="457.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">actions</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="530" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="527.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Configurer les</text><text x="400" y="540.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">types de documents</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="620" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="617.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Configurer les</text><text x="400" y="630.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">niveaux et classes</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="710" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="701.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Affecter un</text><text x="400" y="714.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">enseignant a une</text><text x="400" y="727.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">classe/matiere</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="800" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="791.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Configurer les</text><text x="400" y="804.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">matieres et</text><text x="400" y="817.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">trimestres</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="890" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="881.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Designer un</text><text x="400" y="894.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">professeur</text><text x="400" y="907.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">principal</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="980" rx="100" ry="56.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="964.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Configurer la</text><text x="400" y="977.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">duree de</text><text x="400" y="990.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">conservation</text><text x="400" y="1003.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">(RGPD)</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="1070" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="1067.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Purger les donnees</text><text x="400" y="1080.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">expirees (auto)</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="1330" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="1321.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter la liste</text><text x="400" y="1334.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">des comptes (triee</text><text x="400" y="1347.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">par profil)</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="1420" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="1417.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Rechercher un</text><text x="400" y="1430.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">compte utilisateur</text>
+  </g>
+
+  <g>
+    <ellipse cx="400" cy="1510" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="1507.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Creer des comptes</text><text x="400" y="1520.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">(email + profil)</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="1330" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="1327.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Archiver un compte</text><text x="690" y="1340.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">utilisateur</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="1420" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="1417.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Changer le profil</text><text x="690" y="1430.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">d'un compte</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="1510" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="1501.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Envoyer un email</text><text x="690" y="1514.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">d'activation</text><text x="690" y="1527.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">(auto)</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="350" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="347.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Creer / modifier</text><text x="690" y="360.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">une fiche eleve</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="440" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="437.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter une</text><text x="690" y="450.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">fiche eleve</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="530" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="527.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Rechercher un</text><text x="690" y="540.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">dossier eleve</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="620" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="617.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Gerer les infos</text><text x="690" y="630.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">parents/tuteurs</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="710" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="707.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Gerer le parcours</text><text x="690" y="720.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">scolaire</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="800" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="791.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Archiver /</text><text x="690" y="804.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">desarchiver un</text><text x="690" y="817.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">eleve</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="890" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="887.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Rechercher un</text><text x="690" y="900.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">parent/tuteur</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="980" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="971.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Affecter / changer</text><text x="690" y="984.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">la classe d'un</text><text x="690" y="997.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">apprenant</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="1070" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="1061.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter les</text><text x="690" y="1074.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">apprenants</text><text x="690" y="1087.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">archives</text>
+  </g>
+
+  <g>
+    <ellipse cx="690" cy="1160" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="690" y="1157.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Supprimer une</text><text x="690" y="1170.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">fiche eleve</text>
+  </g>
+
+  <g>
+    <ellipse cx="950" cy="350" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="950" y="347.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Ajouter un</text><text x="950" y="360.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">document</text>
+  </g>
+
+  <g>
+    <ellipse cx="950" cy="440" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="950" y="437.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter un</text><text x="950" y="450.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">document</text>
+  </g>
+
+  <g>
+    <ellipse cx="950" cy="530" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="950" y="527.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Remplacer un</text><text x="950" y="540.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">document</text>
+  </g>
+
+  <g>
+    <ellipse cx="950" cy="620" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="950" y="617.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Supprimer un</text><text x="950" y="630.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">document</text>
+  </g>
+
+  <g>
+    <ellipse cx="1210" cy="350" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1210" y="347.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Saisir les notes</text><text x="1210" y="360.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">des eleves</text>
+  </g>
+
+  <g>
+    <ellipse cx="1210" cy="440" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1210" y="437.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Calculer la</text><text x="1210" y="450.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">moyenne (auto)</text>
+  </g>
+
+  <g>
+    <ellipse cx="1210" cy="530" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1210" y="527.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Generer le</text><text x="1210" y="540.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">bulletin (auto)</text>
+  </g>
+
+  <g>
+    <ellipse cx="1210" cy="620" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1210" y="611.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Determiner passage</text><text x="1210" y="624.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">/ redoublement</text><text x="1210" y="637.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">(auto)</text>
+  </g>
+
+  <g>
+    <ellipse cx="1210" cy="720" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1210" y="711.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Notifier notes</text><text x="1210" y="724.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">incompletes (auto,</text><text x="1210" y="737.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">J-14)</text>
+  </g>
+
+  <g>
+    <ellipse cx="1470" cy="350" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1470" y="341.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter ses</text><text x="1470" y="354.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">classes attribuees</text><text x="1470" y="367.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">(annee en cours)</text>
+  </g>
+
+  <g>
+    <ellipse cx="1470" cy="440" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1470" y="431.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter la liste</text><text x="1470" y="444.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">des eleves de sa</text><text x="1470" y="457.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">classe</text>
+  </g>
+
+  <g>
+    <ellipse cx="1470" cy="530" rx="100" ry="56.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1470" y="514.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter les</text><text x="1470" y="527.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">notes de sa</text><text x="1470" y="540.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">matiere par</text><text x="1470" y="553.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">trimestre</text>
+  </g>
+
+  <g>
+    <ellipse cx="1470" cy="620" rx="100" ry="27" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1470" y="624.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Modifier une note</text>
+  </g>
+
+  <g>
+    <ellipse cx="1470" cy="710" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1470" y="701.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Rediger</text><text x="1470" y="714.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">l'appreciation du</text><text x="1470" y="727.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">bulletin</text>
+  </g>
+
+  <g>
+    <ellipse cx="1900" cy="350" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1900" y="341.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Generer des</text><text x="1900" y="354.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">rapports</text><text x="1900" y="367.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">statistiques</text>
+  </g>
+
+  <g>
+    <ellipse cx="1900" cy="440" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1900" y="437.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Exporter en Excel</text><text x="1900" y="450.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">/ PDF</text>
+  </g>
+
+  <g>
+    <ellipse cx="890" cy="1680" rx="100" ry="27" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="890" y="1684.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">S'authentifier</text>
+  </g>
+
+  <g>
+    <ellipse cx="1170" cy="1680" rx="100" ry="35.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="1170" y="1677.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Verifier le code</text><text x="1170" y="1690.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">2FA</text>
+  </g>
+
+  <g>
+    <ellipse cx="890" cy="1770" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="890" y="1761.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Definir le mot de</text><text x="890" y="1774.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">passe (1ere</text><text x="890" y="1787.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">connexion)</text>
+  </g>
+</svg>

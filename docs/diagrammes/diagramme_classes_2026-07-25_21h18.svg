@@ -1,0 +1,287 @@
+<svg viewBox="0 0 2090 1298.0" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Diagramme de classes (v2)</title>
+<desc>Diagramme UML des classes mis a jour: Utilisateur avec double authentification, JournalAction pour la tracabilite, Rapport pour les statistiques et exports, Matiere/Note/Bulletin pour la saisie des notes et le calcul automatique des moyennes et bulletins.</desc>
+<rect x="0" y="0" width="2090" height="1298.0" fill="#ffffff"/>
+<line x1="620" y1="578.75" x2="580" y2="485.75" stroke="#888888" stroke-width="1.3"/><text x="612" y="572.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="588" y="479.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="600.0" y="526.25" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">possede</text>
+<line x1="290" y1="532.25" x2="330" y2="485.75" stroke="#888888" stroke-width="1.3"/><text x="298" y="526.25" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="322" y="479.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="310.0" y="503.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">concerne</text>
+<line x1="745.0" y1="718.0" x2="745.0" y2="808.0" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="712.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="751.0" y="802.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="745.0" y="757.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">effectue</text>
+<line x1="870" y1="900.75" x2="910" y2="854.25" stroke="#888888" stroke-width="1.3"/><text x="878" y="894.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="902" y="848.25" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="890.0" y="871.5" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">appartient a</text>
+<line x1="1035.0" y1="900.5" x2="1325.0" y2="808.0" stroke="#888888" stroke-width="1.3"/><text x="1041.0" y="894.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1331.0" y="802.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1180.0" y="848.25" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">planifiee pour</text>
+<line x1="745.0" y1="993.5" x2="710" y2="1160.75" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="987.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="718" y="1154.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="727.5" y="1071.125" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">genere</text>
+<line x1="710" y1="1160.75" x2="750" y2="1153.0" stroke="#888888" stroke-width="1.3"/><text x="718" y="1154.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="742" y="1147.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="730.0" y="1150.875" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">contient</text>
+<line x1="1000" y1="1153.0" x2="1040" y2="1129.75" stroke="#888888" stroke-width="1.3"/><text x="1008" y="1147.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1032" y="1123.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1020.0" y="1135.375" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">concerne</text>
+<line x1="870" y1="578.75" x2="745.0" y2="194.5" stroke="#888888" stroke-width="1.3"/><text x="878" y="572.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="751.0" y="188.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="807.5" y="380.625" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">archive</text>
+<line x1="745.0" y1="194.5" x2="1035.0" y2="439.5" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="188.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1041.0" y="433.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="890.0" y="311.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">est de type</text>
+<line x1="1160" y1="854.25" x2="1200" y2="501.25" stroke="#888888" stroke-width="1.3"/><text x="1168" y="848.25" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1192" y="495.25" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1180.0" y="671.75" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">correspond a</text>
+<line x1="1035.0" y1="900.5" x2="1745.0" y2="1083.5" stroke="#888888" stroke-width="1.3"/><text x="1041.0" y="894.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1751.0" y="1077.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1390.0" y="986.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">concerne</text>
+<line x1="1450" y1="869.75" x2="1490" y2="893.0" stroke="#888888" stroke-width="1.3"/><text x="1458" y="863.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1482" y="887.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1470.0" y="875.375" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">comprend</text>
+<line x1="1615.0" y1="978.0" x2="585.0" y2="1083.5" stroke="#888888" stroke-width="1.3"/><text x="1621.0" y="972.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="591.0" y="1077.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1100.0" y="1024.75" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">concerne</text>
+<line x1="1035.0" y1="900.5" x2="1455.0" y2="1083.5" stroke="#888888" stroke-width="1.3"/><text x="1041.0" y="894.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1461.0" y="1077.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1245.0" y="986.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">propose</text>
+<line x1="1290" y1="1129.75" x2="1330" y2="1129.75" stroke="#888888" stroke-width="1.3"/><text x="1298" y="1123.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1322" y="1123.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1310.0" y="1123.75" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">concerne</text>
+<line x1="745.0" y1="439.5" x2="455.0" y2="148.0" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="433.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="461.0" y="142.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="600.0" y="287.75" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">fait l'objet de</text>
+<line x1="290" y1="194.75" x2="330" y2="94.0" stroke="#888888" stroke-width="1.3"/><text x="298" y="188.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="322" y="88.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="310.0" y="138.375" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">redige</text>
+<line x1="165.0" y1="349.5" x2="620" y2="117.25" stroke="#888888" stroke-width="1.3"/><text x="171.0" y="343.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="612" y="111.25" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="392.5" y="227.375" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">televerse</text>
+<line x1="290" y1="194.75" x2="910" y2="109.5" stroke="#888888" stroke-width="1.3"/><text x="298" y="188.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="902" y="103.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="600.0" y="146.125" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">genere</text>
+<line x1="290" y1="194.75" x2="1200" y2="109.5" stroke="#888888" stroke-width="1.3"/><text x="298" y="188.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1192" y="103.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="745.0" y="146.125" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">produit</text>
+<line x1="290" y1="194.75" x2="1490" y2="140.5" stroke="#888888" stroke-width="1.3"/><text x="298" y="188.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1482" y="134.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="890.0" y="161.625" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">effectue</text>
+<line x1="165.0" y1="349.5" x2="875.0" y2="1083.5" stroke="#888888" stroke-width="1.3"/><text x="171.0" y="343.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="881.0" y="1077.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="520.0" y="710.5" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">saisit</text>
+<g>
+<rect x="40" y="40" width="250" height="309.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="165.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Utilisateur</text>
+<line x1="40" y1="66" x2="290" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="50" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="50" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string</text>
+<text x="50" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- email: string</text>
+<text x="50" y="126.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- motDePasse: string</text>
+<text x="50" y="142.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- profil: ProfilUtilisateur (enum)</text>
+<text x="50" y="157.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- statut: StatutUtilisateur (enum)</text>
+<text x="50" y="173.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- deuxFAActif: bool</text>
+<text x="50" y="188.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- secret2FA: string</text>
+<text x="50" y="204.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- doitChangerMotDePasse: bool</text>
+<line x1="40" y1="215.5" x2="290" y2="215.5" stroke="#888888" stroke-width="1.2"/>
+<text x="50" y="229.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ seConnecter(): bool</text>
+<text x="50" y="245.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ seDeconnecter(): void</text>
+<text x="50" y="260.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ activerDoubleAuth(): void</text>
+<text x="50" y="276.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ verifierCode2FA(code): bool</text>
+<text x="50" y="291.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ archiverCompte(): void</text>
+<text x="50" y="307.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ changerProfil(profil): void</text>
+<text x="50" y="322.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ envoyerActivation(): void</text>
+<text x="50" y="338.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ definirMotDePasse(mdp): void</text>
+</g>
+<g>
+<rect x="330" y="40" width="250" height="108.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="455.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ObservationAdministrative</text>
+<line x1="330" y1="66" x2="580" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="340" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="340" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- date: date</text>
+<text x="340" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- contenu: text</text>
+<line x1="330" y1="122.5" x2="580" y2="122.5" stroke="#888888" stroke-width="1.2"/>
+<text x="340" y="136.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ ajouter(): void</text>
+</g>
+<g>
+<rect x="620" y="40" width="250" height="154.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="745.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">DocumentNumerique</text>
+<line x1="620" y1="66" x2="870" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="630" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- cheminFichier: string</text>
+<text x="630" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateAjout: date</text>
+<line x1="620" y1="122.5" x2="870" y2="122.5" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="136.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ televerser(): void</text>
+<text x="630" y="152.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ consulter(): void</text>
+<text x="630" y="167.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ remplacer(): void</text>
+<text x="630" y="183.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ supprimer(): void</text>
+</g>
+<g>
+<rect x="910" y="40" width="250" height="139.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1035.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">JournalAction</text>
+<line x1="910" y1="66" x2="1160" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="920" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="920" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- action: string</text>
+<text x="920" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateHeure: datetime</text>
+<text x="920" y="126.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- details: text</text>
+<text x="920" y="142.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- adresseIp: string</text>
+<line x1="910" y1="153.5" x2="1160" y2="153.5" stroke="#888888" stroke-width="1.2"/>
+<text x="920" y="167.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ enregistrer(): void</text>
+</g>
+<g>
+<rect x="1200" y="40" width="250" height="139.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1325.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Rapport</text>
+<line x1="1200" y1="66" x2="1450" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="1210" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1210" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- type: TypeRapport (enum)</text>
+<text x="1210" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- format: enum{PDF,Excel}</text>
+<text x="1210" y="126.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateGeneration: date</text>
+<line x1="1200" y1="138.0" x2="1450" y2="138.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1210" y="152.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ generer(): void</text>
+<text x="1210" y="167.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ exporter(): void</text>
+</g>
+<g>
+<rect x="1490" y="40" width="250" height="201.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1615.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ImportDonnees</text>
+<line x1="1490" y1="66" x2="1740" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="1500" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1500" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- typeImport: TypeImportDonnees (enum)</text>
+<text x="1500" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- fichierSource: string</text>
+<text x="1500" y="126.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateImport: date</text>
+<text x="1500" y="142.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nombreLignesImportees: int</text>
+<text x="1500" y="157.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nombreErreurs: int</text>
+<text x="1500" y="173.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- statut: StatutImport (enum)</text>
+<line x1="1490" y1="184.5" x2="1740" y2="184.5" stroke="#888888" stroke-width="1.2"/>
+<text x="1500" y="198.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ importer(): void</text>
+<text x="1500" y="214.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ validerDonnees(): bool</text>
+<text x="1500" y="229.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ genererRapportErreurs(): void</text>
+</g>
+<g>
+<rect x="1780" y="40" width="250" height="92.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1905.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ParametreSysteme</text>
+<line x1="1780" y1="66" x2="2030" y2="66" stroke="#888888" stroke-width="1.2"/>
+<text x="1790" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1790" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dureeConservationDonnees: int (mois)</text>
+<line x1="1780" y1="107.0" x2="2030" y2="107.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1790" y="121.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ modifierParametres(): void</text>
+</g>
+<g>
+<rect x="40" y="439.5" width="250" height="185.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="165.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ParentTuteur</text>
+<line x1="40" y1="465.5" x2="290" y2="465.5" stroke="#888888" stroke-width="1.2"/>
+<text x="50" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="50" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string</text>
+<text x="50" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- prenom: string</text>
+<text x="50" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- telephone: string</text>
+<text x="50" y="541.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- email: string</text>
+<text x="50" y="557.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- profession: string</text>
+<text x="50" y="572.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- adresse: string</text>
+<line x1="40" y1="584.0" x2="290" y2="584.0" stroke="#888888" stroke-width="1.2"/>
+<text x="50" y="598.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ contacter(): void</text>
+<text x="50" y="613.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ rechercherDoublon(): ParentTuteur</text>
+</g>
+<g>
+<rect x="330" y="439.5" width="250" height="92.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="455.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">EleveParent</text>
+<line x1="330" y1="465.5" x2="580" y2="465.5" stroke="#888888" stroke-width="1.2"/>
+<text x="340" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="340" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- lienParente: string</text>
+<line x1="330" y1="506.5" x2="580" y2="506.5" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="620" y="439.5" width="250" height="278.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="745.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Eleve</text>
+<line x1="620" y1="465.5" x2="870" y2="465.5" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="630" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- matricule: string {unique}</text>
+<text x="630" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string</text>
+<text x="630" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- prenom: string</text>
+<text x="630" y="541.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateNaissance: date</text>
+<text x="630" y="557.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- lieuNaissance: string</text>
+<text x="630" y="572.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- sexe: string</text>
+<text x="630" y="588.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- adresse: string</text>
+<text x="630" y="603.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- statut: StatutEleve (enum: Actif, Archive)</text>
+<text x="630" y="619.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateArchivage: date</text>
+<line x1="620" y1="630.5" x2="870" y2="630.5" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="644.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ creerFiche(): void</text>
+<text x="630" y="660.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ modifierFiche(): void</text>
+<text x="630" y="675.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ archiver(): void</text>
+<text x="630" y="691.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ desarchiver(): void</text>
+<text x="630" y="706.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ supprimer(): void</text>
+</g>
+<g>
+<rect x="910" y="439.5" width="250" height="123.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1035.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">TypeDocument</text>
+<line x1="910" y1="465.5" x2="1160" y2="465.5" stroke="#888888" stroke-width="1.2"/>
+<text x="920" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="920" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- libelle: string</text>
+<text x="920" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- description: string</text>
+<text x="920" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- obligatoire: bool</text>
+<line x1="910" y1="537.5" x2="1160" y2="537.5" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="1200" y="439.5" width="250" height="123.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1325.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Niveau</text>
+<line x1="1200" y1="465.5" x2="1450" y2="465.5" stroke="#888888" stroke-width="1.2"/>
+<text x="1210" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1210" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- libelle: string {ex: CI,CP,CE1,CE2,CM1,CM2,6e,5e,4e,3e}</text>
+<text x="1210" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- ordre: int</text>
+<text x="1210" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- cycle: enum{Primaire,College}</text>
+<line x1="1200" y1="537.5" x2="1450" y2="537.5" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="620" y="808.0" width="250" height="185.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="745.0" y="822.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Inscription</text>
+<line x1="620" y1="834.0" x2="870" y2="834.0" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="848.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="630" y="863.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateInscription: date</text>
+<text x="630" y="879.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- moyenneAnnuelle: float {0..20}</text>
+<text x="630" y="894.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- decision: DecisionAnnuelle (enum)</text>
+<line x1="620" y1="906.0" x2="870" y2="906.0" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="920.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ inscrire(): void</text>
+<text x="630" y="935.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ transferer(): void</text>
+<text x="630" y="951.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ calculerMoyenneAnnuelle(): float</text>
+<text x="630" y="966.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ determinerPassage(): void</text>
+<text x="630" y="982.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ verifierDocumentsObligatoires(): bool</text>
+</g>
+<g>
+<rect x="910" y="808.0" width="250" height="92.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1035.0" y="822.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Classe</text>
+<line x1="910" y1="834.0" x2="1160" y2="834.0" stroke="#888888" stroke-width="1.2"/>
+<text x="920" y="848.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="920" y="863.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string {ex: CM1 A, CM1 B}</text>
+<line x1="910" y1="875.0" x2="1160" y2="875.0" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="1200" y="808.0" width="250" height="123.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1325.0" y="822.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">AnneeAcademique</text>
+<line x1="1200" y1="834.0" x2="1450" y2="834.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1210" y="848.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1210" y="863.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- libelle: string</text>
+<text x="1210" y="879.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateDebut: date</text>
+<text x="1210" y="894.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateFin: date</text>
+<line x1="1200" y1="906.0" x2="1450" y2="906.0" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="1490" y="808.0" width="250" height="170.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1615.0" y="822.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Trimestre</text>
+<line x1="1490" y1="834.0" x2="1740" y2="834.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1500" y="848.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1500" y="863.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string {ex: Trimestre 1}</text>
+<text x="1500" y="879.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- ordre: int</text>
+<text x="1500" y="894.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateDebut: date</text>
+<text x="1500" y="910.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateFin: date</text>
+<text x="1500" y="925.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- statut: StatutTrimestre (enum)</text>
+<line x1="1490" y1="937.0" x2="1740" y2="937.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1500" y="951.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ ouvrir(): void</text>
+<text x="1500" y="966.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ fermer(): void</text>
+</g>
+<g>
+<rect x="460" y="1083.5" width="250" height="154.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="585.0" y="1097.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Bulletin</text>
+<line x1="460" y1="1109.5" x2="710" y2="1109.5" stroke="#888888" stroke-width="1.2"/>
+<text x="470" y="1123.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="470" y="1139.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- moyenneGenerale: float {0..20}</text>
+<text x="470" y="1154.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- appreciation: string</text>
+<text x="470" y="1170.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- rang: int</text>
+<text x="470" y="1185.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateGeneration: date</text>
+<line x1="460" y1="1197.0" x2="710" y2="1197.0" stroke="#888888" stroke-width="1.2"/>
+<text x="470" y="1211.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ calculerMoyenne(): float</text>
+<text x="470" y="1226.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ genererBulletin(): void</text>
+</g>
+<g>
+<rect x="750" y="1083.5" width="250" height="139.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="875.0" y="1097.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Note</text>
+<line x1="750" y1="1109.5" x2="1000" y2="1109.5" stroke="#888888" stroke-width="1.2"/>
+<text x="760" y="1123.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="760" y="1139.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- valeur: float {0..20}</text>
+<text x="760" y="1154.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- type: TypeEvaluation (enum)</text>
+<text x="760" y="1170.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- numero: int</text>
+<text x="760" y="1185.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateSaisie: date</text>
+<line x1="750" y1="1197.0" x2="1000" y2="1197.0" stroke="#888888" stroke-width="1.2"/>
+<text x="760" y="1211.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ verifierModifiable(): bool</text>
+</g>
+<g>
+<rect x="1040" y="1083.5" width="250" height="92.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1165.0" y="1097.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Matiere</text>
+<line x1="1040" y1="1109.5" x2="1290" y2="1109.5" stroke="#888888" stroke-width="1.2"/>
+<text x="1050" y="1123.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1050" y="1139.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string</text>
+<line x1="1040" y1="1150.5" x2="1290" y2="1150.5" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="1330" y="1083.5" width="250" height="92.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1455.0" y="1097.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ClasseMatiere</text>
+<line x1="1330" y1="1109.5" x2="1580" y2="1109.5" stroke="#888888" stroke-width="1.2"/>
+<text x="1340" y="1123.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1340" y="1139.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- coefficient: float</text>
+<line x1="1330" y1="1150.5" x2="1580" y2="1150.5" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="1620" y="1083.5" width="250" height="139.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1745.0" y="1097.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">AffectationEnseignant</text>
+<line x1="1620" y1="1109.5" x2="1870" y2="1109.5" stroke="#888888" stroke-width="1.2"/>
+<text x="1630" y="1123.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="1630" y="1139.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- enseignantId: int {FK -&gt; Utilisateur}</text>
+<text x="1630" y="1154.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- matiereId: int {FK}</text>
+<text x="1630" y="1170.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- anneeAcademiqueId: int {FK}</text>
+<text x="1630" y="1185.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- estProfesseurPrincipal: bool</text>
+<line x1="1620" y1="1197.0" x2="1870" y2="1197.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1630" y="1211.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ affecter(): void</text>
+</g>
+</svg>
