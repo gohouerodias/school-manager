@@ -25,6 +25,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'telephone',
         'email',
         'password',
         'profil',
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'deux_fa_actif',
         'secret_2fa',
         'doit_changer_mot_de_passe',
+        'derniere_connexion_at',
     ];
 
     /**
@@ -59,6 +61,7 @@ class User extends Authenticatable
             'statut' => StatutUtilisateur::class,
             'deux_fa_actif' => 'bool',
             'doit_changer_mot_de_passe' => 'bool',
+            'derniere_connexion_at' => 'datetime',
         ];
     }
 
@@ -173,9 +176,14 @@ class User extends Authenticatable
         $this->update(['statut' => StatutUtilisateur::Archive]);
     }
 
-    public function changerProfil(ProfilUtilisateur $profil): void
+    public function reactiverCompte(): void
     {
-        $this->update(['profil' => $profil]);
+        $this->update(['statut' => StatutUtilisateur::Actif]);
+    }
+
+    public function estEnAttenteActivation(): bool
+    {
+        return $this->statut === StatutUtilisateur::Actif && $this->derniere_connexion_at === null;
     }
 
     /**

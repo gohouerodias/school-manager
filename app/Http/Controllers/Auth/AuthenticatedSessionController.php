@@ -47,6 +47,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->forget('2fa_verified');
+        $user->update(['derniere_connexion_at' => now()]);
 
         return redirect()->intended($this->nextStepAfterLogin($user));
     }

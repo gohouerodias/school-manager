@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'account.active' => \App\Http\Middleware\EnsureAccountIsActive::class,
             '2fa' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
             'password.changed' => \App\Http\Middleware\EnsurePasswordIsChanged::class,
+            'profile' => \App\Http\Middleware\EnsureUserHasProfile::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -7,27 +7,30 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="cscmt app-shell">
-<div class="app-shell-inner">
+<div class="shell">
+    <x-sidebar-nav />
 
-    <div class="app-shell-topbar">
-        <div class="brand">
-            <div class="logo-slot">LOGO<br>CSCMT</div>
-            <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad — Registre numérique</small></div>
-        </div>
-        <div class="user-chip">
-            <div class="avatar">{{ auth()->user()?->initials() }}</div>
-            <span>{{ auth()->user()?->name }} · {{ auth()->user()?->profil?->label() }}</span>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn ghost logout-btn">Se déconnecter</button>
-            </form>
+    <div class="main">
+        <div class="app-shell-inner">
+
+            <div class="app-shell-topbar">
+                <div class="brand">
+                    <div class="logo-slot">LOGO<br>CSCMT</div>
+                    <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad — Registre numérique</small></div>
+                </div>
+                <x-profile-menu :user="auth()->user()" />
+            </div>
+
+            <x-breadcrumbs :items="$breadcrumbs ?? []" />
+
+            <main>
+                @yield('content')
+            </main>
+
         </div>
     </div>
-
-    <main>
-        @yield('content')
-    </main>
-
 </div>
+
+<x-flash-toast />
 </body>
 </html>

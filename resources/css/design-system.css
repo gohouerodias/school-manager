@@ -3,9 +3,9 @@
  * Palette extraite du logo (turquoise, orange djembé, terracotta, anthracite).
  * Variables et composants partagés entre les pages d'authentification (auth.css)
  * et l'interface applicative (app-shell.css).
+ * (La police Google Fonts est importée en tête de app.css, avant
+ * @import 'tailwindcss', comme l'exige la spec CSS pour les @import.)
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 :root {
     --paper: #FAF8F5;

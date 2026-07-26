@@ -37,11 +37,13 @@
   }
   .brand{display:flex;align-items:center;gap:12px;}
   .brand .logo-slot{
-    width:44px;height:44px;border-radius:8px;
-    border:1.5px dashed var(--line);background:#fff;
+    width:150px;height:48px;border-radius:8px;
+    border:none;background:#fff;
     display:flex;align-items:center;justify-content:center;
     color:var(--ink-muted);font-size:8.5px;text-align:center;line-height:1.2;flex-shrink:0;
+    overflow:hidden;
   }
+  .brand .logo-slot img{width:100%;height:100%;object-fit:contain;}
   .brand .name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--ink);line-height:1.25;}
   .brand .name small{display:block;font-family:'Inter',sans-serif;font-weight:500;font-size:10.5px;color:var(--ink-muted);letter-spacing:.03em;text-transform:uppercase;}
   .user-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);}
@@ -84,6 +86,25 @@
 
   /* Table */
   .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .pagination{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    padding:16px 4px 0;
+  }
+  .page-info{font-size:12.5px;color:var(--ink-muted);}
+  .page-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .page-btn{
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:7px;
+    padding:7px 13px;cursor:pointer;
+  }
+  .page-btn:hover:not(:disabled){background:var(--green-tint);border-color:var(--green);}
+  .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .page-num{
+    width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--paper-raised);
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;
+  }
+  .page-num:hover{background:var(--green-tint);}
+  .page-num.active{background:var(--green);border-color:var(--green);color:#fff;}
   table{width:100%;border-collapse:collapse;}
   thead th{
     text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
@@ -209,31 +230,230 @@
     display:flex;align-items:center;gap:8px;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* Shell : sidebar + contenu */
+  .shell{display:flex;min-height:100vh;align-items:stretch;}
+  .sidebar{
+    width:250px;flex-shrink:0;background:var(--green-deep);
+    transition:width .22s ease;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .sidebar.collapsed{width:72px;}
+
+  .sidebar-header{
+    display:flex;align-items:center;gap:10px;padding:16px 14px;flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,.14);
+  }
+  .sidebar.collapsed .sidebar-header{padding:16px 0;justify-content:center;}
+  .rail-burger{
+    width:34px;height:34px;border-radius:8px;border:none;flex-shrink:0;
+    background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rail-burger:hover{background:rgba(255,255,255,.18);}
+  .sidebar-logo{
+    width:30px;height:30px;border-radius:7px;background:#fff;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-size:7px;font-weight:700;color:var(--green-deep);text-align:center;
+  }
+  .sidebar-logo img{width:100%;height:100%;object-fit:contain;}
+  .sidebar.collapsed .sidebar-logo,
+  .sidebar.collapsed .sidebar-wordmark{display:none;}
+  .sidebar-wordmark{color:#fff;font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;white-space:nowrap;}
+
+  .sidebar-inner{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden;}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:11px 13px;border-radius:9px;background:none;border:none;color:rgba(255,255,255,.82);
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:3px;
+  }
+  .nav-item svg{width:19px;height:19px;flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-item.active{background:#fff;color:var(--green-deep);}
+  .nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sidebar.collapsed .nav-item{justify-content:center;padding:12px 0;}
+  .sidebar.collapsed .nav-label{display:none;}
+
+  .main{flex:1;min-width:0;}
+
+  /* Lien + popover Guide d'utilisation */
+  .guide-wrap{position:relative;margin-left:6px;}
+  .guide-link{
+    display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green-deep);
+    background:none;text-decoration:none;padding:8px 13px;border:1px solid var(--line);border-radius:20px;
+    white-space:nowrap;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .guide-link:hover{background:var(--green-tint);border-color:var(--green);}
+  .guide-link svg{width:14px;height:14px;}
+  .guide-menu{
+    position:absolute;top:42px;left:0;width:280px;background:#fff;border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 12px 30px rgba(38,89,74,.15);padding:16px;display:none;z-index:45;
+  }
+  .guide-menu.show{display:block;}
+  .guide-title{
+    margin:0 0 12px;font-family:'Inter',sans-serif;font-weight:700;font-size:13.5px;
+    color:var(--ink);line-height:1.4;
+  }
+  .guide-download{
+    display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--green);
+    font-weight:600;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+  }
+  .guide-download:hover{background:var(--green-tint);}
+  .guide-download svg{width:16px;height:16px;}
+
+  .empty-panel{
+    padding:70px 20px;text-align:center;color:var(--ink-muted);font-size:13.5px;
+    background:var(--paper-raised);border:1.5px dashed var(--line);border-radius:14px;
+  }
+  .empty-panel svg{width:30px;height:30px;color:var(--line);margin-bottom:12px;}
+
+  /* Popover profil */
+  .profile-wrap{position:relative;}
+  .user-chip{cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;padding:4px;border-radius:8px;}
+  .user-chip:hover{background:var(--green-tint);}
+  .profile-menu{
+    position:absolute;top:46px;right:0;width:290px;background:#fff;border:1px solid var(--line);
+    border-radius:13px;box-shadow:0 14px 34px rgba(38,89,74,.16);padding:20px;display:none;z-index:45;
+  }
+  .profile-menu.show{display:block;}
+  .profile-menu-head{
+    font-family:'Fraunces',serif;font-size:14.5px;font-weight:600;color:var(--green-deep);
+    margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line);
+  }
+  .profile-menu .field{margin-bottom:13px;}
+  .profile-menu .field label{font-size:11.5px;}
+  .profile-menu .field input{padding:9px 11px;font-size:13px;}
+  .profile-menu .btn{width:100%;justify-content:center;margin-top:4px;}
+  .profile-menu hr{border:none;border-top:1px solid var(--line);margin:14px 0;}
+  .profile-menu .btn.logout{color:var(--red);border-color:var(--red-tint);background:var(--red-tint);}
 </style>
 </head>
 <body>
-<div class="app">
+<div class="shell">
 
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo-slot">LOGO<br>CSCMT</div>
-      <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad — Registre numérique</small></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="rail-burger" onclick="toggleSidebar()" title="Réduire/agrandir le menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="sidebar-logo">
+        <img src="logo-cscmt.jpeg" alt="Logo CSCMT"
+             onerror="this.onerror=null; this.parentElement.innerHTML='CSCMT';">
+      </div>
+      <span class="sidebar-wordmark">Registre CSCMT</span>
     </div>
-    <div class="user-chip">
-      <div class="avatar">MB</div>
-      M. Bio · Administrateur
+    <div class="sidebar-inner">
+      <nav>
+        <button class="nav-item active" data-panel="comptes" onclick="switchPanel('comptes', this)" title="Gestion de compte">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="nav-label">Gestion de compte</span>
+        </button>
+        <button class="nav-item" data-panel="securite" onclick="switchPanel('securite', this)" title="Sécurité et Administration">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="nav-label">Sécurité et Administration</span>
+        </button>
+        <button class="nav-item" data-panel="dossiers" onclick="switchPanel('dossiers', this)" title="Dossier élève et documents">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          <span class="nav-label">Dossier élève et documents</span>
+        </button>
+        <button class="nav-item" data-panel="academique" onclick="switchPanel('academique', this)" title="Académique">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>
+          <span class="nav-label">Académique</span>
+        </button>
+        <button class="nav-item" data-panel="rapports" onclick="switchPanel('rapports', this)" title="Rapports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/></svg>
+          <span class="nav-label">Rapports</span>
+        </button>
+      </nav>
     </div>
-  </div>
+  </aside>
 
-  <div class="page-head">
+  <div class="main">
+    <div class="app">
+
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo-slot" style="width:150px;height:48px;">
+            <img src="logo-cscmt.jpeg" alt="Logo CSCMT"
+                 onerror="this.onerror=null; this.parentElement.innerHTML='CSCMT';">
+          </div>
+
+          <div class="guide-wrap">
+            <button class="guide-link" onclick="toggleGuideMenu()" title="Guide d'utilisation">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              Guide d'utilisation
+            </button>
+            <div class="guide-menu" id="guideMenu">
+              <p class="guide-title">Guide d'utilisation tableau de bord Admin</p>
+              <a href="guide-utilisation.pdf" download class="guide-download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                <span>Téléchargeable</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-wrap" style="display:flex; align-items:center; gap:10px;">
+          <button class="user-chip" onclick="toggleProfileMenu()">
+            <div class="avatar">MB</div>
+            BIO Marcelin · Administrateur
+          </button>
+          <button class="btn ghost" onclick="alert('Déconnexion (démo)')">Se déconnecter</button>
+          <div class="profile-menu" id="profileMenu">
+            <div class="profile-menu-head">Mon profil</div>
+            <div class="field"><label>Nom</label><input type="text" value="Bio"></div>
+            <div class="field"><label>Prénom</label><input type="text" value="Marcelin"></div>
+            <div class="field"><label>Numéro de téléphone</label><input type="tel" value="+229 01 XX XX XX"></div>
+            <button class="btn primary" onclick="alert('Modifications enregistrées (démo)')">Enregistrer les modifications</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-comptes" class="dashboard-panel">
+
+      <div id="panel-securite" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <p>Panneau « Sécurité et Administration » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+      <div id="panel-dossiers" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+          <p>Panneau « Dossier élève et documents » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+      <div id="panel-academique" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>
+          <p>Panneau « Académique » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+      <div id="panel-rapports" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/></svg>
+          <p>Panneau « Rapports » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+
+      <div class="page-head">
     <div>
       <h1>Gestion des comptes utilisateurs</h1>
-      <p>7 comptes · 3 administrateurs, 2 agents de scolarité, 1 enseignant, 1 direction</p>
+      <p id="summaryText">7 comptes · 3 administrateurs, 2 agents de scolarité, 1 enseignant, 1 direction</p>
     </div>
-    <button class="btn primary" onclick="openPanel()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-      Inviter un utilisateur
-    </button>
+    <div style="display:flex; gap:10px;">
+      <button class="btn ghost" onclick="alert('Export Excel (démo)')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+        Excel
+      </button>
+      <button class="btn ghost" onclick="alert('Export PDF (démo)')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+        PDF
+      </button>
+      <button class="btn primary" onclick="openPanel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Inviter un utilisateur
+      </button>
+    </div>
   </div>
 
   <div class="toolbar">
@@ -272,50 +492,50 @@
         </tr>
       </thead>
       <tbody id="userTableBody">
-        <tr data-role="Administrateur" data-statut="Actif">
+        <tr data-role="Administrateur" data-statut="Actif" data-nom="Bio" data-prenom="Marcelin">
           <td class="name-cell">
             <div class="av" style="background:var(--red-tint);color:var(--red);">MB</div>
-            <div class="info"><b>M. Bio</b><span>m.bio@ecole-madre-trinidad.bj</span></div>
+            <div class="info"><b>BIO Marcelin</b><span>m.bio@ecole-madre-trinidad.bj</span></div>
           </td>
           <td><span class="role-badge admin">Administrateur</span></td>
           <td><span class="status active"><span class="dot"></span>Actif</span></td>
           <td>Aujourd'hui, 08:12</td>
           <td class="actions-cell" data-status="active"></td>
         </tr>
-        <tr data-role="Agent de scolarité" data-statut="Actif">
+        <tr data-role="Agent de scolarité" data-statut="Actif" data-nom="Traoré" data-prenom="Aïcha">
           <td class="name-cell">
             <div class="av" style="background:var(--green-tint);color:var(--green);">AT</div>
-            <div class="info"><b>Mme Traoré</b><span>a.traore@ecole-madre-trinidad.bj</span></div>
+            <div class="info"><b>TRAORÉ Aïcha</b><span>a.traore@ecole-madre-trinidad.bj</span></div>
           </td>
           <td><span class="role-badge scol">Agent de scolarité</span></td>
           <td><span class="status active"><span class="dot"></span>Actif</span></td>
           <td>Aujourd'hui, 09:41</td>
           <td class="actions-cell" data-status="active"></td>
         </tr>
-        <tr data-role="Enseignant" data-statut="Actif">
+        <tr data-role="Enseignant" data-statut="Actif" data-nom="Houngbo" data-prenom="Kokou">
           <td class="name-cell">
             <div class="av" style="background:var(--blue-tint);color:var(--blue);">KH</div>
-            <div class="info"><b>M. Houngbo</b><span>k.houngbo@ecole-madre-trinidad.bj</span></div>
+            <div class="info"><b>HOUNGBO Kokou</b><span>k.houngbo@ecole-madre-trinidad.bj</span></div>
           </td>
           <td><span class="role-badge ens">Enseignant</span></td>
           <td><span class="status active"><span class="dot"></span>Actif</span></td>
           <td>Hier, 16:20</td>
           <td class="actions-cell" data-status="active"></td>
         </tr>
-        <tr data-role="Direction" data-statut="Actif">
+        <tr data-role="Direction" data-statut="Actif" data-nom="Dossou" data-prenom="Sylvie">
           <td class="name-cell">
             <div class="av" style="background:var(--gold-tint);color:#8A6717;">SD</div>
-            <div class="info"><b>Mme Dossou</b><span>s.dossou@ecole-madre-trinidad.bj</span></div>
+            <div class="info"><b>DOSSOU Sylvie</b><span>s.dossou@ecole-madre-trinidad.bj</span></div>
           </td>
           <td><span class="role-badge dir">Direction</span></td>
           <td><span class="status active"><span class="dot"></span>Actif</span></td>
           <td>12/07/2026</td>
           <td class="actions-cell" data-status="active"></td>
         </tr>
-        <tr data-role="Enseignant" data-statut="Archivé">
+        <tr data-role="Enseignant" data-statut="Archivé" data-nom="Adjovi" data-prenom="Roméo">
           <td class="name-cell">
             <div class="av" style="background:#EDEAE0;color:var(--ink-muted);">RA</div>
-            <div class="info"><b>M. Adjovi</b><span>r.adjovi@ecole-madre-trinidad.bj</span></div>
+            <div class="info"><b>ADJOVI Roméo</b><span>r.adjovi@ecole-madre-trinidad.bj</span></div>
           </td>
           <td><span class="role-badge ens">Enseignant</span></td>
           <td><span class="status archived"><span class="dot"></span>Archivé</span></td>
@@ -324,11 +544,15 @@
         </tr>
       </tbody>
     </table>
-  </div>
+      </div>
+      <div class="pagination" id="pagination"></div>
 
-</div>
+      </div><!-- /panel-comptes -->
+    </div><!-- /.app -->
+  </div><!-- /.main -->
+</div><!-- /.shell -->
 
-<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
 
 <div class="panel" id="panel">
   <div class="panel-head">
@@ -340,6 +564,16 @@
       <label>Adresse e-mail</label>
       <input type="email" id="emailInput" placeholder="prenom.nom@ecole-madre-trinidad.bj">
       <div class="hint">Un mot de passe temporaire sera envoyé à cette adresse.</div>
+    </div>
+
+    <div class="field">
+      <label>Nom</label>
+      <input type="text" id="nomInput" placeholder="Nom de famille">
+    </div>
+
+    <div class="field">
+      <label>Prénom</label>
+      <input type="text" id="prenomInput" placeholder="Prénom">
     </div>
 
     <div class="field">
@@ -372,7 +606,78 @@
 
 <div class="toast" id="toast">✓ Invitations envoyées avec succès</div>
 
+<div class="panel" id="editUserPanel">
+  <div class="panel-head">
+    <h2>Modifier le profil</h2>
+    <button class="panel-close" onclick="closeEditUserPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nom</label><input type="text" id="editNom"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="editPrenom"></div>
+    <div class="field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="editEmail">
+      <div class="hint">Seul un administrateur peut modifier l'adresse e-mail d'un utilisateur.</div>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeEditUserPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveEditUser()">Enregistrer</button>
+  </div>
+</div>
+
 <script>
+/* ============================================================================
+   NOTE POUR LE DÉVELOPPEUR — LECTURE OBLIGATOIRE AVANT INTÉGRATION
+   ============================================================================
+   Ce fichier est une MAQUETTE FRONT-END. Toutes les données (utilisateurs,
+   compteurs, etc.) sont actuellement générées ou stockées directement dans
+   le navigateur (tableaux JS, attributs data-*), uniquement pour la démo.
+
+   Chaque section marquée 🔌 BACKEND ci-dessous doit être remplacée par un
+   véritable appel à l'API / la base de données. En résumé :
+
+   - RECHERCHE, FILTRES, TRI, PAGINATION → doivent être envoyés au serveur
+     (ex: GET /api/utilisateurs?search=...&role=...&statut=...&sort=nom&page=1)
+     et NON calculés côté navigateur comme ici. Sinon, avec des milliers de
+     comptes, l'app deviendra lente et consommera trop de données.
+   - Le tri alphabétique (actuellement fait en JS avec .sort()) doit devenir
+     un "ORDER BY nom, prenom" dans la requête SQL côté serveur.
+   - generateDemoUsers() est une fonction FICTIVE qui invente des faux
+     utilisateurs pour peupler la démo — à supprimer entièrement et
+     remplacer par un fetch() vers l'API au chargement de la page.
+   - L'ajout de compte, la modification de profil, l'archivage, etc. ne
+     font actuellement QUE des changements visuels temporaires (perdus au
+     rechargement de la page) — chacun doit déclencher un vrai appel API
+     (POST / PATCH / DELETE) vers le serveur.
+   ============================================================================ */
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function switchPanel(name, btn){
+  document.querySelectorAll('.dashboard-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('panel-' + name).style.display = 'block';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleProfileMenu(){
+  document.getElementById('profileMenu').classList.toggle('show');
+}
+function toggleGuideMenu(){
+  document.getElementById('guideMenu').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.profile-wrap')){
+    document.getElementById('profileMenu')?.classList.remove('show');
+  }
+  if(!e.target.closest('.guide-wrap')){
+    document.getElementById('guideMenu')?.classList.remove('show');
+  }
+});
+
 let pending = [];
 
 const roleDescriptions = {
@@ -388,29 +693,112 @@ function updateRoleDesc(){
   document.getElementById('roleDescText').textContent = roleDescriptions[role];
 }
 
-function filterRows(){
+const PAGE_SIZE = 50;
+let currentPage = 1;
+
+// 🔌 BACKEND — Cette fonction filtre ET trie côté navigateur, à partir des
+// lignes déjà présentes dans le DOM. En production, remplacer entièrement
+// cette logique par un appel API qui reçoit search/role/statut/tri en
+// paramètres et renvoie DIRECTEMENT la bonne page de résultats, déjà triée
+// et déjà filtrée par le serveur (ex: GET /api/utilisateurs?search=...&sort=nom&page=1&pageSize=50).
+// Le tri par .sort() ci-dessous doit devenir un "ORDER BY nom, prenom" en SQL.
+function getMatchingRows(){
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
   const roleFilter = document.getElementById('filterRole').value;
   const statutFilter = document.getElementById('filterStatut').value;
-  const rows = document.querySelectorAll('#userTableBody tr');
-  let visibleCount = 0;
-
-  rows.forEach(row => {
+  const matching = Array.from(document.querySelectorAll('#userTableBody tr')).filter(row => {
     const name = row.querySelector('.info b')?.textContent.toLowerCase() || '';
     const email = row.querySelector('.info span')?.textContent.toLowerCase() || '';
     const role = row.dataset.role || '';
     const statut = row.dataset.statut || '';
-
     const matchSearch = !search || name.includes(search) || email.includes(search);
     const matchRole = !roleFilter || role === roleFilter;
     const matchStatut = !statutFilter || statut === statutFilter;
-
-    const visible = matchSearch && matchRole && matchStatut;
-    row.style.display = visible ? '' : 'none';
-    if(visible) visibleCount++;
+    return matchSearch && matchRole && matchStatut;
   });
 
-  document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+  // Tri alphabétique : Nom de famille, puis Prénom en cas d'égalité
+  matching.sort((a, b) => {
+    const nomA = (a.dataset.nom || '').toLowerCase();
+    const nomB = (b.dataset.nom || '').toLowerCase();
+    if(nomA !== nomB) return nomA.localeCompare(nomB, 'fr');
+    const prenomA = (a.dataset.prenom || '').toLowerCase();
+    const prenomB = (b.dataset.prenom || '').toLowerCase();
+    return prenomA.localeCompare(prenomB, 'fr');
+  });
+
+  return matching;
+}
+
+function filterRows(){
+  currentPage = 1;
+  renderTable();
+}
+
+function goPage(p){
+  currentPage = p;
+  renderTable();
+}
+
+// 🔌 BACKEND — La pagination ci-dessous découpe un tableau déjà chargé en
+// mémoire dans le navigateur. En production, chaque clic sur "Précédent"/
+// "Suivant"/un numéro de page doit déclencher une NOUVELLE requête au
+// serveur pour cette page précise (le serveur ne renvoie jamais tous les
+// utilisateurs d'un coup, seulement les 50 de la page demandée).
+function renderTable(){
+  const allRows = Array.from(document.querySelectorAll('#userTableBody tr'));
+  const matching = getMatchingRows();
+  const totalPages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  if(currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageRows = matching.slice(start, start + PAGE_SIZE);
+
+  allRows.forEach(r => r.style.display = 'none');
+
+  // Réordonne réellement les lignes affichées dans le DOM selon le tri alphabétique
+  const tbody = document.getElementById('userTableBody');
+  pageRows.forEach(r => {
+    tbody.appendChild(r);
+    r.style.display = '';
+  });
+
+  document.getElementById('noResults').style.display = matching.length === 0 ? 'block' : 'none';
+  renderPagination(matching.length, totalPages, start, pageRows.length);
+  updateSummary(allRows);
+}
+
+function renderPagination(totalMatching, totalPages, start, shownCount){
+  const el = document.getElementById('pagination');
+  if(!el) return;
+  if(totalMatching === 0){ el.innerHTML = ''; return; }
+
+  let html = `<span class="page-info">Affichage de ${start + 1}–${start + shownCount} sur ${totalMatching} utilisateurs</span><div class="page-controls">`;
+  html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">← Précédent</button>`;
+  for(let p = 1; p <= totalPages; p++){
+    html += `<button class="page-num ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">Suivant →</button>`;
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function roleLabelPlural(role){
+  const map = {
+    'Administrateur': 'administrateurs',
+    'Agent de scolarité': 'agents de scolarité',
+    'Enseignant': 'enseignants',
+    'Direction': 'direction'
+  };
+  return map[role] || role;
+}
+
+function updateSummary(allRows){
+  const el = document.getElementById('summaryText');
+  if(!el) return;
+  const counts = {};
+  allRows.forEach(r => { counts[r.dataset.role] = (counts[r.dataset.role] || 0) + 1; });
+  const parts = Object.entries(counts).map(([role, n]) => `${n} ${roleLabelPlural(role)}`).join(', ');
+  el.textContent = `${allRows.length} comptes · ${parts}`;
 }
 
 function menuHTML(status){
@@ -429,8 +817,7 @@ function menuHTML(status){
     <div class="row-actions-wrap">
       <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
       <div class="action-menu">
-        <button onclick="alert('Ouvrirait le formulaire de modification (démo)')">✎ Modifier le profil</button>
-        <button onclick="alert('Ouvrirait la réinitialisation (démo)')">🔑 Réinitialiser le mot de passe</button>
+        <button onclick="openEditUser(this.closest('tr'))">✎ Modifier le profil</button>
         <hr>
         <button class="danger" onclick="alert('Archiverait ce compte (démo)')">🗄 Archiver le compte</button>
       </div>
@@ -458,7 +845,46 @@ document.addEventListener('click', (e) => {
   }
 });
 
-initActionMenus();
+// 🔌 BACKEND — Fonction FICTIVE, uniquement pour peupler la démo visuellement.
+// À SUPPRIMER en production. La remplacer par un appel du type :
+//   fetch('/api/utilisateurs').then(r => r.json()).then(data => { ...construire les lignes... })
+// au chargement de la page (voir l'appel generateDemoUsers() tout en bas de ce script).
+function generateDemoUsers(){
+  const prenoms = ['Aline','Bertin','Chantal','Didier','Estelle','Florent','Georgette','Hervé','Irène','Julien','Karine','Landry','Miriam','Nadège','Olivier','Priscille','Quentin','Raïssa','Sévérin','Tatiana'];
+  const noms = ['Agbo','Bokossa','Codjo','Dansou','Edorh','Fanou','Gbaguidi','Hounkpatin','Ikpoto','Kpossou','Lawson','Medegan','Noudegbessi','Ogoubi','Padonou','Quenum','Sagbo','Tchibozo','Vodounon','Zannou'];
+  const roles = ['Enseignant','Agent de scolarité','Enseignant','Direction','Enseignant'];
+  const tbody = document.getElementById('userTableBody');
+  let count = 0;
+  for(let i=0; i<55; i++){
+    const prenom = prenoms[i % prenoms.length];
+    const nom = noms[(i * 3) % noms.length];
+    const role = roles[i % roles.length];
+    const roleClass = {'Administrateur':'admin','Agent de scolarité':'scol','Enseignant':'ens','Direction':'dir'}[role];
+    const email = `${prenom.toLowerCase()}.${nom.toLowerCase()}@ecole-madre-trinidad.bj`;
+    const initials = (prenom[0] + nom[0]).toUpperCase();
+    const row = document.createElement('tr');
+    row.dataset.role = role;
+    row.dataset.statut = 'Actif';
+    row.dataset.nom = nom;
+    row.dataset.prenom = prenom;
+    row.innerHTML = `
+      <td class="name-cell">
+        <div class="av" style="background:var(--green-tint);color:var(--green);">${initials}</div>
+        <div class="info"><b>${nom.toUpperCase()} ${prenom}</b><span>${email}</span></div>
+      </td>
+      <td><span class="role-badge ${roleClass}">${role}</span></td>
+      <td><span class="status active"><span class="dot"></span>Actif</span></td>
+      <td>Il y a ${1 + (i % 20)} jours</td>
+      <td class="actions-cell" data-status="active"></td>
+    `;
+    tbody.appendChild(row);
+    count++;
+  }
+  initActionMenus();
+}
+
+generateDemoUsers();
+renderTable();
 
 function openPanel(){
   document.getElementById('panel').classList.add('show');
@@ -469,16 +895,57 @@ function closePanel(){
   document.getElementById('overlay').classList.remove('show');
 }
 
+let editingRow = null;
+function openEditUser(row){
+  editingRow = row;
+  document.getElementById('editNom').value = row.dataset.nom || '';
+  document.getElementById('editPrenom').value = row.dataset.prenom || '';
+  document.getElementById('editEmail').value = row.querySelector('.info span').textContent;
+  document.getElementById('editUserPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeEditUserPanel(){
+  document.getElementById('editUserPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+function closeAllPanels(){
+  closePanel();
+  closeEditUserPanel();
+}
+// 🔌 BACKEND — Remplacer par un appel PATCH /api/utilisateurs/{id} avec les
+// nouvelles valeurs, puis mettre à jour l'affichage seulement après
+// confirmation de succès du serveur (et afficher une erreur sinon).
+function saveEditUser(){
+  if(editingRow){
+    const nom = document.getElementById('editNom').value.trim();
+    const prenom = document.getElementById('editPrenom').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    editingRow.dataset.nom = nom;
+    editingRow.dataset.prenom = prenom;
+    editingRow.querySelector('.info b').textContent = `${nom.toUpperCase()} ${prenom}`.trim();
+    editingRow.querySelector('.info span').textContent = email;
+  }
+  closeEditUserPanel();
+  const toast = document.getElementById('toast');
+  toast.textContent = '✓ Profil mis à jour avec succès';
+  toast.classList.add('show');
+  setTimeout(() => { toast.classList.remove('show'); }, 3000);
+}
+
 function addPending(){
   const email = document.getElementById('emailInput').value.trim();
+  const nom = document.getElementById('nomInput').value.trim();
+  const prenom = document.getElementById('prenomInput').value.trim();
   if(!email || !email.includes('@')){
     document.getElementById('emailInput').style.borderColor = 'var(--red)';
     return;
   }
   const role = document.getElementById('roleSelect').value;
-  pending.push({email, role});
+  pending.push({email, nom, prenom, role});
   renderPending();
   document.getElementById('emailInput').value = '';
+  document.getElementById('nomInput').value = '';
+  document.getElementById('prenomInput').value = '';
   document.getElementById('emailInput').style.borderColor = 'var(--line)';
 }
 
@@ -499,12 +966,17 @@ function renderPending(){
   callout.style.display = pending.length ? 'block' : 'none';
   list.innerHTML = pending.map((p,i) => `
     <div class="pending-item">
-      <div><span class="pmail">${p.email}</span><br><span class="prole">${p.role}</span></div>
+      <div><span class="pmail">${p.prenom || p.nom ? (p.prenom + ' ' + p.nom).trim() + ' — ' : ''}${p.email}</span><br><span class="prole">${p.role}</span></div>
       <button class="premove" onclick="removePending(${i})">✕</button>
     </div>
   `).join('');
 }
 
+// 🔌 BACKEND — Actuellement, "enregistrer" ne fait qu'ajouter les lignes
+// visuellement dans le tableau (perdu au rechargement de la page). En
+// production, chaque invitation doit être envoyée via POST /api/utilisateurs
+// (ou en lot), puis la liste doit être rechargée depuis le serveur pour
+// refléter les vrais comptes créés.
 function saveInvites(){
   const toast = document.getElementById('toast');
   toast.textContent = `✓ ${pending.length} invitation${pending.length>1?'s':''} envoyée${pending.length>1?'s':''} avec succès`;
@@ -512,15 +984,18 @@ function saveInvites(){
   pending.forEach(p => {
     const tbody = document.getElementById('userTableBody');
     const roleClass = {'Administrateur':'admin','Agent de scolarité':'scol','Enseignant':'ens','Direction':'dir'}[p.role];
-    const initials = p.email.substring(0,2).toUpperCase();
+    const displayName = (p.prenom || p.nom) ? `${p.nom.toUpperCase()} ${p.prenom}`.trim() : '—';
+    const initials = ((p.prenom?.[0]||'') + (p.nom?.[0]||p.email[0])).toUpperCase() || p.email.substring(0,2).toUpperCase();
     const row = document.createElement('tr');
     row.className = 'pending';
     row.dataset.role = p.role;
     row.dataset.statut = 'Invitation en attente';
+    row.dataset.nom = p.nom;
+    row.dataset.prenom = p.prenom;
     row.innerHTML = `
       <td class="name-cell">
         <div class="av" style="background:var(--gold-tint);color:#8A6717;">${initials}</div>
-        <div class="info"><b>—</b><span>${p.email}</span></div>
+        <div class="info"><b>${displayName}</b><span>${p.email}</span></div>
       </td>
       <td><span class="role-badge ${roleClass}">${p.role}</span></td>
       <td><span class="status pending-status"><span class="dot"></span>Invitation en attente</span></td>
@@ -534,6 +1009,7 @@ function saveInvites(){
   renderPending();
   setTimeout(() => { closePanel(); }, 600);
   setTimeout(() => { toast.classList.remove('show'); }, 3200);
+  filterRows();
 }
 </script>
 </body>
