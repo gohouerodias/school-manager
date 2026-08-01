@@ -8,6 +8,12 @@ import { initAccountInvites } from './account-invites';
 import { initAccountEdit } from './account-edit';
 import { initProfileMenu } from './profile-menu';
 import { initSidebar } from './sidebar';
+import { initGuideMenu } from './guide-menu';
+import { initEleveEdit } from './eleve-edit';
+import { initEleveFiche } from './eleve-fiche';
+import { initEleveTuteurDocument } from './eleve-tuteur-document';
+import { initParametresDossiers } from './parametres-dossiers';
+import { initPanelErrorReopen } from './panel-error-reopen';
 
 document.addEventListener('DOMContentLoaded', () => {
     initPasswordToggles();
@@ -19,4 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initAccountEdit();
     initProfileMenu();
     initSidebar();
+    initGuideMenu();
+    initEleveEdit();
+    initEleveFiche();
+    initEleveTuteurDocument();
+    initParametresDossiers();
+    initPanelErrorReopen();
 });

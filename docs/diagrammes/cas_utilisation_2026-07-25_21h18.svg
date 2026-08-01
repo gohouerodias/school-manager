@@ -12,7 +12,7 @@
   </marker>
 </defs>
 
-<rect x="276" y="269.0" width="248" height="860.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
+<rect x="276" y="269.0" width="248" height="980.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
 <text x="288" y="285.0" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Securite &amp; administration</text>
 <rect x="276" y="1238.5" width="538" height="341.0" rx="8" fill="none" stroke="#c9c9c9" stroke-width="1.2" stroke-dasharray="6,5"/>
 <text x="288" y="1254.5" font-size="11.5" font-weight="600" fill="#555555" font-family="sans-serif">Gestion des comptes</text>
@@ -37,6 +37,7 @@
 <line x1="126" y1="168" x2="1375.2166379161015" y2="611.3933322107746" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
 <line x1="126" y1="168" x2="1120.8885233326919" y2="699.3531010334307" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
 <line x1="126" y1="168" x2="368.027373435512" y2="926.9394425131242" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
+<line x1="126" y1="168" x2="373.8658576701534" y2="1125.9462002147056" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
 <line x1="126" y1="168" x2="370.9344958958343" y2="1036.5110231909302" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
 <line x1="126" y1="168" x2="640.5749714621559" y2="1129.5738122192563" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
 <line x1="126" y1="168" x2="377.0493825923908" y2="1285.7145221548283" stroke="#2563eb" stroke-width="1.3" stroke-opacity="0.75"/>
@@ -228,8 +229,13 @@
   </g>
 
   <g>
+    <ellipse cx="400" cy="1180" rx="100" ry="56.0" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
+    <text x="400" y="1164.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Configurer les</text><text x="400" y="1177.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">champs du</text><text x="400" y="1190.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">formulaire</text><text x="400" y="1203.5" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">apprenant</text>
+  </g>
+
+  <g>
     <ellipse cx="400" cy="1330" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
-    <text x="400" y="1321.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter la liste</text><text x="400" y="1334.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">des comptes (triee</text><text x="400" y="1347.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">par profil)</text>
+    <text x="400" y="1321.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Consulter la liste</text><text x="400" y="1334.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">des comptes (triee</text><text x="400" y="1347.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">A-Z)</text>
   </g>
 
   <g>

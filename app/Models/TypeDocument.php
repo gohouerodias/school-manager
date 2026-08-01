@@ -15,12 +15,14 @@ class TypeDocument extends Model
     protected $fillable = [
         'libelle',
         'description',
+        'formats_acceptes',
         'obligatoire',
     ];
 
     protected function casts(): array
     {
         return [
+            'formats_acceptes' => 'array',
             'obligatoire' => 'bool',
         ];
     }

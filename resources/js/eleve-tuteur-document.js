@@ -1,0 +1,193 @@
+/**
+ * "Ajouter un tuteur" / "Ajouter un document" panels, opened from within the
+ * fiche apprenant modal (eleve-fiche.js). Both are shared singleton panels
+ * (like edit-eleve), so their form.action is set right before opening, from
+ * the URL templates carried on the fiche panel's dataset (see
+ * eleves/index.blade.php: data-tuteur-url-template / data-document-url-template)
+ * combined with the currently open élève's id (fichePanel.dataset.currentEleveId,
+ * set by eleve-fiche.js).
+ */
+export function initEleveTuteurDocument() {
+    const fichePanel = document.querySelector('[data-panel="fiche"]');
+    const tuteurForm = document.getElementById('add-tuteur-form');
+    const documentForm = document.getElementById('add-document-form');
+
+    if (fichePanel && tuteurForm) {
+        const tuteurActionHidden = document.getElementById('add-tuteur-action');
+
+        document.querySelectorAll('[data-panel-open="add-tuteur"]').forEach((trigger) => {
+            trigger.addEventListener('click', () => {
+                const eleveId = fichePanel.dataset.currentEleveId;
+                const template = fichePanel.dataset.tuteurUrlTemplate;
+                if (eleveId && template) {
+                    const action = template.replace('__ID__', eleveId);
+                    tuteurForm.action = action;
+                    // Mirrored into a hidden field so `old('_action')` can
+                    // restore the correct action if a validation error
+                    // redirects back here.
+                    if (tuteurActionHidden) {
+                        tuteurActionHidden.value = action;
+                    }
+                }
+                tuteurForm.reset();
+            });
+        });
+    }
+
+    if (fichePanel && documentForm) {
+        const documentActionHidden = document.getElementById('add-document-action');
+
+        document.querySelectorAll('[data-panel-open="add-document"]').forEach((trigger) => {
+            trigger.addEventListener('click', () => {
+                const eleveId = fichePanel.dataset.currentEleveId;
+                const template = fichePanel.dataset.documentUrlTemplate;
+                if (eleveId && template) {
+                    const action = template.replace('__ID__', eleveId);
+                    documentForm.action = action;
+                    if (documentActionHidden) {
+                        documentActionHidden.value = action;
+                    }
+                }
+                documentForm.reset();
+                resetDropzone();
+                updateFormatsHint();
+                hideFileClientError();
+            });
+        });
+
+        documentForm.addEventListener('submit', (event) => {
+            const fileInput = document.getElementById('document-file-input');
+            if (fileInput && fileInput.files.length === 0) {
+                event.preventDefault();
+                showFileClientError();
+            }
+        });
+    }
+
+    const typeSelect = document.getElementById('document-type');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateFormatsHint);
+    }
+
+    initDropzone();
+}
+
+function showFileClientError() {
+    const error = document.getElementById('document-file-client-error');
+    if (error) {
+        error.style.display = 'block';
+    }
+}
+
+function hideFileClientError() {
+    const error = document.getElementById('document-file-client-error');
+    if (error) {
+        error.style.display = 'none';
+    }
+}
+
+function updateFormatsHint() {
+    const typeSelect = document.getElementById('document-type');
+    const hint = document.getElementById('document-formats-hint');
+    if (!typeSelect || !hint) {
+        return;
+    }
+
+    const formats = typeSelect.selectedOptions[0]?.dataset.formats;
+    hint.textContent = formats ? `${formats.split(',').join(', ')} — 5 Mo maximum` : 'PDF, JPG ou PNG — 5 Mo maximum';
+}
+
+/**
+ * Makes the dropzone actually work: click-to-browse (via the hidden file
+ * input) and real drag-and-drop, both feeding the same <input type="file">
+ * so the surrounding <form> submits it normally.
+ */
+function initDropzone() {
+    const dropzone = document.getElementById('document-dropzone');
+    const fileInput = document.getElementById('document-file-input');
+
+    if (!dropzone || !fileInput) {
+        return;
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        showSelectedFile(fileInput.files[0]);
+        if (fileInput.files.length > 0) {
+            hideFileClientError();
+        }
+    });
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropzone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'dragend'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropzone.classList.remove('dragover');
+        });
+    });
+
+    dropzone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        dropzone.classList.remove('dragover');
+
+        const file = event.dataTransfer?.files?.[0];
+        if (file) {
+            fileInput.files = event.dataTransfer.files;
+            showSelectedFile(file);
+            hideFileClientError();
+        }
+    });
+}
+
+function showSelectedFile(file) {
+    const textBlock = document.getElementById('document-dropzone-text');
+    const filenameLabel = document.getElementById('document-filename');
+    if (!filenameLabel) {
+        return;
+    }
+
+    if (!file) {
+        resetDropzone();
+        return;
+    }
+
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    filenameLabel.textContent = `📎 ${file.name} (${sizeMb} Mo)`;
+    filenameLabel.style.display = 'block';
+    if (textBlock) {
+        textBlock.style.display = 'none';
+    }
+}
+
+function resetDropzone() {
+    const fileInput = document.getElementById('document-file-input');
+    const textBlock = document.getElementById('document-dropzone-text');
+    const filenameLabel = document.getElementById('document-filename');
+
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    if (filenameLabel) {
+        filenameLabel.style.display = 'none';
+        filenameLabel.textContent = '';
+    }
+    if (textBlock) {
+        textBlock.style.display = 'block';
+    }
+}

@@ -30,7 +30,8 @@ export function initAccountInvites() {
     }
 
     const emailInput = document.getElementById('invite-email');
-    const nameInput = document.getElementById('invite-name');
+    const nomInput = document.getElementById('invite-nom');
+    const prenomsInput = document.getElementById('invite-prenoms');
     const telephoneInput = document.getElementById('invite-telephone');
     const roleSelect = document.getElementById('invite-role');
     const roleTitle = document.getElementById('invite-role-desc-title');
@@ -87,13 +88,16 @@ export function initAccountInvites() {
 
     addButton.addEventListener('click', () => {
         const email = emailInput.value.trim();
-        const name = nameInput.value.trim();
+        const nom = nomInput.value.trim();
+        const prenoms = prenomsInput.value.trim();
         const telephone = telephoneInput.value.trim();
+        const name = `${prenoms} ${nom}`.trim();
 
         let hasError = false;
         [
             [emailInput, email && email.includes('@')],
-            [nameInput, name.length > 0],
+            [nomInput, nom.length > 0],
+            [prenomsInput, prenoms.length > 0],
             [telephoneInput, telephone.length > 0],
         ].forEach(([input, isValid]) => {
             input.style.borderColor = isValid ? '' : 'var(--red)';
@@ -107,7 +111,8 @@ export function initAccountInvites() {
         pending.push({ email, name, telephone, profil: roleSelect.value });
         render();
         emailInput.value = '';
-        nameInput.value = '';
+        nomInput.value = '';
+        prenomsInput.value = '';
         telephoneInput.value = '';
     });
 

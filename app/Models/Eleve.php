@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\StatutEleve;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -17,9 +18,8 @@ class Eleve extends Model
         'nom',
         'prenom',
         'date_naissance',
-        'lieu_naissance',
         'sexe',
-        'adresse',
+        'niveau_souhaite_id',
         'statut',
         'date_archivage',
     ];
@@ -31,6 +31,17 @@ class Eleve extends Model
             'date_archivage' => 'date',
             'statut' => StatutEleve::class,
         ];
+    }
+
+    /**
+     * Grade level a not-yet-assigned élève is intended for — purely
+     * informational until the censeur assigns a real classe (Inscription).
+     *
+     * @return BelongsTo<Niveau, $this>
+     */
+    public function niveauSouhaite(): BelongsTo
+    {
+        return $this->belongsTo(Niveau::class, 'niveau_souhaite_id');
     }
 
     /**
@@ -74,6 +85,36 @@ class Eleve extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(DocumentNumerique::class);
+    }
+
+    /**
+     * @return HasMany<ValeurChampPersonnalise, $this>
+     */
+    public function valeursPersonnalisees(): HasMany
+    {
+        return $this->hasMany(ValeurChampPersonnalise::class);
+    }
+
+    public function nomComplet(): string
+    {
+        return "{$this->nom} {$this->prenom}";
+    }
+
+    /**
+     * Sequential matricule per year, e.g. "2026-1000", "2026-1001"...
+     */
+    public static function genererMatricule(): string
+    {
+        $annee = now()->year;
+
+        $dernier = static::query()
+            ->where('matricule', 'like', "{$annee}-%")
+            ->orderByDesc('matricule')
+            ->value('matricule');
+
+        $sequence = $dernier ? ((int) substr($dernier, strlen((string) $annee) + 1)) + 1 : 1000;
+
+        return "{$annee}-{$sequence}";
     }
 
     public function archiver(): void

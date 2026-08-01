@@ -12,6 +12,31 @@
     padding-bottom: 20px;
 }
 
+/* "Guide d'utilisation" popover, next to the logo in the topbar */
+.guide-wrap { position: relative; margin-left: 6px; }
+.guide-link {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--green-deep);
+    background: none; text-decoration: none; padding: 8px 13px; border: 1px solid var(--line); border-radius: 20px;
+    white-space: nowrap; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+.guide-link:hover { background: var(--green-tint); border-color: var(--green); }
+.guide-link svg { width: 14px; height: 14px; }
+.guide-menu {
+    position: absolute; top: 42px; left: 0; width: 280px; background: #fff; border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 12px 30px rgba(38, 89, 74, .15); padding: 16px; display: none; z-index: 45;
+}
+.guide-menu.show { display: block; }
+.guide-title {
+    margin: 0 0 12px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13.5px;
+    color: var(--ink); line-height: 1.4;
+}
+.guide-download {
+    display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--green);
+    font-weight: 600; font-size: 13px; border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px;
+}
+.guide-download:hover { background: var(--green-tint); }
+.guide-download svg { width: 16px; height: 16px; }
+
 /* Primary navigation, directly under the topbar */
 .app-nav {
     display: flex; align-items: center; gap: 4px;
@@ -48,9 +73,8 @@
 }
 .rail-burger:hover { background: rgba(255, 255, 255, .18); }
 .sidebar-logo {
-    width: 30px; height: 30px; border-radius: 7px; background: #fff; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-    font-size: 7px; font-weight: 700; color: var(--green-deep); text-align: center;
+    height: 28px; width: auto; max-width: 90px; border-radius: 5px; background: #fff; flex-shrink: 0;
+    padding: 2px 4px; box-sizing: border-box; object-fit: contain; display: block;
 }
 .sidebar.collapsed .sidebar-logo, .sidebar.collapsed .sidebar-wordmark { display: none; }
 .sidebar-wordmark { color: #fff; font-family: 'Fraunces', serif; font-weight: 600; font-size: 14.5px; white-space: nowrap; }
@@ -70,6 +94,29 @@
 .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar.collapsed .nav-item { justify-content: center; padding: 12px 0; }
 .sidebar.collapsed .nav-label { display: none; }
+
+/* Collapsible submenu, e.g. "Dossier élève et documents" > "Liste des
+   apprenants" / "Paramètres des dossiers". */
+.nav-group { margin-bottom: 3px; }
+.nav-parent { justify-content: flex-start; margin-bottom: 0; }
+.nav-parent .nav-label { flex: 1; }
+.nav-chevron { width: 15px !important; height: 15px !important; flex-shrink: 0; transition: transform .18s ease; }
+.nav-parent[aria-expanded="true"] .nav-chevron { transform: rotate(180deg); }
+.sidebar.collapsed .nav-chevron { display: none; }
+.nav-submenu { display: none; padding-left: 14px; margin: 2px 0 6px; }
+.nav-subitem {
+    display: block; padding: 9px 13px 9px 32px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    color: rgba(255, 255, 255, .72); text-decoration: none; margin-bottom: 2px; position: relative;
+}
+/* A small dot (not a chevron) marks each subitem: a second arrow here would
+   wrongly suggest the subitem itself expands further. */
+.nav-subitem:before {
+    content: ''; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .6;
+}
+.nav-subitem:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.nav-subitem.active { background: rgba(255, 255, 255, .14); color: #fff; font-weight: 600; }
+.sidebar.collapsed .nav-submenu { display: none !important; }
 
 /* Breadcrumb trail, above the page title */
 .breadcrumbs { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-muted); margin-bottom: 14px; }
@@ -192,9 +239,12 @@ tbody tr.pending { background: var(--gold-tint); }
 }
 .row-actions:hover { background: var(--green-tint); color: var(--green-deep); }
 .action-menu {
-    position: absolute; right: 0; top: 32px; background: #fff; border: 1px solid var(--line);
+    /* position: fixed (not absolute) so the dropdown escapes the clipping
+       .data-card { overflow: hidden; } applies to its table — top/left are
+       computed in JS (action-menu.js) from the trigger's bounding rect. */
+    position: fixed; background: #fff; border: 1px solid var(--line);
     border-radius: 10px; box-shadow: 0 8px 24px rgba(38, 89, 74, .12);
-    min-width: 200px; z-index: 20; overflow: hidden; display: none;
+    min-width: 200px; z-index: 60; overflow: hidden; display: none;
 }
 .action-menu.show { display: block; }
 .action-menu form { margin: 0; }
@@ -273,3 +323,150 @@ tbody tr.pending { background: var(--gold-tint); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .export-buttons { display: flex; gap: 8px; }
+
+/* Eleves list: classe badge, doc-status badge, date filter */
+.classe-badge {
+    font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block;
+    background: var(--blue-tint); color: var(--blue);
+}
+.classe-badge.none { background: #EDEAE0; color: var(--ink-muted); }
+
+.doc-status-badge { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block; }
+.doc-status-badge.complet { background: var(--green-tint); color: var(--green); }
+.doc-status-badge.manquant { background: var(--gold-tint); color: #8A6717; }
+
+.date-filter-wrap { display: flex; align-items: center; gap: 8px; }
+.date-filter-wrap label { font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; }
+.date-filter-wrap input[type="date"] {
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--paper-raised); font-size: 13px; font-family: 'Inter', sans-serif;
+}
+
+/* Paramètres des dossiers: config sections (types de documents, champs) */
+.config-section { margin-bottom: 32px; }
+.config-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.config-section-head h2 { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: var(--green-deep); margin: 0; }
+.config-section-note { font-size: 12.5px; color: var(--ink-muted); margin: -6px 0 14px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    background: #EDEAE0; color: var(--ink-muted); display: inline-block;
+}
+.type-badge {
+    font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block;
+    background: var(--blue-tint); color: var(--blue); margin-bottom: 6px;
+}
+
+.row-delete {
+    width: 28px; height: 28px; border-radius: 6px; border: none; background: none; cursor: pointer;
+    color: var(--ink-muted); display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.row-delete:hover { background: var(--red-tint); color: var(--red); }
+
+/* Groups a "Modifier" (✎) button next to the existing "Supprimer" (🗑) form,
+   e.g. in the types-documents table. */
+.row-actions-group { display: flex; align-items: center; gap: 4px; }
+.row-edit {
+    width: 28px; height: 28px; border-radius: 6px; border: none; background: none; cursor: pointer;
+    color: var(--ink-muted); display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.row-edit:hover { background: var(--green-tint); color: var(--green-deep); }
+
+.checkbox-group { display: flex; gap: 16px; }
+.checkbox-group label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ink); }
+
+.field-inline { display: flex; align-items: center; gap: 10px; }
+.field textarea {
+    width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 13.5px; background: var(--paper); resize: vertical;
+}
+
+/* Toggle switch, used for "obligatoire" flags */
+.toggle-switch { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; cursor: pointer; inset: 0; background: #E2DFD8; border-radius: 22px; transition: background .2s ease;
+}
+.toggle-slider:before {
+    content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff;
+    border-radius: 50%; transition: transform .2s ease; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--green); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+/* Fiche apprenant modal (<x-fiche-modal>): centered dialog variant of .panel */
+.fiche-modal {
+    top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%, -46%);
+    width: 720px; max-width: 92vw; height: auto; max-height: 88vh; border-radius: 16px;
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; box-shadow: 0 20px 50px rgba(18, 52, 30, .22);
+}
+.fiche-modal.show { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+.fiche-head { display: flex; align-items: center; gap: 14px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.fiche-avatar {
+    width: 48px; height: 48px; border-radius: 50%; background: var(--gold-tint); color: var(--gold);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0;
+}
+.fiche-head-info { flex: 1; min-width: 0; }
+.fiche-head-info h2 { font-family: 'Fraunces', serif; font-size: 17px; margin: 0 0 5px; color: var(--ink); }
+.fiche-meta { display: flex; align-items: center; gap: 10px; }
+.fiche-tabs { display: flex; gap: 4px; padding: 0 24px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.fiche-tab {
+    padding: 12px 10px; font-size: 13px; font-weight: 600; color: var(--ink-muted); background: none; border: none;
+    border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif;
+}
+.fiche-tab:hover { color: var(--green-deep); }
+.fiche-tab.active { color: var(--green-deep); border-bottom-color: var(--green); }
+.fiche-tab-content { padding: 20px 24px; overflow-y: auto; max-height: 55vh; }
+.fiche-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+.fiche-field { display: flex; flex-direction: column; gap: 3px; }
+.fiche-field .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); font-weight: 600; }
+.fiche-field .fvalue { font-size: 13.5px; color: var(--ink); }
+.fiche-parent, .fiche-parcours-item {
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; font-size: 13px;
+}
+.fiche-parent { display: flex; align-items: center; gap: 10px; }
+.fiche-parent span, .fiche-parcours-item span { color: var(--ink-muted); font-size: 12px; }
+.fiche-doc-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; font-size: 13px; grid-column: 1 / -1;
+}
+.fiche-doc-item.fourni { border-color: var(--green); background: var(--green-tint); }
+.fiche-doc-item.manquant { border-color: var(--gold); background: var(--gold-tint); }
+.fiche-doc-status { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); margin-right: auto; }
+
+/* "Ajouter un tuteur" / "Ajouter un document" row above the fiche's lists */
+.fiche-actions-row { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+
+/* Per-item "supprimer" control rendered from JS inside a tuteur/document
+   card (fiche-parent, fiche-doc-item). Pinned to the far right. */
+.fiche-item-delete-form { margin: 0 0 0 auto; flex-shrink: 0; }
+.fiche-doc-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+.fiche-doc-actions .fiche-item-delete-form { margin: 0; }
+
+.fiche-item-btn {
+    display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink-muted);
+    cursor: pointer; transition: background .15s, border-color .15s, color .15s; text-decoration: none;
+}
+.fiche-item-btn:hover { background: var(--green-tint); border-color: var(--green); color: var(--green-deep); }
+.fiche-item-delete { color: var(--red); }
+.fiche-item-delete:hover { background: var(--red-tint); border-color: var(--red); color: var(--red); }
+
+/* Panels opened from within the fiche modal must sit above it (.fiche-modal
+   uses the base .panel z-index, 50) and above its own overlay (z-index 40). */
+#panel-add-tuteur, #panel-add-document { z-index: 95; }
+[data-panel-overlay="add-tuteur"], [data-panel-overlay="add-document"] { z-index: 90; }
+
+/* Fichier dropzone ("Ajouter un document") : cliquable (parcourir) et
+   glisser-déposer, tous deux alimentant le même <input type="file">. */
+.dropzone {
+    border: 1.5px dashed var(--line); border-radius: 10px; padding: 26px 16px; text-align: center;
+    font-size: 12.5px; color: var(--ink-muted); cursor: pointer; background: var(--paper);
+    transition: border-color .15s ease, background .15s ease;
+}
+.dropzone:hover, .dropzone:focus-visible { border-color: var(--green); background: var(--green-tint); outline: none; }
+.dropzone.dragover { border-color: var(--green); background: var(--green-tint); }
+.dropzone-text b { color: var(--green-deep); font-weight: 600; }
+.dropzone-text span { display: block; margin-top: 6px; font-size: 11px; color: var(--ink-muted); }
+.dropzone-filename { font-size: 13px; font-weight: 600; color: var(--green-deep); word-break: break-all; }

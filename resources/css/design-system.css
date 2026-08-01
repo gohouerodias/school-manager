@@ -34,10 +34,7 @@ body.cscmt {
 
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand .logo-slot {
-    width: 42px; height: 42px; border-radius: 8px;
-    border: 1.5px dashed var(--line); background: #fff;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--ink-muted); font-size: 8px; text-align: center; line-height: 1.2; flex-shrink: 0;
+    height: 46px; width: auto; max-width: 190px; flex-shrink: 0; object-fit: contain; display: block;
 }
 .brand .name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 15px; color: var(--ink); line-height: 1.25; }
 .brand .name small { display: block; font-family: 'Inter', sans-serif; font-weight: 500; font-size: 10px; color: var(--ink-muted); letter-spacing: .03em; text-transform: uppercase; }

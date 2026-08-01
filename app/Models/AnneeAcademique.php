@@ -14,6 +14,7 @@ class AnneeAcademique extends Model
 
     protected $fillable = [
         'libelle',
+        'est_active',
         'date_debut',
         'date_fin',
     ];
@@ -21,6 +22,7 @@ class AnneeAcademique extends Model
     protected function casts(): array
     {
         return [
+            'est_active' => 'bool',
             'date_debut' => 'date',
             'date_fin' => 'date',
         ];

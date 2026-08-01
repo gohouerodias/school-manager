@@ -1,10 +1,10 @@
-<svg viewBox="0 0 2090 1298.0" xmlns="http://www.w3.org/2000/svg" role="img">
-<title>Diagramme de classes (v2)</title>
-<desc>Diagramme UML des classes mis a jour: Utilisateur avec double authentification, JournalAction pour la tracabilite, Rapport pour les statistiques et exports, Matiere/Note/Bulletin pour la saisie des notes et le calcul automatique des moyennes et bulletins.</desc>
-<rect x="0" y="0" width="2090" height="1298.0" fill="#ffffff"/>
+<svg viewBox="0 0 2090 1530" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Diagramme de classes (v3)</title>
+<desc>Diagramme UML des classes mis a jour: Utilisateur avec double authentification, JournalAction pour la tracabilite, Rapport pour les statistiques et exports, Matiere/Note/Bulletin pour la saisie des notes et le calcul automatique des moyennes et bulletins, ChampPersonnalise/ValeurChampPersonnalise pour le formulaire apprenant configurable (Nom/Prenom/Sexe/DateNaissance restent fixes sur Eleve).</desc>
+<rect x="0" y="0" width="2090" height="1530" fill="#ffffff"/>
 <line x1="620" y1="578.75" x2="580" y2="485.75" stroke="#888888" stroke-width="1.3"/><text x="612" y="572.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="588" y="479.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="600.0" y="526.25" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">possede</text>
 <line x1="290" y1="532.25" x2="330" y2="485.75" stroke="#888888" stroke-width="1.3"/><text x="298" y="526.25" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="322" y="479.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="310.0" y="503.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">concerne</text>
-<line x1="745.0" y1="718.0" x2="745.0" y2="808.0" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="712.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="751.0" y="802.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="745.0" y="757.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">effectue</text>
+<line x1="745.0" y1="687.0" x2="745.0" y2="808.0" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="681.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="751.0" y="802.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="745.0" y="757.0" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">effectue</text>
 <line x1="870" y1="900.75" x2="910" y2="854.25" stroke="#888888" stroke-width="1.3"/><text x="878" y="894.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="902" y="848.25" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="890.0" y="871.5" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">appartient a</text>
 <line x1="1035.0" y1="900.5" x2="1325.0" y2="808.0" stroke="#888888" stroke-width="1.3"/><text x="1041.0" y="894.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="1331.0" y="802.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1180.0" y="848.25" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">planifiee pour</text>
 <line x1="745.0" y1="993.5" x2="710" y2="1160.75" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="987.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="718" y="1154.75" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="727.5" y="1071.125" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">genere</text>
@@ -25,12 +25,14 @@
 <line x1="290" y1="194.75" x2="1200" y2="109.5" stroke="#888888" stroke-width="1.3"/><text x="298" y="188.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1192" y="103.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="745.0" y="146.125" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">produit</text>
 <line x1="290" y1="194.75" x2="1490" y2="140.5" stroke="#888888" stroke-width="1.3"/><text x="298" y="188.75" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1482" y="134.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="890.0" y="161.625" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">effectue</text>
 <line x1="165.0" y1="349.5" x2="875.0" y2="1083.5" stroke="#888888" stroke-width="1.3"/><text x="171.0" y="343.5" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="881.0" y="1077.5" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="520.0" y="710.5" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">saisit</text>
+<line x1="745.0" y1="687.0" x2="1035.0" y2="1330.0" stroke="#888888" stroke-width="1.3"/><text x="751.0" y="681.0" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="1041.0" y="1324.0" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="890.0" y="1008.5" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">renseigne</text>
+<line x1="870" y1="1407.25" x2="910" y2="1376.25" stroke="#888888" stroke-width="1.3"/><text x="878" y="1401.25" font-size="10.5" fill="#555555" font-family="sans-serif">1</text><text x="902" y="1370.25" font-size="10.5" fill="#555555" font-family="sans-serif">0..*</text><text x="890.0" y="1391.75" text-anchor="middle" font-size="10.5" font-style="italic" fill="#555555" font-family="sans-serif">possede</text>
 <g>
 <rect x="40" y="40" width="250" height="309.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
 <text x="165.0" y="54" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Utilisateur</text>
 <line x1="40" y1="66" x2="290" y2="66" stroke="#888888" stroke-width="1.2"/>
 <text x="50" y="80" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
-<text x="50" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string</text>
+<text x="50" y="95.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- name: string</text>
 <text x="50" y="111.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- telephone: string</text>
 <text x="50" y="126.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- email: string</text>
 <text x="50" y="142.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- motDePasse: string</text>
@@ -144,35 +146,34 @@
 <line x1="330" y1="506.5" x2="580" y2="506.5" stroke="#888888" stroke-width="1.2"/>
 </g>
 <g>
-<rect x="620" y="439.5" width="250" height="278.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<rect x="620" y="439.5" width="250" height="247.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
 <text x="745.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">Eleve</text>
 <line x1="620" y1="465.5" x2="870" y2="465.5" stroke="#888888" stroke-width="1.2"/>
 <text x="630" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
-<text x="630" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- matricule: string {unique}</text>
-<text x="630" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string</text>
-<text x="630" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- prenom: string</text>
-<text x="630" y="541.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateNaissance: date</text>
-<text x="630" y="557.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- lieuNaissance: string</text>
-<text x="630" y="572.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- sexe: string</text>
-<text x="630" y="588.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- adresse: string</text>
-<text x="630" y="603.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- statut: StatutEleve (enum: Actif, Archive)</text>
-<text x="630" y="619.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateArchivage: date</text>
-<line x1="620" y1="630.5" x2="870" y2="630.5" stroke="#888888" stroke-width="1.2"/>
-<text x="630" y="644.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ creerFiche(): void</text>
-<text x="630" y="660.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ modifierFiche(): void</text>
-<text x="630" y="675.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ archiver(): void</text>
-<text x="630" y="691.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ desarchiver(): void</text>
-<text x="630" y="706.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ supprimer(): void</text>
+<text x="630" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- matricule: string {unique, ex: 2026-1000}</text>
+<text x="630" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- nom: string {fixe}</text>
+<text x="630" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- prenom: string {fixe}</text>
+<text x="630" y="541.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateNaissance: date {fixe}</text>
+<text x="630" y="557.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- sexe: string {fixe}</text>
+<text x="630" y="572.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- statut: StatutEleve (enum: Actif, Archive)</text>
+<text x="630" y="588.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateArchivage: date</text>
+<line x1="620" y1="599.5" x2="870" y2="599.5" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="613.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ genererMatricule(): string</text>
+<text x="630" y="629.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ modifierFiche(): void</text>
+<text x="630" y="644.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ archiver(): void</text>
+<text x="630" y="660.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ desarchiver(): void</text>
+<text x="630" y="675.5" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ supprimer(): void</text>
 </g>
 <g>
-<rect x="910" y="439.5" width="250" height="123.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<rect x="910" y="439.5" width="250" height="139.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
 <text x="1035.0" y="453.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">TypeDocument</text>
 <line x1="910" y1="465.5" x2="1160" y2="465.5" stroke="#888888" stroke-width="1.2"/>
 <text x="920" y="479.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
 <text x="920" y="495.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- libelle: string</text>
 <text x="920" y="510.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- description: string</text>
 <text x="920" y="526.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- obligatoire: bool</text>
-<line x1="910" y1="537.5" x2="1160" y2="537.5" stroke="#888888" stroke-width="1.2"/>
+<text x="920" y="541.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- formatsAcceptes: json {ex: [PDF,JPG]}</text>
+<line x1="910" y1="553.0" x2="1160" y2="553.0" stroke="#888888" stroke-width="1.2"/>
 </g>
 <g>
 <rect x="1200" y="439.5" width="250" height="123.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
@@ -208,14 +209,15 @@
 <line x1="910" y1="875.0" x2="1160" y2="875.0" stroke="#888888" stroke-width="1.2"/>
 </g>
 <g>
-<rect x="1200" y="808.0" width="250" height="123.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<rect x="1200" y="808.0" width="250" height="139.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
 <text x="1325.0" y="822.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">AnneeAcademique</text>
 <line x1="1200" y1="834.0" x2="1450" y2="834.0" stroke="#888888" stroke-width="1.2"/>
 <text x="1210" y="848.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
 <text x="1210" y="863.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- libelle: string</text>
-<text x="1210" y="879.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateDebut: date</text>
-<text x="1210" y="894.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateFin: date</text>
-<line x1="1200" y1="906.0" x2="1450" y2="906.0" stroke="#888888" stroke-width="1.2"/>
+<text x="1210" y="879.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- estActive: bool</text>
+<text x="1210" y="894.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateDebut: date</text>
+<text x="1210" y="910.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- dateFin: date</text>
+<line x1="1200" y1="921.5" x2="1450" y2="921.5" stroke="#888888" stroke-width="1.2"/>
 </g>
 <g>
 <rect x="1490" y="808.0" width="250" height="170.0" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
@@ -283,5 +285,25 @@
 <text x="1630" y="1185.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- estProfesseurPrincipal: bool</text>
 <line x1="1620" y1="1197.0" x2="1870" y2="1197.0" stroke="#888888" stroke-width="1.2"/>
 <text x="1630" y="1211.0" font-size="11.5" fill="#7a4fd6" font-family="sans-serif">+ affecter(): void</text>
+</g>
+<g>
+<rect x="620" y="1330" width="250" height="154.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="745.0" y="1344.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ChampPersonnalise</text>
+<line x1="620" y1="1356.0" x2="870" y2="1356.0" stroke="#888888" stroke-width="1.2"/>
+<text x="630" y="1370.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="630" y="1385.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- libelle: string</text>
+<text x="630" y="1401.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- type: TypeChampPersonnalise (enum)</text>
+<text x="630" y="1416.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- options: json {nullable, liste deroulante}</text>
+<text x="630" y="1432.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- obligatoire: bool</text>
+<text x="630" y="1447.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- ordre: int</text>
+<line x1="620" y1="1459.0" x2="870" y2="1459.0" stroke="#888888" stroke-width="1.2"/>
+</g>
+<g>
+<rect x="910" y="1330" width="250" height="92.5" fill="#f5f5f5" stroke="#888888" stroke-width="1.5" rx="3"/>
+<text x="1035.0" y="1344.0" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1a1a1a" font-family="sans-serif">ValeurChampPersonnalise</text>
+<line x1="910" y1="1356.0" x2="1160" y2="1356.0" stroke="#888888" stroke-width="1.2"/>
+<text x="920" y="1370.0" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- id: int</text>
+<text x="920" y="1385.5" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">- valeur: text {nullable}</text>
+<line x1="910" y1="1397.0" x2="1160" y2="1397.0" stroke="#888888" stroke-width="1.2"/>
 </g>
 </svg>

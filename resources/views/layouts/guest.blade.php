@@ -25,7 +25,7 @@
 
 <div class="auth-topbar">
     <div class="brand">
-        <div class="logo-slot">LOGO<br>CSCMT</div>
+        <img src="{{ asset('logo-cscmt.jpg') }}" alt="Complexe Scolaire Catholique Madre Trinidad" class="logo-slot">
         <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad</small></div>
     </div>
     <a class="help-link" href="mailto:admin@cscmadretrinidad.bj">Besoin d'aide ?</a>

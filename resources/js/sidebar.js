@@ -7,11 +7,34 @@ export function initSidebar() {
     const sidebar = document.querySelector('[data-sidebar]');
     const toggle = document.querySelector('[data-sidebar-toggle]');
 
-    if (!sidebar || !toggle) {
-        return;
+    if (sidebar && toggle) {
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
     }
 
-    toggle.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
+    initNavGroups();
+}
+
+/**
+ * Expand/collapse a <div data-nav-group> submenu (e.g. "Dossier élève et
+ * documents" > "Liste des apprenants" / "Paramètres des dossiers"). Purely
+ * visual: the submenu is server-rendered open already when the current
+ * route falls under it.
+ */
+function initNavGroups() {
+    document.querySelectorAll('[data-nav-group]').forEach((group) => {
+        const toggle = group.querySelector('[data-nav-parent-toggle]');
+        const submenu = group.querySelector('[data-nav-submenu]');
+
+        if (!toggle || !submenu) {
+            return;
+        }
+
+        toggle.addEventListener('click', () => {
+            const isOpen = submenu.style.display === 'block';
+            submenu.style.display = isOpen ? 'none' : 'block';
+            toggle.setAttribute('aria-expanded', String(!isOpen));
+        });
     });
 }

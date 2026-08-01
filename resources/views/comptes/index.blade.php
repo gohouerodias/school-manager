@@ -98,6 +98,7 @@
 <x-slide-panel id="invite" title="Inviter un utilisateur">
     <form method="POST" action="{{ route('comptes.store') }}" id="invite-form">
         @csrf
+        <input type="hidden" name="_panel" value="invite">
 
         @error('invites')
             <div class="alert-error">{{ $message }}</div>
@@ -110,8 +111,13 @@
         </div>
 
         <div class="field">
-            <label for="invite-name">Nom complet</label>
-            <input type="text" id="invite-name" placeholder="Prénom Nom">
+            <label for="invite-nom">Nom</label>
+            <input type="text" id="invite-nom" placeholder="Nom de famille">
+        </div>
+
+        <div class="field">
+            <label for="invite-prenoms">Prénoms</label>
+            <input type="text" id="invite-prenoms" placeholder="Prénom(s)">
         </div>
 
         <div class="field">
@@ -148,23 +154,42 @@
 </x-slide-panel>
 
 <x-slide-panel id="edit-user" title="Modifier le profil">
-    <form method="POST" action="" id="edit-user-form">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-user-form">
         @csrf
         @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-user">
+        <input type="hidden" name="_edit_url" id="edit-user-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('name')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('telephone')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('email')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
 
         <div class="field">
-            <label for="edit-user-name">Nom complet</label>
-            <input type="text" id="edit-user-name" name="name">
+            <label for="edit-user-nom">Nom</label>
+            <input type="text" id="edit-user-nom" placeholder="Nom de famille" required>
         </div>
 
         <div class="field">
+            <label for="edit-user-prenoms">Prénoms</label>
+            <input type="text" id="edit-user-prenoms" placeholder="Prénom(s)" required>
+        </div>
+
+        <input type="hidden" id="edit-user-name" name="name" value="{{ old('name') }}">
+
+        <div class="field">
             <label for="edit-user-telephone">Numéro de téléphone</label>
-            <input type="tel" id="edit-user-telephone" name="telephone">
+            <input type="tel" id="edit-user-telephone" name="telephone" value="{{ old('telephone') }}" required>
         </div>
 
         <div class="field">
             <label for="edit-user-email">Adresse e-mail</label>
-            <input type="email" id="edit-user-email" name="email">
+            <input type="email" id="edit-user-email" name="email" value="{{ old('email') }}" required>
             <div class="hint">Seul un administrateur peut modifier l'adresse e-mail d'un utilisateur.</div>
         </div>
     </form>

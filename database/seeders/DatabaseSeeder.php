@@ -3,12 +3,13 @@
 namespace Database\Seeders;
 
 use App\Enums\CycleNiveau;
-use App\Enums\ProfilUtilisateur;
 use App\Enums\StatutTrimestre;
+use App\Enums\TypeChampPersonnalise;
 use App\Enums\TypeEvaluation;
 use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Bulletin;
+use App\Models\ChampPersonnalise;
 use App\Models\Classe;
 use App\Models\ClasseMatiere;
 use App\Models\DocumentNumerique;
@@ -26,7 +27,10 @@ use App\Models\Rapport;
 use App\Models\Trimestre;
 use App\Models\TypeDocument;
 use App\Models\User;
+use App\Models\ValeurChampPersonnalise;
+use App\Support\BeninData;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class DatabaseSeeder extends Seeder
 {
@@ -47,6 +51,7 @@ class DatabaseSeeder extends Seeder
         $trimestres = $this->seedTrimestres($anneeAcademique);
         $typesDocuments = $this->seedTypesDocuments();
         $matieres = $this->seedMatieres();
+        $champsPersonnalises = $this->seedChampsPersonnalises();
 
         $admin = User::factory()->administrateur()->create([
             'name' => 'Admin CSC',
@@ -74,6 +79,7 @@ class DatabaseSeeder extends Seeder
             foreach ($eleves as $eleve) {
                 $this->attacherParents($eleve);
                 $this->creerDocuments($eleve, $typesDocuments, $agentScolarite);
+                $this->remplirChampsPersonnalises($eleve, $champsPersonnalises);
 
                 $inscription = Inscription::factory()->create([
                     'eleve_id' => $eleve->id,
@@ -99,9 +105,9 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Niveau>
+     * @return Collection<int, Niveau>
      */
-    private function seedNiveaux(): \Illuminate\Support\Collection
+    private function seedNiveaux(): Collection
     {
         $definitions = [
             ['libelle' => 'CI', 'ordre' => 1, 'cycle' => CycleNiveau::Primaire],
@@ -123,15 +129,16 @@ class DatabaseSeeder extends Seeder
     {
         return AnneeAcademique::create([
             'libelle' => '2025-2026',
+            'est_active' => true,
             'date_debut' => '2025-10-01',
             'date_fin' => '2026-07-31',
         ]);
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Trimestre>
+     * @return Collection<int, Trimestre>
      */
-    private function seedTrimestres(AnneeAcademique $anneeAcademique): \Illuminate\Support\Collection
+    private function seedTrimestres(AnneeAcademique $anneeAcademique): Collection
     {
         $definitions = [
             ['nom' => 'Trimestre 1', 'ordre' => 1, 'debut' => '2025-10-01', 'fin' => '2025-12-20', 'statut' => StatutTrimestre::Ouvert],
@@ -150,29 +157,57 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, TypeDocument>
+     * @return Collection<int, TypeDocument>
      */
-    private function seedTypesDocuments(): \Illuminate\Support\Collection
+    private function seedTypesDocuments(): Collection
     {
         $definitions = [
-            ['libelle' => 'Photo d\'identité', 'obligatoire' => true],
-            ['libelle' => 'Acte de naissance', 'obligatoire' => true],
-            ['libelle' => 'CIP', 'obligatoire' => false],
-            ['libelle' => 'NPI', 'obligatoire' => false],
-            ['libelle' => 'Certificat médical', 'obligatoire' => false],
+            ['libelle' => 'Photo d\'identité', 'formats' => ['JPG', 'PNG'], 'obligatoire' => true],
+            ['libelle' => 'Acte de naissance', 'formats' => ['PDF', 'JPG'], 'obligatoire' => true],
+            ['libelle' => 'CIP', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false],
+            ['libelle' => 'NPI', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false],
+            ['libelle' => 'Certificat médical', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false],
         ];
 
         return collect($definitions)->map(fn (array $data) => TypeDocument::create([
             'libelle' => $data['libelle'],
             'description' => null,
+            'formats_acceptes' => $data['formats'],
             'obligatoire' => $data['obligatoire'],
         ]));
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Matiere>
+     * Default configurable fields for the fiche apprenant, beyond the fixed
+     * Nom/Prénom/Sexe/Date de naissance columns.
+     *
+     * @return Collection<int, ChampPersonnalise>
      */
-    private function seedMatieres(): \Illuminate\Support\Collection
+    private function seedChampsPersonnalises(): Collection
+    {
+        $definitions = [
+            ['libelle' => 'Lieu de naissance', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
+            ['libelle' => 'Nationalité', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
+            ['libelle' => 'Adresse', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
+            ['libelle' => 'Groupe sanguin', 'type' => TypeChampPersonnalise::ListeDeroulante, 'options' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], 'obligatoire' => false],
+            ['libelle' => 'Quartier', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
+            ['libelle' => 'Allergies', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => false],
+            ['libelle' => 'Situation de handicap', 'type' => TypeChampPersonnalise::ListeDeroulante, 'options' => ['Aucune', 'Motrice', 'Visuelle', 'Auditive', 'Autre'], 'obligatoire' => false],
+        ];
+
+        return collect($definitions)->values()->map(fn (array $data, int $index) => ChampPersonnalise::create([
+            'libelle' => $data['libelle'],
+            'type' => $data['type'],
+            'options' => $data['options'],
+            'obligatoire' => $data['obligatoire'],
+            'ordre' => $index + 1,
+        ]));
+    }
+
+    /**
+     * @return Collection<int, Matiere>
+     */
+    private function seedMatieres(): Collection
     {
         $noms = [
             'Français', 'Mathématiques', 'Sciences de la Vie et de la Terre', 'Histoire-Géographie',
@@ -183,10 +218,10 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Niveau>  $niveaux
-     * @return \Illuminate\Support\Collection<int, Classe>
+     * @param  Collection<int, Niveau>  $niveaux
+     * @return Collection<int, Classe>
      */
-    private function seedClasses(\Illuminate\Support\Collection $niveaux, AnneeAcademique $anneeAcademique): \Illuminate\Support\Collection
+    private function seedClasses(Collection $niveaux, AnneeAcademique $anneeAcademique): Collection
     {
         return $niveaux->map(fn (Niveau $niveau) => Classe::create([
             'niveau_id' => $niveau->id,
@@ -196,10 +231,10 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Classe>  $classes
-     * @param  \Illuminate\Support\Collection<int, Matiere>  $matieres
+     * @param  Collection<int, Classe>  $classes
+     * @param  Collection<int, Matiere>  $matieres
      */
-    private function seedClasseMatiere(\Illuminate\Support\Collection $classes, \Illuminate\Support\Collection $matieres): void
+    private function seedClasseMatiere(Collection $classes, Collection $matieres): void
     {
         foreach ($classes as $classe) {
             foreach ($matieres as $matiere) {
@@ -215,14 +250,14 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Classe>  $classes
-     * @param  \Illuminate\Support\Collection<int, Matiere>  $matieres
-     * @param  \Illuminate\Support\Collection<int, User>  $enseignants
+     * @param  Collection<int, Classe>  $classes
+     * @param  Collection<int, Matiere>  $matieres
+     * @param  Collection<int, User>  $enseignants
      */
     private function seedAffectations(
-        \Illuminate\Support\Collection $classes,
-        \Illuminate\Support\Collection $matieres,
-        \Illuminate\Support\Collection $enseignants,
+        Collection $classes,
+        Collection $matieres,
+        Collection $enseignants,
         AnneeAcademique $anneeAcademique
     ): void {
         foreach ($classes as $classe) {
@@ -252,9 +287,9 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, TypeDocument>  $typesDocuments
+     * @param  Collection<int, TypeDocument>  $typesDocuments
      */
-    private function creerDocuments(Eleve $eleve, \Illuminate\Support\Collection $typesDocuments, User $agent): void
+    private function creerDocuments(Eleve $eleve, Collection $typesDocuments, User $agent): void
     {
         foreach ($typesDocuments->where('obligatoire', true) as $type) {
             DocumentNumerique::factory()->create([
@@ -266,9 +301,28 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, User>  $enseignants
+     * @param  Collection<int, ChampPersonnalise>  $champsPersonnalises
      */
-    private function saisirNotes(Eleve $eleve, Classe $classe, Trimestre $trimestre, \Illuminate\Support\Collection $enseignants): void
+    private function remplirChampsPersonnalises(Eleve $eleve, Collection $champsPersonnalises): void
+    {
+        foreach ($champsPersonnalises as $champ) {
+            $valeur = match ($champ->type) {
+                TypeChampPersonnalise::ListeDeroulante => fake()->randomElement($champ->options ?? ['—']),
+                default => fake()->randomElement(BeninData::$villes),
+            };
+
+            ValeurChampPersonnalise::create([
+                'eleve_id' => $eleve->id,
+                'champ_personnalise_id' => $champ->id,
+                'valeur' => $valeur,
+            ]);
+        }
+    }
+
+    /**
+     * @param  Collection<int, User>  $enseignants
+     */
+    private function saisirNotes(Eleve $eleve, Classe $classe, Trimestre $trimestre, Collection $enseignants): void
     {
         $classeMatieres = ClasseMatiere::where('classe_id', $classe->id)->get();
 

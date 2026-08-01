@@ -27,9 +27,7 @@ class EleveFactory extends Factory
             'nom' => $nom,
             'prenom' => $prenom,
             'date_naissance' => fake()->dateTimeBetween('-16 years', '-4 years')->format('Y-m-d'),
-            'lieu_naissance' => fake()->randomElement(BeninData::$villes),
             'sexe' => $sexe,
-            'adresse' => fake()->randomElement(BeninData::$villes),
             'statut' => StatutEleve::Actif,
             'date_archivage' => null,
         ];

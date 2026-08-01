@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Gestion des comptes utilisateurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Palette extraite du logo CSCMT : turquoise (palmier), orange (djembé), terracotta (djembé), gris anthracite (texte) */
+    --paper:#FAF8F5;
+    --paper-raised:#FFFFFF;
+    --ink:#33383A;
+    --ink-muted:#787F82;
+    --line:#E2DFD8;
+    --green:#3D8B75;
+    --green-deep:#26594A;
+    --green-tint:#E5F1EC;
+    --gold:#EFA03B;
+    --gold-tint:#FCEEDA;
+    --red:#C6392F;
+    --red-tint:#FAE7E4;
+    --blue:#3B6EA5;
+    --blue-tint:#E7EEF6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:28px 32px 80px;position:relative;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:20px;margin-bottom:26px;border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .logo-slot{
+    width:150px;height:48px;border-radius:8px;
+    border:none;background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-muted);font-size:8.5px;text-align:center;line-height:1.2;flex-shrink:0;
+    overflow:hidden;
+  }
+  .brand .logo-slot img{width:100%;height:100%;object-fit:contain;}
+  .brand .name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--ink);line-height:1.25;}
+  .brand .name small{display:block;font-family:'Inter',sans-serif;font-weight:500;font-size:10.5px;color:var(--ink-muted);letter-spacing:.03em;text-transform:uppercase;}
+  .user-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);}
+  .avatar{
+    width:28px;height:28px;border-radius:50%;background:var(--gold-tint);
+    color:var(--gold);display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;
+  }
+
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;}
+  .page-head h1{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin:0 0 4px;color:var(--green-deep);}
+  .page-head p{margin:0;font-size:13.5px;color:var(--ink-muted);}
+  .btn{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+    padding:10px 18px;border-radius:8px;border:1px solid transparent;
+    cursor:pointer;white-space:nowrap;transition:opacity .15s ease;
+    display:inline-flex;align-items:center;gap:7px;
+  }
+  .btn:hover{opacity:.88;}
+  .btn.primary{background:var(--green);color:#fff;}
+  .btn.ghost{background:transparent;color:var(--ink-muted);border-color:var(--line);}
+  .btn.dark{background:var(--green-deep);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* Toolbar */
+  .toolbar{display:flex;gap:12px;margin-bottom:18px;align-items:center;}
+  .search{
+    flex:1;position:relative;
+  }
+  .search input{
+    width:100%;padding:10px 14px 10px 38px;border-radius:8px;border:1px solid var(--line);
+    font-family:'Inter',sans-serif;font-size:13.5px;background:var(--paper-raised);
+  }
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-muted);}
+  .filter-select{
+    padding:10px 14px;border-radius:8px;border:1px solid var(--line);
+    background:var(--paper-raised);font-size:13px;font-weight:500;color:var(--ink);
+    font-family:'Inter',sans-serif;
+  }
+
+  /* Table */
+  .card{background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .pagination{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    padding:16px 4px 0;
+  }
+  .page-info{font-size:12.5px;color:var(--ink-muted);}
+  .page-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .page-btn{
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:7px;
+    padding:7px 13px;cursor:pointer;
+  }
+  .page-btn:hover:not(:disabled){background:var(--green-tint);border-color:var(--green);}
+  .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .page-num{
+    width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--paper-raised);
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;
+  }
+  .page-num:hover{background:var(--green-tint);}
+  .page-num.active{background:var(--green);border-color:var(--green);color:#fff;}
+
+  /* Filtre par date */
+  .date-filter-wrap{display:flex;align-items:center;gap:8px;background:var(--paper-raised);border:1px solid var(--line);border-radius:8px;padding:6px 10px;}
+  .date-filter-wrap label{font-size:12px;color:var(--ink-muted);font-weight:600;white-space:nowrap;}
+  .date-filter-wrap input[type="date"]{border:none;padding:4px 2px;font-size:12.5px;font-family:'Inter',sans-serif;background:none;}
+  .date-filter-wrap .page-btn{padding:4px 8px;font-size:11px;}
+
+  /* Badge documents (fiche apprenant) */
+  .doc-status-badge{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;}
+  .doc-status-badge.complet{background:var(--green-tint);color:var(--green);}
+  .doc-status-badge.incomplet{background:var(--red-tint);color:var(--red);}
+
+  /* Sections de configuration (Paramètres des dossiers) */
+  .config-section{margin-bottom:36px;}
+  .config-section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;gap:20px;}
+  .config-section-head h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0 0 5px;color:var(--green-deep);}
+  .config-section-head p{margin:0;font-size:12.5px;color:var(--ink-muted);max-width:560px;line-height:1.5;}
+
+  /* Interrupteur (obligatoire / optionnel) */
+  .toggle-switch{position:relative;display:inline-block;width:40px;height:23px;flex-shrink:0;vertical-align:middle;}
+  .toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+  .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#DDD8CC;border-radius:22px;transition:.2s;}
+  .toggle-slider:before{content:'';position:absolute;height:17px;width:17px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+  .toggle-switch input:checked + .toggle-slider{background:var(--green);}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(17px);}
+  .toggle-label{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--ink);}
+  .required-star{color:var(--red);font-weight:700;margin-left:2px;}
+  .format-chips{display:flex;gap:5px;flex-wrap:wrap;}
+  .format-chip{font-size:10.5px;font-weight:700;background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:2px 7px;color:var(--ink-muted);}
+
+  /* Modale Fiche apprenant */
+  .fiche-overlay{
+    position:fixed;inset:0;background:rgba(18,40,32,.45);z-index:70;
+    display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;
+  }
+  .fiche-overlay.show{display:flex;}
+  .fiche-modal{
+    background:var(--paper);border-radius:16px;max-width:960px;width:100%;
+    box-shadow:0 24px 60px rgba(18,40,32,.3);overflow:hidden;
+  }
+  .fiche-topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);background:var(--paper-raised);}
+  .fiche-topbar-title{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;color:var(--ink-muted);}
+  .fiche-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-muted);font-size:16px;}
+  .fiche-close:hover{background:var(--paper);}
+  .fiche-body{padding:24px;}
+
+  .fiche-student-card{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;display:flex;gap:20px;align-items:flex-start;margin-bottom:0;
+  }
+  .fiche-photo{
+    width:64px;height:78px;border-radius:8px;background:linear-gradient(155deg,#EDE7D6,#DDD3B8);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    color:var(--ink-muted);flex-shrink:0;
+  }
+  .fiche-photo svg{width:28px;height:28px;opacity:.35;}
+  .fiche-main{flex:1;}
+  .fiche-name-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+  .fiche-name{font-family:'Fraunces',serif;font-size:21px;font-weight:600;color:var(--green-deep);}
+  .fiche-matricule{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;background:var(--green-tint);color:var(--green);padding:3px 9px;border-radius:5px;}
+  .fiche-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-muted);}
+  .fiche-meta b{color:var(--ink);font-weight:600;}
+
+  .fiche-tabs{display:flex;gap:4px;padding:0 2px;position:relative;top:1px;margin-top:16px;}
+  .fiche-tab{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--ink-muted);
+    background:#F0EBDD;border:1px solid var(--line);border-bottom:none;
+    padding:10px 18px 12px;border-radius:10px 10px 0 0;cursor:pointer;position:relative;top:1px;
+  }
+  .fiche-tab.active{background:var(--paper-raised);color:var(--green-deep);top:0;padding-bottom:13px;box-shadow:0 -2px 0 var(--gold) inset;}
+  .fiche-panel{background:var(--paper-raised);border:1px solid var(--line);border-radius:0 12px 12px 12px;padding:24px;min-height:200px;}
+  .fiche-panel-section{display:none;}
+  .fiche-panel-section.active{display:block;}
+  .fiche-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px;}
+  .fiche-field{font-size:13px;}
+  .fiche-field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);font-weight:600;margin-bottom:3px;}
+  .fiche-field .val{color:var(--ink);font-weight:500;}
+
+  .fiche-doc-card{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .fiche-doc-card.missing{border-style:dashed;border-color:#DBB9B0;background:#FDFAF7;}
+  .fiche-doc-icon{width:36px;height:36px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .fiche-doc-icon.ok{background:var(--green-tint);color:var(--green);}
+  .fiche-doc-icon.missing{background:var(--red-tint);color:var(--red);}
+  .fiche-doc-icon svg{width:17px;height:17px;}
+  .fiche-doc-title{font-size:13px;font-weight:600;color:var(--ink);}
+  .fiche-doc-sub{font-size:11.5px;color:var(--ink-muted);margin-top:2px;}
+
+  /* Modale de confirmation */
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(18,40,32,.45);z-index:80;
+    display:none;align-items:center;justify-content:center;
+  }
+  .confirm-overlay.show{display:flex;}
+  .confirm-box{
+    background:#fff;border-radius:14px;max-width:360px;width:90%;padding:24px;
+    box-shadow:0 20px 50px rgba(18,40,32,.3);text-align:center;
+  }
+  .confirm-icon{
+    width:44px;height:44px;border-radius:50%;background:var(--red-tint);color:var(--red);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+  }
+  .confirm-box h3{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--ink);margin:0 0 8px;}
+  .confirm-box p{font-size:13px;color:var(--ink-muted);margin:0 0 20px;line-height:1.5;}
+  .confirm-actions{display:flex;gap:10px;justify-content:center;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-muted);padding:14px 20px;border-bottom:1px solid var(--line);font-weight:600;
+    background:#FAF8F2;
+  }
+  tbody td{padding:14px 20px;border-bottom:1px solid #F0EBDD;font-size:13.5px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.pending{background:var(--gold-tint);}
+  .name-cell{display:flex;align-items:center;gap:10px;}
+  .name-cell .av{
+    width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;flex-shrink:0;
+  }
+  .name-cell .info b{display:block;font-weight:600;color:var(--ink);}
+  .name-cell .info span{font-size:12px;color:var(--ink-muted);}
+  .role-badge{
+    font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-block;
+  }
+  .role-badge.admin{background:var(--red-tint);color:var(--red);}
+  .role-badge.scol{background:var(--green-tint);color:var(--green);}
+  .role-badge.ens{background:var(--blue-tint);color:var(--blue);}
+  .role-badge.dir{background:var(--gold-tint);color:#8A6717;}
+  .status{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;}
+  .status .dot{width:6px;height:6px;border-radius:50%;}
+  .status.active .dot{background:var(--green);}
+  .status.active{color:var(--green);}
+  .status.pending-status .dot{background:var(--gold);}
+  .status.pending-status{color:#8A6717;}
+  .status.archived .dot{background:var(--ink-muted);}
+  .status.archived{color:var(--ink-muted);}
+  .row-actions-wrap{position:relative;display:inline-block;}
+  .row-actions{
+    font-size:16px;color:var(--ink-muted);cursor:pointer;font-weight:700;
+    width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    border:none;background:none;
+  }
+  .row-actions:hover{background:var(--green-tint);color:var(--green-deep);}
+  .action-menu{
+    position:absolute;right:0;top:32px;background:#fff;border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 8px 24px rgba(38,89,74,.12);
+    min-width:190px;z-index:20;overflow:hidden;display:none;
+  }
+  .action-menu.show{display:block;}
+  .action-menu button{
+    width:100%;text-align:left;padding:10px 14px;font-size:12.5px;background:none;border:none;
+    cursor:pointer;font-family:'Inter',sans-serif;color:var(--ink);display:flex;align-items:center;gap:8px;
+  }
+  .action-menu button:hover{background:var(--paper);}
+  .action-menu button.danger{color:var(--red);}
+  .action-menu button.positive{color:var(--green);}
+  .action-menu hr{border:none;border-top:1px solid var(--line);margin:2px 0;}
+
+  /* Overlay + Side panel */
+  .overlay{
+    position:fixed;inset:0;background:rgba(18,52,30,0.25);
+    opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:40;
+  }
+  .overlay.show{opacity:1;pointer-events:auto;}
+  .panel{
+    position:fixed;top:0;right:0;height:100%;width:420px;background:var(--paper-raised);
+    box-shadow:-8px 0 30px rgba(18,52,30,0.12);
+    transform:translateX(100%);transition:transform .3s ease;z-index:50;
+    display:flex;flex-direction:column;
+  }
+  .panel.show{transform:translateX(0);}
+  .panel-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .panel-head h2{font-family:'Fraunces',serif;font-size:18px;margin:0;color:var(--green-deep);}
+  .panel-close{cursor:pointer;color:var(--ink-muted);font-size:20px;background:none;border:none;line-height:1;}
+  .panel-body{padding:22px 24px;flex:1;overflow-y:auto;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:13.5px;background:var(--paper);
+  }
+  .field .hint{font-size:11.5px;color:var(--ink-muted);margin-top:5px;}
+
+  .role-select{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:13.5px;background:var(--paper) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%23787F82" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>') no-repeat right 12px center;
+    appearance:none;-webkit-appearance:none;cursor:pointer;font-weight:600;color:var(--ink);
+  }
+  .role-desc-box{
+    margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+    background:var(--green-tint);
+  }
+  .role-desc-box .rtitle{font-size:12.5px;font-weight:700;color:var(--green-deep);margin-bottom:3px;}
+  .role-desc-box .rdesc{font-size:11.5px;color:var(--ink-muted);line-height:1.45;}
+
+  .btn.add-pending{width:100%;justify-content:center;background:var(--green-deep);color:#fff;margin-top:4px;}
+
+  .pending-list-title{
+    font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-muted);margin:26px 0 10px;padding-top:20px;border-top:1px solid var(--line);
+  }
+  .pending-item{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--gold-tint);border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:12.5px;
+  }
+  .pending-item .pmail{font-weight:600;color:var(--ink);}
+  .pending-item .prole{color:#8A6717;font-size:11px;}
+  .pending-item .premove{cursor:pointer;color:var(--red);font-weight:700;font-size:14px;background:none;border:none;}
+
+  .panel-foot{
+    padding:18px 24px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;
+    position:relative;
+  }
+  .callout{
+    position:absolute;bottom:64px;right:24px;background:var(--green-deep);color:#fff;
+    padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;max-width:220px;
+    box-shadow:0 6px 20px rgba(18,52,30,.25);
+  }
+  .callout:after{
+    content:'';position:absolute;bottom:-6px;right:24px;width:12px;height:12px;
+    background:var(--green-deep);transform:rotate(45deg);
+  }
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--green-deep);color:#fff;padding:12px 22px;border-radius:10px;
+    font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s ease;z-index:60;
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* Shell : sidebar + contenu */
+  .shell{display:flex;min-height:100vh;align-items:stretch;}
+  .sidebar{
+    width:250px;flex-shrink:0;background:var(--green-deep);
+    transition:width .22s ease;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .sidebar.collapsed{width:72px;}
+
+  .sidebar-header{
+    display:flex;align-items:center;gap:10px;padding:16px 14px;flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,.14);
+  }
+  .sidebar.collapsed .sidebar-header{padding:16px 0;justify-content:center;}
+  .rail-burger{
+    width:34px;height:34px;border-radius:8px;border:none;flex-shrink:0;
+    background:rgba(255,255,255,.1);color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rail-burger:hover{background:rgba(255,255,255,.18);}
+  .sidebar-logo{
+    width:30px;height:30px;border-radius:7px;background:#fff;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-size:7px;font-weight:700;color:var(--green-deep);text-align:center;
+  }
+  .sidebar-logo img{width:100%;height:100%;object-fit:contain;}
+  .sidebar.collapsed .sidebar-logo,
+  .sidebar.collapsed .sidebar-wordmark{display:none;}
+  .sidebar-wordmark{color:#fff;font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;white-space:nowrap;}
+
+  .sidebar-inner{flex:1;padding:14px 10px;overflow-y:auto;overflow-x:hidden;}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:11px 13px;border-radius:9px;background:none;border:none;color:rgba(255,255,255,.82);
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:3px;
+  }
+  .nav-item svg{width:19px;height:19px;flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-item.active{background:#fff;color:var(--green-deep);}
+  .nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sidebar.collapsed .nav-item{justify-content:center;padding:12px 0;}
+  .sidebar.collapsed .nav-label{display:none;}
+
+  .nav-chevron{width:14px;height:14px;margin-left:auto;flex-shrink:0;transition:transform .2s ease;}
+  .nav-parent.expanded .nav-chevron{transform:rotate(90deg);}
+  .sidebar.collapsed .nav-chevron{display:none;}
+
+  .nav-submenu{
+    max-height:0;overflow:hidden;transition:max-height .22s ease;
+    display:flex;flex-direction:column;padding-left:14px;
+  }
+  .nav-submenu.open{max-height:160px;}
+  .sidebar.collapsed .nav-submenu{display:none;}
+  .nav-subitem{
+    display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+    padding:9px 13px 9px 30px;border-radius:8px;background:none;border:none;
+    color:rgba(255,255,255,.68);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+    cursor:pointer;margin:2px 0;position:relative;
+  }
+  .nav-subitem .sub-arrow{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    width:11px;height:11px;opacity:.65;flex-shrink:0;
+  }
+  .nav-subitem:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-subitem.active{background:rgba(255,255,255,.14);color:#fff;}
+
+  .main{flex:1;min-width:0;}
+
+  /* Lien + popover Guide d'utilisation */
+  .guide-wrap{position:relative;margin-left:6px;}
+  .guide-link{
+    display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green-deep);
+    background:none;text-decoration:none;padding:8px 13px;border:1px solid var(--line);border-radius:20px;
+    white-space:nowrap;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .guide-link:hover{background:var(--green-tint);border-color:var(--green);}
+  .guide-link svg{width:14px;height:14px;}
+  .guide-menu{
+    position:absolute;top:42px;left:0;width:280px;background:#fff;border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 12px 30px rgba(38,89,74,.15);padding:16px;display:none;z-index:45;
+  }
+  .guide-menu.show{display:block;}
+  .guide-title{
+    margin:0 0 12px;font-family:'Inter',sans-serif;font-weight:700;font-size:13.5px;
+    color:var(--ink);line-height:1.4;
+  }
+  .guide-download{
+    display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--green);
+    font-weight:600;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+  }
+  .guide-download:hover{background:var(--green-tint);}
+  .guide-download svg{width:16px;height:16px;}
+
+  .empty-panel{
+    padding:70px 20px;text-align:center;color:var(--ink-muted);font-size:13.5px;
+    background:var(--paper-raised);border:1.5px dashed var(--line);border-radius:14px;
+  }
+  .empty-panel svg{width:30px;height:30px;color:var(--line);margin-bottom:12px;}
+
+  /* Popover profil */
+  .profile-wrap{position:relative;}
+  .user-chip{cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;padding:4px;border-radius:8px;}
+  .user-chip:hover{background:var(--green-tint);}
+  .profile-menu{
+    position:absolute;top:46px;right:0;width:290px;background:#fff;border:1px solid var(--line);
+    border-radius:13px;box-shadow:0 14px 34px rgba(38,89,74,.16);padding:20px;display:none;z-index:45;
+  }
+  .profile-menu.show{display:block;}
+  .profile-menu-head{
+    font-family:'Fraunces',serif;font-size:14.5px;font-weight:600;color:var(--green-deep);
+    margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line);
+  }
+  .profile-menu .field{margin-bottom:13px;}
+  .profile-menu .field label{font-size:11.5px;}
+  .profile-menu .field input{padding:9px 11px;font-size:13px;}
+  .profile-menu .btn{width:100%;justify-content:center;margin-top:4px;}
+  .profile-menu hr{border:none;border-top:1px solid var(--line);margin:14px 0;}
+  .profile-menu .btn.logout{color:var(--red);border-color:var(--red-tint);background:var(--red-tint);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="rail-burger" onclick="toggleSidebar()" title="Réduire/agrandir le menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="sidebar-logo">
+        <img src="logo-cscmt.jpeg" alt="Logo CSCMT"
+             onerror="this.onerror=null; this.parentElement.innerHTML='CSCMT';">
+      </div>
+      <span class="sidebar-wordmark">Registre CSCMT</span>
+    </div>
+    <div class="sidebar-inner">
+      <nav>
+        <button class="nav-item active" data-panel="comptes" onclick="switchPanel('comptes', this)" title="Gestion de compte">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="nav-label">Gestion de compte</span>
+        </button>
+        <button class="nav-item" data-panel="securite" onclick="switchPanel('securite', this)" title="Sécurité et Administration">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="nav-label">Sécurité et Administration</span>
+        </button>
+        <div class="nav-group">
+          <button class="nav-item nav-parent" onclick="toggleSubmenu(this)" title="Dossier élève et documents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            <span class="nav-label">Dossier élève et documents</span>
+            <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <div class="nav-submenu open" id="submenu-dossiers">
+            <button class="nav-subitem" data-panel="dossiers-liste" onclick="switchPanel('dossiers-liste', this)">
+              <svg class="sub-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+              Liste des apprenants
+            </button>
+            <button class="nav-subitem" data-panel="dossiers-parametres" onclick="switchPanel('dossiers-parametres', this)">
+              <svg class="sub-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+              Paramètres des dossiers
+            </button>
+          </div>
+        </div>
+        <button class="nav-item" data-panel="academique" onclick="switchPanel('academique', this)" title="Académique">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>
+          <span class="nav-label">Académique</span>
+        </button>
+        <button class="nav-item" data-panel="rapports" onclick="switchPanel('rapports', this)" title="Rapports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/></svg>
+          <span class="nav-label">Rapports</span>
+        </button>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="app">
+
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo-slot" style="width:56px;height:40px;">
+            <img src="logo-cscmt.jpeg" alt="Logo CSCMT"
+                 onerror="this.onerror=null; this.parentElement.innerHTML='CSCMT';">
+          </div>
+
+          <div class="guide-wrap">
+            <button class="guide-link" onclick="toggleGuideMenu()" title="Guide d'utilisation">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+              Guide d'utilisation
+            </button>
+            <div class="guide-menu" id="guideMenu">
+              <p class="guide-title">Guide d'utilisation tableau de bord Admin</p>
+              <a href="guide-utilisation.pdf" download class="guide-download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                <span>Téléchargeable</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-wrap" style="display:flex; align-items:center; gap:10px;">
+          <button class="user-chip" onclick="toggleProfileMenu()">
+            <div class="avatar">MB</div>
+            BIO Marcelin · Administrateur
+          </button>
+          <button class="btn ghost" onclick="alert('Déconnexion (démo)')">Se déconnecter</button>
+          <div class="profile-menu" id="profileMenu">
+            <div class="profile-menu-head">Mon profil</div>
+            <div class="field"><label>Nom</label><input type="text" value="Bio"></div>
+            <div class="field"><label>Prénom</label><input type="text" value="Marcelin"></div>
+            <div class="field"><label>Numéro de téléphone</label><input type="tel" value="+229 01 XX XX XX"></div>
+            <button class="btn primary" onclick="alert('Modifications enregistrées (démo)')">Enregistrer les modifications</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-securite" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <p>Panneau « Sécurité et Administration » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+      <div id="panel-dossiers-liste" class="dashboard-panel" style="display:none;">
+
+        <div class="page-head">
+          <div>
+            <h1>Liste des apprenants</h1>
+            <p id="elevesSummaryText">Chargement...</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn ghost" onclick="alert('Export Excel (démo)')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+              Excel
+            </button>
+            <button class="btn ghost" onclick="alert('Export PDF (démo)')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+              PDF
+            </button>
+            <button class="btn primary" onclick="openElevePanel()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Nouvel apprenant
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar" style="flex-wrap:wrap;">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="eleveSearchInput" placeholder="Rechercher par nom ou matricule..." oninput="filterEleves()">
+          </div>
+          <select class="filter-select" id="filterClasse" onchange="filterEleves()">
+            <option value="">Toutes les classes</option>
+            <option value="CI">CI</option>
+            <option value="CP">CP</option>
+            <option value="CE1">CE1</option>
+            <option value="CE2">CE2</option>
+            <option value="CM1-A">CM1-A</option>
+            <option value="CM1-B">CM1-B</option>
+            <option value="CM2-A">CM2-A</option>
+            <option value="CM2-B">CM2-B</option>
+            <option value="__aucune__">Sans classe attribuée</option>
+          </select>
+          <select class="filter-select" id="filterEleveStatut" onchange="filterEleves()">
+            <option value="">Tous les statuts</option>
+            <option value="Actif">Actif</option>
+            <option value="Archivé">Archivé</option>
+          </select>
+          <div class="date-filter-wrap">
+            <label for="filterDate">Créées le :</label>
+            <input type="date" id="filterDate" class="filter-select" onchange="filterEleves()">
+            <button class="page-btn" onclick="clearDateFilter()" title="Effacer le filtre de date">✕</button>
+          </div>
+        </div>
+
+        <p id="noResultsEleves" style="display:none; text-align:center; color:var(--ink-muted); font-size:13px; padding:30px 0;">
+          Aucun apprenant ne correspond à votre recherche.
+        </p>
+
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Apprenant</th>
+                <th>Classe</th>
+                <th>Statut</th>
+                <th>Date de création</th>
+                <th>Documents</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="elevesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginationEleves"></div>
+      </div>
+
+      <div id="panel-dossiers-parametres" class="dashboard-panel" style="display:none;">
+
+        <div class="page-head">
+          <div>
+            <h1>Paramètres des dossiers</h1>
+            <p>Configuration des types de documents et du formulaire de création d'une fiche apprenant</p>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="config-section-head">
+            <div>
+              <h2>Types de documents</h2>
+              <p>Documents pouvant être rattachés au dossier d'un apprenant. Les documents marqués « obligatoire » doivent être fournis pour valider la création d'une fiche.</p>
+            </div>
+            <button class="btn primary" onclick="openDocTypePanel()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter un type de document
+            </button>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nom du document</th>
+                  <th>Formats acceptés</th>
+                  <th>Obligatoire à la création</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="docTypesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="config-section-head">
+            <div>
+              <h2>Champs du formulaire apprenant</h2>
+              <p>Informations demandées lors de la création d'une fiche apprenant. Les champs marqués « obligatoire » doivent être remplis pour valider la fiche.</p>
+            </div>
+            <button class="btn primary" onclick="openFormFieldPanel()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter un champ
+            </button>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nom du champ</th>
+                  <th>Type de champ</th>
+                  <th>Obligatoire à la création</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="formFieldsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div id="panel-academique" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>
+          <p>Panneau « Académique » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+      <div id="panel-rapports" class="dashboard-panel" style="display:none;">
+        <div class="empty-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/></svg>
+          <p>Panneau « Rapports » — contenu à définir prochainement.</p>
+        </div>
+      </div>
+
+      <div id="panel-comptes" class="dashboard-panel">
+      <div class="page-head">
+    <div>
+      <h1>Gestion des comptes utilisateurs</h1>
+      <p id="summaryText">7 comptes · 3 administrateurs, 2 agents de scolarité, 1 enseignant, 1 direction</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn ghost" onclick="alert('Export Excel (démo)')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+        Excel
+      </button>
+      <button class="btn ghost" onclick="alert('Export PDF (démo)')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+        PDF
+      </button>
+      <button class="btn primary" onclick="openPanel()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Inviter un utilisateur
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Rechercher un utilisateur par nom ou email..." oninput="filterRows()">
+    </div>
+    <select class="filter-select" id="filterRole" onchange="filterRows()">
+      <option value="">Tous les profils</option>
+      <option value="Administrateur">Administrateur</option>
+      <option value="Agent de scolarité">Agent de scolarité</option>
+      <option value="Enseignant">Enseignant</option>
+      <option value="Direction">Direction</option>
+    </select>
+    <select class="filter-select" id="filterStatut" onchange="filterRows()">
+      <option value="">Tous les statuts</option>
+      <option value="Actif">Actif</option>
+      <option value="Invitation en attente">Invitation en attente</option>
+      <option value="Archivé">Archivé</option>
+    </select>
+  </div>
+
+  <p id="noResults" style="display:none; text-align:center; color:var(--ink-muted); font-size:13px; padding:30px 0;">
+    Aucun utilisateur ne correspond à votre recherche.
+  </p>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>Profil</th>
+          <th>Statut</th>
+          <th>Dernière connexion</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <tr data-role="Administrateur" data-statut="Actif" data-nom="Bio" data-prenom="Marcelin">
+          <td class="name-cell">
+            <div class="av" style="background:var(--red-tint);color:var(--red);">MB</div>
+            <div class="info"><b>BIO Marcelin</b><span>m.bio@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge admin">Administrateur</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>Aujourd'hui, 08:12</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Agent de scolarité" data-statut="Actif" data-nom="Traoré" data-prenom="Aïcha">
+          <td class="name-cell">
+            <div class="av" style="background:var(--green-tint);color:var(--green);">AT</div>
+            <div class="info"><b>TRAORÉ Aïcha</b><span>a.traore@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge scol">Agent de scolarité</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>Aujourd'hui, 09:41</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Enseignant" data-statut="Actif" data-nom="Houngbo" data-prenom="Kokou">
+          <td class="name-cell">
+            <div class="av" style="background:var(--blue-tint);color:var(--blue);">KH</div>
+            <div class="info"><b>HOUNGBO Kokou</b><span>k.houngbo@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge ens">Enseignant</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>Hier, 16:20</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Direction" data-statut="Actif" data-nom="Dossou" data-prenom="Sylvie">
+          <td class="name-cell">
+            <div class="av" style="background:var(--gold-tint);color:#8A6717;">SD</div>
+            <div class="info"><b>DOSSOU Sylvie</b><span>s.dossou@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge dir">Direction</span></td>
+          <td><span class="status active"><span class="dot"></span>Actif</span></td>
+          <td>12/07/2026</td>
+          <td class="actions-cell" data-status="active"></td>
+        </tr>
+        <tr data-role="Enseignant" data-statut="Archivé" data-nom="Adjovi" data-prenom="Roméo">
+          <td class="name-cell">
+            <div class="av" style="background:#EDEAE0;color:var(--ink-muted);">RA</div>
+            <div class="info"><b>ADJOVI Roméo</b><span>r.adjovi@ecole-madre-trinidad.bj</span></div>
+          </td>
+          <td><span class="role-badge ens">Enseignant</span></td>
+          <td><span class="status archived"><span class="dot"></span>Archivé</span></td>
+          <td>03/02/2026</td>
+          <td class="actions-cell" data-status="archived"></td>
+        </tr>
+      </tbody>
+    </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+
+      </div><!-- /panel-comptes -->
+    </div><!-- /.app -->
+  </div><!-- /.main -->
+</div><!-- /.shell -->
+
+<div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
+
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <h2>Inviter un utilisateur</h2>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="emailInput" placeholder="prenom.nom@ecole-madre-trinidad.bj">
+      <div class="hint">Un mot de passe temporaire sera envoyé à cette adresse.</div>
+    </div>
+
+    <div class="field">
+      <label>Nom</label>
+      <input type="text" id="nomInput" placeholder="Nom de famille">
+    </div>
+
+    <div class="field">
+      <label>Prénom</label>
+      <input type="text" id="prenomInput" placeholder="Prénom">
+    </div>
+
+    <div class="field">
+      <label>Profil</label>
+      <select class="role-select" id="roleSelect" onchange="updateRoleDesc()">
+        <option value="Administrateur">Administrateur</option>
+        <option value="Agent de scolarité" selected>Agent de scolarité</option>
+        <option value="Enseignant">Enseignant</option>
+        <option value="Direction">Direction</option>
+      </select>
+      <div class="role-desc-box">
+        <div class="rtitle" id="roleDescTitle">Agent de scolarité</div>
+        <div class="rdesc" id="roleDescText">Gère les fiches élèves, les documents, les inscriptions et génère les bulletins. Pas d'accès à la gestion des comptes.</div>
+      </div>
+    </div>
+
+    <button class="btn add-pending" onclick="addPending()">+ Ajouter à la liste</button>
+
+    <div id="pendingSection" style="display:none;">
+      <div class="pending-list-title">En attente d'enregistrement (<span id="pendingCount">0</span>)</div>
+      <div id="pendingList"></div>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <div class="callout" id="callout" style="display:none;">Cliquez sur <b>Enregistrer</b> pour envoyer les invitations</div>
+    <button class="btn ghost" onclick="closePanel()">Annuler</button>
+    <button class="btn dark" id="saveBtn" onclick="saveInvites()" disabled>Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="eleveFormPanel">
+  <div class="panel-head">
+    <h2 id="eleveFormTitle">Nouvel apprenant</h2>
+    <button class="panel-close" onclick="closeElevePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div id="eleveFormFields"></div>
+    <div class="field">
+      <label>Classe</label>
+      <select class="role-select" id="eleveClasse">
+        <option value="">Sans classe attribuée</option>
+        <option>CI</option><option>CP</option><option>CE1</option><option>CE2</option>
+        <option>CM1-A</option><option>CM1-B</option><option>CM2-A</option><option>CM2-B</option>
+      </select>
+    </div>
+    <div class="hint" style="margin-bottom:16px;">Le matricule sera généré automatiquement à l'enregistrement.</div>
+    <div class="pending-list-title">Documents à joindre</div>
+    <div class="hint">Les documents pourront être ajoutés une fois la fiche créée, depuis l'onglet « Documents » de la fiche apprenant.</div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeElevePanel()">Annuler</button>
+    <button class="btn dark" onclick="saveEleve()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="docTypePanel">
+  <div class="panel-head">
+    <h2>Ajouter un type de document</h2>
+    <button class="panel-close" onclick="closeDocTypePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nom du document</label><input type="text" id="docTypeNom" placeholder="Ex : Certificat médical"></div>
+    <div class="field">
+      <label>Formats acceptés</label>
+      <div style="display:flex; gap:16px; margin-top:6px;">
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" id="fmtPdf" checked style="width:15px;height:15px;accent-color:var(--green);"> PDF</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" id="fmtJpg" checked style="width:15px;height:15px;accent-color:var(--green);"> JPG</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" id="fmtPng" style="width:15px;height:15px;accent-color:var(--green);"> PNG</label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="toggle-label">
+        <span class="toggle-switch"><input type="checkbox" id="docTypeObligatoire"><span class="toggle-slider"></span></span>
+        Document obligatoire pour valider la création d'une fiche
+      </label>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeDocTypePanel()">Annuler</button>
+    <button class="btn dark" onclick="saveDocType()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="formFieldPanel">
+  <div class="panel-head">
+    <h2>Ajouter un champ</h2>
+    <button class="panel-close" onclick="closeFormFieldPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nom du champ</label><input type="text" id="fieldNom" placeholder="Ex : Groupe sanguin"></div>
+    <div class="field">
+      <label>Type de champ</label>
+      <select class="role-select" id="fieldType" onchange="toggleFieldOptions()">
+        <option>Texte</option>
+        <option>Date</option>
+        <option>Liste déroulante</option>
+        <option>Nombre</option>
+      </select>
+    </div>
+    <div class="field" id="fieldOptionsWrap" style="display:none;">
+      <label>Options de la liste (séparées par une virgule)</label>
+      <input type="text" id="fieldOptions" placeholder="Ex : Masculin, Féminin">
+      <div class="hint">Ces valeurs seront proposées dans le menu déroulant du formulaire.</div>
+    </div>
+    <div class="field">
+      <label class="toggle-label">
+        <span class="toggle-switch"><input type="checkbox" id="fieldObligatoire"><span class="toggle-slider"></span></span>
+        Champ obligatoire pour valider la création d'une fiche
+      </label>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeFormFieldPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveFormField()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="fiche-overlay" id="ficheOverlay" onclick="if(event.target===this) closeFiche()">
+  <div class="fiche-modal">
+    <div class="fiche-topbar">
+      <span class="fiche-topbar-title">Dossier élève et documents / Liste des apprenants</span>
+      <button class="fiche-close" onclick="closeFiche()">✕</button>
+    </div>
+    <div class="fiche-body">
+      <div class="fiche-student-card">
+        <div class="fiche-photo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-9 2.2-9 5v2h18v-2c0-2.8-4.6-5-9-5Z"/></svg>
+        </div>
+        <div class="fiche-main">
+          <div class="fiche-name-row">
+            <div class="fiche-name" id="ficheNom">—</div>
+            <div class="fiche-matricule" id="ficheMatricule">—</div>
+          </div>
+          <div class="fiche-meta">
+            <span>Classe : <b id="ficheClasse">—</b></span>
+            <span>Statut : <b id="ficheStatut">—</b></span>
+            <span>Date de création : <b id="ficheDate">—</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fiche-tabs">
+        <div class="fiche-tab active" onclick="switchFicheTab('identite', this)">Identité</div>
+        <div class="fiche-tab" onclick="switchFicheTab('parents', this)">Parents / Tuteurs</div>
+        <div class="fiche-tab" onclick="switchFicheTab('parcours', this)">Parcours scolaire</div>
+        <div class="fiche-tab" onclick="switchFicheTab('documents', this)">Documents</div>
+      </div>
+
+      <div class="fiche-panel">
+        <div class="fiche-panel-section active" id="fiche-identite">
+          <div class="fiche-grid" id="ficheIdentiteGrid"></div>
+        </div>
+
+        <div class="fiche-panel-section" id="fiche-parents">
+          <div class="fiche-grid">
+            <div class="fiche-field"><label>Nom du parent/tuteur</label><div class="val">Grégoire (Père)</div></div>
+            <div class="fiche-field"><label>Téléphone</label><div class="val">+229 97 XX XX XX</div></div>
+            <div class="fiche-field"><label>Nom du parent/tuteur</label><div class="val">Christelle (Mère)</div></div>
+            <div class="fiche-field"><label>Téléphone</label><div class="val">+229 96 XX XX XX</div></div>
+          </div>
+          <p class="hint" style="margin-top:16px;">Exemple de contenu — à relier à la fiche parent/tuteur réelle une fois la base connectée.</p>
+        </div>
+
+        <div class="fiche-panel-section" id="fiche-parcours">
+          <div class="fiche-grid">
+            <div class="fiche-field"><label>Classe actuelle</label><div class="val" id="ficheParcoursClasse">—</div></div>
+            <div class="fiche-field"><label>Année académique</label><div class="val">2025-2026</div></div>
+            <div class="fiche-field"><label>Moyenne générale (1er trimestre)</label><div class="val">14,2 / 20</div></div>
+            <div class="fiche-field"><label>Observations</label><div class="val">Aucune observation particulière</div></div>
+          </div>
+          <p class="hint" style="margin-top:16px;">Exemple de contenu — à relier aux notes/bulletins réels une fois la base connectée.</p>
+        </div>
+
+        <div class="fiche-panel-section" id="fiche-documents">
+          <div id="ficheDocumentsGrid" class="doc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay" onclick="if(event.target===this) closeConfirm()">
+  <div class="confirm-box">
+    <div class="confirm-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
+    </div>
+    <h3 id="confirmTitle">Confirmer la suppression</h3>
+    <p id="confirmText">Cette action est irréversible. Voulez-vous vraiment continuer ?</p>
+    <div class="confirm-actions">
+      <button class="btn ghost" onclick="closeConfirm()">Annuler</button>
+      <button class="btn" style="background:var(--red);color:#fff;" id="confirmActionBtn">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Invitations envoyées avec succès</div>
+
+<div class="panel" id="editUserPanel">
+  <div class="panel-head">
+    <h2>Modifier le profil</h2>
+    <button class="panel-close" onclick="closeEditUserPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nom</label><input type="text" id="editNom"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="editPrenom"></div>
+    <div class="field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="editEmail">
+      <div class="hint">Seul un administrateur peut modifier l'adresse e-mail d'un utilisateur.</div>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeEditUserPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveEditUser()">Enregistrer</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   NOTE POUR LE DÉVELOPPEUR — LECTURE OBLIGATOIRE AVANT INTÉGRATION
+   ============================================================================
+   Ce fichier est une MAQUETTE FRONT-END. Toutes les données (utilisateurs,
+   compteurs, etc.) sont actuellement générées ou stockées directement dans
+   le navigateur (tableaux JS, attributs data-*), uniquement pour la démo.
+
+   Chaque section marquée 🔌 BACKEND ci-dessous doit être remplacée par un
+   véritable appel à l'API / la base de données. En résumé :
+
+   - RECHERCHE, FILTRES, TRI, PAGINATION → doivent être envoyés au serveur
+     (ex: GET /api/utilisateurs?search=...&role=...&statut=...&sort=nom&page=1)
+     et NON calculés côté navigateur comme ici. Sinon, avec des milliers de
+     comptes, l'app deviendra lente et consommera trop de données.
+   - Le tri alphabétique (actuellement fait en JS avec .sort()) doit devenir
+     un "ORDER BY nom, prenom" dans la requête SQL côté serveur.
+   - generateDemoUsers() est une fonction FICTIVE qui invente des faux
+     utilisateurs pour peupler la démo — à supprimer entièrement et
+     remplacer par un fetch() vers l'API au chargement de la page.
+   - L'ajout de compte, la modification de profil, l'archivage, etc. ne
+     font actuellement QUE des changements visuels temporaires (perdus au
+     rechargement de la page) — chacun doit déclencher un vrai appel API
+     (POST / PATCH / DELETE) vers le serveur.
+   ============================================================================ */
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function toggleSubmenu(btn){
+  btn.classList.toggle('expanded');
+  document.getElementById('submenu-dossiers').classList.toggle('open');
+}
+
+function switchPanel(name, btn){
+  document.querySelectorAll('.dashboard-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('panel-' + name).style.display = 'block';
+  document.querySelectorAll('.nav-item, .nav-subitem').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleProfileMenu(){
+  document.getElementById('profileMenu').classList.toggle('show');
+}
+function toggleGuideMenu(){
+  document.getElementById('guideMenu').classList.toggle('show');
+}
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.profile-wrap')){
+    document.getElementById('profileMenu')?.classList.remove('show');
+  }
+  if(!e.target.closest('.guide-wrap')){
+    document.getElementById('guideMenu')?.classList.remove('show');
+  }
+});
+
+let pending = [];
+
+const roleDescriptions = {
+  "Administrateur": "Accès complet : gestion des comptes, des classes, des documents et de tous les dossiers élèves.",
+  "Agent de scolarité": "Gère les fiches élèves, les documents, les inscriptions et génère les bulletins. Pas d'accès à la gestion des comptes.",
+  "Enseignant": "Saisit les notes et les observations pédagogiques, uniquement pour les classes qui lui sont assignées.",
+  "Direction": "Consultation des dossiers, accès aux rapports et statistiques de l'établissement."
+};
+
+function updateRoleDesc(){
+  const role = document.getElementById('roleSelect').value;
+  document.getElementById('roleDescTitle').textContent = role;
+  document.getElementById('roleDescText').textContent = roleDescriptions[role];
+}
+
+const PAGE_SIZE = 50;
+let currentPage = 1;
+
+// 🔌 BACKEND — Cette fonction filtre ET trie côté navigateur, à partir des
+// lignes déjà présentes dans le DOM. En production, remplacer entièrement
+// cette logique par un appel API qui reçoit search/role/statut/tri en
+// paramètres et renvoie DIRECTEMENT la bonne page de résultats, déjà triée
+// et déjà filtrée par le serveur (ex: GET /api/utilisateurs?search=...&sort=nom&page=1&pageSize=50).
+// Le tri par .sort() ci-dessous doit devenir un "ORDER BY nom, prenom" en SQL.
+function getMatchingRows(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const roleFilter = document.getElementById('filterRole').value;
+  const statutFilter = document.getElementById('filterStatut').value;
+  const matching = Array.from(document.querySelectorAll('#userTableBody tr')).filter(row => {
+    const name = row.querySelector('.info b')?.textContent.toLowerCase() || '';
+    const email = row.querySelector('.info span')?.textContent.toLowerCase() || '';
+    const role = row.dataset.role || '';
+    const statut = row.dataset.statut || '';
+    const matchSearch = !search || name.includes(search) || email.includes(search);
+    const matchRole = !roleFilter || role === roleFilter;
+    const matchStatut = !statutFilter || statut === statutFilter;
+    return matchSearch && matchRole && matchStatut;
+  });
+
+  // Tri alphabétique : Nom de famille, puis Prénom en cas d'égalité
+  matching.sort((a, b) => {
+    const nomA = (a.dataset.nom || '').toLowerCase();
+    const nomB = (b.dataset.nom || '').toLowerCase();
+    if(nomA !== nomB) return nomA.localeCompare(nomB, 'fr');
+    const prenomA = (a.dataset.prenom || '').toLowerCase();
+    const prenomB = (b.dataset.prenom || '').toLowerCase();
+    return prenomA.localeCompare(prenomB, 'fr');
+  });
+
+  return matching;
+}
+
+function filterRows(){
+  currentPage = 1;
+  renderTable();
+}
+
+function goPage(p){
+  currentPage = p;
+  renderTable();
+}
+
+// 🔌 BACKEND — La pagination ci-dessous découpe un tableau déjà chargé en
+// mémoire dans le navigateur. En production, chaque clic sur "Précédent"/
+// "Suivant"/un numéro de page doit déclencher une NOUVELLE requête au
+// serveur pour cette page précise (le serveur ne renvoie jamais tous les
+// utilisateurs d'un coup, seulement les 50 de la page demandée).
+function renderTable(){
+  const allRows = Array.from(document.querySelectorAll('#userTableBody tr'));
+  const matching = getMatchingRows();
+  const totalPages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  if(currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageRows = matching.slice(start, start + PAGE_SIZE);
+
+  allRows.forEach(r => r.style.display = 'none');
+
+  // Réordonne réellement les lignes affichées dans le DOM selon le tri alphabétique
+  const tbody = document.getElementById('userTableBody');
+  pageRows.forEach(r => {
+    tbody.appendChild(r);
+    r.style.display = '';
+  });
+
+  document.getElementById('noResults').style.display = matching.length === 0 ? 'block' : 'none';
+  renderPagination(matching.length, totalPages, start, pageRows.length);
+  updateSummary(allRows);
+}
+
+function renderPagination(totalMatching, totalPages, start, shownCount){
+  const el = document.getElementById('pagination');
+  if(!el) return;
+  if(totalMatching === 0){ el.innerHTML = ''; return; }
+
+  let html = `<span class="page-info">Affichage de ${start + 1}–${start + shownCount} sur ${totalMatching} utilisateurs</span><div class="page-controls">`;
+  html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">← Précédent</button>`;
+  for(let p = 1; p <= totalPages; p++){
+    html += `<button class="page-num ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">Suivant →</button>`;
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function roleLabelPlural(role){
+  const map = {
+    'Administrateur': 'administrateurs',
+    'Agent de scolarité': 'agents de scolarité',
+    'Enseignant': 'enseignants',
+    'Direction': 'direction'
+  };
+  return map[role] || role;
+}
+
+function updateSummary(allRows){
+  const el = document.getElementById('summaryText');
+  if(!el) return;
+  const counts = {};
+  allRows.forEach(r => { counts[r.dataset.role] = (counts[r.dataset.role] || 0) + 1; });
+  const parts = Object.entries(counts).map(([role, n]) => `${n} ${roleLabelPlural(role)}`).join(', ');
+  el.textContent = `${allRows.length} comptes · ${parts}`;
+}
+
+function menuHTML(status){
+  if(status === 'archived'){
+    return `
+      <div class="row-actions-wrap">
+        <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
+        <div class="action-menu">
+          <button onclick="alert('Réactiverait ce compte (démo)')">↺ Réactiver le compte</button>
+          <hr>
+          <button onclick="alert('Ouvrirait l\\'historique du compte (démo)')">🕐 Voir l'historique</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="row-actions-wrap">
+      <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
+      <div class="action-menu">
+        <button onclick="openEditUser(this.closest('tr'))">✎ Modifier le profil</button>
+        <hr>
+        <button class="danger" onclick="alert('Archiverait ce compte (démo)')">🗄 Archiver le compte</button>
+      </div>
+    </div>`;
+}
+
+function initActionMenus(scope){
+  (scope || document).querySelectorAll('.actions-cell').forEach(cell => {
+    if(cell.dataset.init) return;
+    cell.innerHTML = menuHTML(cell.dataset.status);
+    cell.dataset.init = "1";
+  });
+}
+
+function toggleMenu(btn){
+  const menu = btn.nextElementSibling;
+  const isOpen = menu.classList.contains('show');
+  document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  if(!isOpen) menu.classList.add('show');
+}
+
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.row-actions-wrap')){
+    document.querySelectorAll('.action-menu.show').forEach(m => m.classList.remove('show'));
+  }
+});
+
+// 🔌 BACKEND — Fonction FICTIVE, uniquement pour peupler la démo visuellement.
+// À SUPPRIMER en production. La remplacer par un appel du type :
+//   fetch('/api/utilisateurs').then(r => r.json()).then(data => { ...construire les lignes... })
+// au chargement de la page (voir l'appel generateDemoUsers() tout en bas de ce script).
+function generateDemoUsers(){
+  const prenoms = ['Aline','Bertin','Chantal','Didier','Estelle','Florent','Georgette','Hervé','Irène','Julien','Karine','Landry','Miriam','Nadège','Olivier','Priscille','Quentin','Raïssa','Sévérin','Tatiana'];
+  const noms = ['Agbo','Bokossa','Codjo','Dansou','Edorh','Fanou','Gbaguidi','Hounkpatin','Ikpoto','Kpossou','Lawson','Medegan','Noudegbessi','Ogoubi','Padonou','Quenum','Sagbo','Tchibozo','Vodounon','Zannou'];
+  const roles = ['Enseignant','Agent de scolarité','Enseignant','Direction','Enseignant'];
+  const tbody = document.getElementById('userTableBody');
+  let count = 0;
+  for(let i=0; i<55; i++){
+    const prenom = prenoms[i % prenoms.length];
+    const nom = noms[(i * 3) % noms.length];
+    const role = roles[i % roles.length];
+    const roleClass = {'Administrateur':'admin','Agent de scolarité':'scol','Enseignant':'ens','Direction':'dir'}[role];
+    const email = `${prenom.toLowerCase()}.${nom.toLowerCase()}@ecole-madre-trinidad.bj`;
+    const initials = (prenom[0] + nom[0]).toUpperCase();
+    const row = document.createElement('tr');
+    row.dataset.role = role;
+    row.dataset.statut = 'Actif';
+    row.dataset.nom = nom;
+    row.dataset.prenom = prenom;
+    row.innerHTML = `
+      <td class="name-cell">
+        <div class="av" style="background:var(--green-tint);color:var(--green);">${initials}</div>
+        <div class="info"><b>${nom.toUpperCase()} ${prenom}</b><span>${email}</span></div>
+      </td>
+      <td><span class="role-badge ${roleClass}">${role}</span></td>
+      <td><span class="status active"><span class="dot"></span>Actif</span></td>
+      <td>Il y a ${1 + (i % 20)} jours</td>
+      <td class="actions-cell" data-status="active"></td>
+    `;
+    tbody.appendChild(row);
+    count++;
+  }
+  initActionMenus();
+}
+
+generateDemoUsers();
+renderTable();
+
+/* ============================================================================
+   DOSSIER ÉLÈVE ET DOCUMENTS — Liste des apprenants
+   ============================================================================ */
+
+// 🔌 BACKEND — Données FICTIVES pour peupler la démo. À supprimer et remplacer
+// par un fetch('/api/apprenants') au chargement de la page.
+function generateDemoEleves(){
+  const prenoms = ['Emmanuel','Grâce','Josué','Ruth','Samuel','Naomie','David','Esther','Isaac','Rebecca','Élie','Deborah','Jonas','Rachel','Timothée','Abigaël','Nathan','Léa','Gabriel','Sarah'];
+  const noms = ['Ahouansou','Biaou','Capo-Chichi','Dossa','Egounlety','Fassinou','Gnonlonfoun','Houinsou','Ifè','Kiki','Loko','Mensah','Nonvide','Okoumassoun','Pognon','Sossou','Toko','Vidjannagni','Yehouenou','Zinsou'];
+  const classes = ['CI','CP','CE1','CE2','CM1-A','CM1-B','CM2-A','CM2-B'];
+  const tbody = document.getElementById('elevesTableBody');
+  for(let i=0; i<62; i++){
+    const prenom = prenoms[i % prenoms.length];
+    const nom = noms[(i * 7) % noms.length];
+    const classe = (i % 13 === 0) ? '' : classes[i % classes.length]; // certains apprenants sans classe attribuée
+    const matricule = `2026-${String(1000 + i)}`;
+    const jour = 1 + (i % 27);
+    const mois = 1 + (i % 12);
+    const dateCreation = `2026-${String(mois).padStart(2,'0')}-${String(jour).padStart(2,'0')}`;
+    const dateAffichee = `${String(jour).padStart(2,'0')}/${String(mois).padStart(2,'0')}/2026`;
+    const statut = (i % 17 === 0) ? 'Archivé' : 'Actif';
+    const manquants = (i % 4 === 0) ? 1 + (i % 2) : 0;
+    const initials = (prenom[0] + nom[0]).toUpperCase();
+
+    const row = document.createElement('tr');
+    row.dataset.nom = nom;
+    row.dataset.prenom = prenom;
+    row.dataset.classe = classe;
+    row.dataset.statut = statut;
+    row.dataset.dateCreation = dateCreation;
+    row.dataset.matricule = matricule;
+    row.innerHTML = `
+      <td class="name-cell">
+        <div class="av" style="background:var(--green-tint);color:var(--green);">${initials}</div>
+        <div class="info"><b>${nom.toUpperCase()} ${prenom}</b><span>${matricule}</span></div>
+      </td>
+      <td>${classe ? `<span class="role-badge scol">${classe}</span>` : `<span class="role-badge admin">Sans classe</span>`}</td>
+      <td><span class="status ${statut === 'Actif' ? 'active' : 'archived'}"><span class="dot"></span>${statut}</span></td>
+      <td>${dateAffichee}</td>
+      <td>${manquants === 0
+          ? `<span class="doc-status-badge complet">✓ Complet</span>`
+          : `<span class="doc-status-badge incomplet">⚠ ${manquants} manquant${manquants>1?'s':''}</span>`}</td>
+      <td class="eleve-actions-cell" data-status="${statut === 'Actif' ? 'active' : 'archived'}"></td>
+    `;
+    tbody.appendChild(row);
+  }
+  initEleveActionMenus();
+}
+
+function eleveMenuHTML(status){
+  if(status === 'archived'){
+    return `
+      <div class="row-actions-wrap">
+        <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
+        <div class="action-menu">
+          <button onclick="openFiche(this.closest('tr'))">👁 Consulter la fiche</button>
+          <hr>
+          <button onclick="alert('Désarchiverait cet apprenant (démo)')">↺ Désarchiver</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="row-actions-wrap">
+      <button class="row-actions" onclick="toggleMenu(this)">⋯</button>
+      <div class="action-menu">
+        <button onclick="openFiche(this.closest('tr'))">👁 Consulter la fiche</button>
+        <button onclick="openElevePanel(this.closest('tr'))">✎ Modifier la fiche</button>
+        <hr>
+        <button class="danger" onclick="alert('Archiverait cet apprenant (démo)')">🗄 Archiver</button>
+      </div>
+    </div>`;
+}
+function initEleveActionMenus(scope){
+  (scope || document).querySelectorAll('.eleve-actions-cell').forEach(cell => {
+    if(cell.dataset.init) return;
+    cell.innerHTML = eleveMenuHTML(cell.dataset.status);
+    cell.dataset.init = "1";
+  });
+}
+
+const ELEVE_PAGE_SIZE = 50;
+let eleveCurrentPage = 1;
+
+// 🔌 BACKEND — Comme pour la gestion des comptes : recherche, filtres et tri
+// doivent être envoyés au serveur (GET /api/apprenants?search=...&classe=...
+// &statut=...&dateCreation=...&sort=nom&page=1), pas calculés ici.
+function getMatchingEleves(){
+  const search = document.getElementById('eleveSearchInput').value.trim().toLowerCase();
+  const classeFilter = document.getElementById('filterClasse').value;
+  const statutFilter = document.getElementById('filterEleveStatut').value;
+  const dateFilter = document.getElementById('filterDate').value;
+
+  const matching = Array.from(document.querySelectorAll('#elevesTableBody tr')).filter(row => {
+    const name = row.querySelector('.info b')?.textContent.toLowerCase() || '';
+    const matricule = row.dataset.matricule.toLowerCase();
+    const matchSearch = !search || name.includes(search) || matricule.includes(search);
+    const matchClasse = !classeFilter
+      || (classeFilter === '__aucune__' ? !row.dataset.classe : row.dataset.classe === classeFilter);
+    const matchStatut = !statutFilter || row.dataset.statut === statutFilter;
+    const matchDate = !dateFilter || row.dataset.dateCreation === dateFilter;
+    return matchSearch && matchClasse && matchStatut && matchDate;
+  });
+
+  matching.sort((a, b) => {
+    const nomA = (a.dataset.nom || '').toLowerCase();
+    const nomB = (b.dataset.nom || '').toLowerCase();
+    if(nomA !== nomB) return nomA.localeCompare(nomB, 'fr');
+    return (a.dataset.prenom || '').toLowerCase().localeCompare((b.dataset.prenom || '').toLowerCase(), 'fr');
+  });
+
+  return matching;
+}
+
+function filterEleves(){
+  eleveCurrentPage = 1;
+  renderElevesTable();
+}
+function clearDateFilter(){
+  document.getElementById('filterDate').value = '';
+  filterEleves();
+}
+function eleveGoPage(p){
+  eleveCurrentPage = p;
+  renderElevesTable();
+}
+
+function renderElevesTable(){
+  const allRows = Array.from(document.querySelectorAll('#elevesTableBody tr'));
+  const matching = getMatchingEleves();
+  const totalPages = Math.max(1, Math.ceil(matching.length / ELEVE_PAGE_SIZE));
+  if(eleveCurrentPage > totalPages) eleveCurrentPage = totalPages;
+  const start = (eleveCurrentPage - 1) * ELEVE_PAGE_SIZE;
+  const pageRows = matching.slice(start, start + ELEVE_PAGE_SIZE);
+
+  allRows.forEach(r => r.style.display = 'none');
+  const tbody = document.getElementById('elevesTableBody');
+  pageRows.forEach(r => { tbody.appendChild(r); r.style.display = ''; });
+
+  document.getElementById('noResultsEleves').style.display = matching.length === 0 ? 'block' : 'none';
+
+  const el = document.getElementById('paginationEleves');
+  if(matching.length === 0){ el.innerHTML = ''; }
+  else{
+    let html = `<span class="page-info">Affichage de ${start+1}–${start+pageRows.length} sur ${matching.length} apprenants</span><div class="page-controls">`;
+    html += `<button class="page-btn" ${eleveCurrentPage===1?'disabled':''} onclick="eleveGoPage(${eleveCurrentPage-1})">← Précédent</button>`;
+    for(let p=1;p<=totalPages;p++){
+      html += `<button class="page-num ${p===eleveCurrentPage?'active':''}" onclick="eleveGoPage(${p})">${p}</button>`;
+    }
+    html += `<button class="page-btn" ${eleveCurrentPage===totalPages?'disabled':''} onclick="eleveGoPage(${eleveCurrentPage+1})">Suivant →</button></div>`;
+    el.innerHTML = html;
+  }
+
+  const total = allRows.length;
+  const archives = allRows.filter(r => r.dataset.statut === 'Archivé').length;
+  document.getElementById('elevesSummaryText').textContent = `${total} apprenants · ${total - archives} actifs, ${archives} archivés`;
+}
+
+let editingEleveRow = null;
+
+function fieldInputHTML(f, idx, prefillValue){
+  const id = `eleveField_${idx}`;
+  const star = f.obligatoire ? '<span class="required-star">*</span>' : '';
+  let input;
+  if(f.type === 'Liste déroulante'){
+    const opts = (f.options || []).map(o => `<option ${o === prefillValue ? 'selected' : ''}>${o}</option>`).join('');
+    input = `<select class="role-select" id="${id}"><option value="">Sélectionner...</option>${opts}</select>`;
+  } else if(f.type === 'Date'){
+    input = `<input type="date" id="${id}" value="${prefillValue || ''}">`;
+  } else if(f.type === 'Nombre'){
+    input = `<input type="number" id="${id}" value="${prefillValue || ''}">`;
+  } else {
+    input = `<input type="text" id="${id}" value="${prefillValue || ''}" placeholder="${f.nom}">`;
+  }
+  return `<div class="field"><label>${f.nom}${star}</label>${input}</div>`;
+}
+
+// 🔌 BACKEND — Le formulaire est généré dynamiquement à partir de la config
+// « Paramètres des dossiers ». Le backend doit valider côté serveur que tous
+// les champs marqués obligatoire (et documents obligatoires) sont bien
+// fournis avant d'accepter la création d'une fiche — la validation ci-dessous
+// (côté navigateur) est un confort visuel, pas une sécurité suffisante.
+function openElevePanel(row){
+  editingEleveRow = row || null;
+  document.getElementById('eleveFormTitle').textContent = row ? 'Modifier la fiche' : 'Nouvel apprenant';
+
+  const prefillMap = row ? {'Nom': row.dataset.nom, 'Prénom(s)': row.dataset.prenom} : {};
+  document.getElementById('eleveFormFields').innerHTML = formFields.map((f, idx) =>
+    fieldInputHTML(f, idx, prefillMap[f.nom])
+  ).join('');
+
+  document.getElementById('eleveClasse').value = row ? (row.dataset.classe || '') : '';
+  document.getElementById('eleveFormPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeElevePanel(){
+  document.getElementById('eleveFormPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+// 🔌 BACKEND — Remplacer par POST /api/apprenants (création) ou
+// PATCH /api/apprenants/{id} (modification), avec génération du matricule
+// côté serveur.
+function saveEleve(){
+  const missing = formFields.filter((f, idx) => f.obligatoire && !document.getElementById(`eleveField_${idx}`).value.trim());
+  if(missing.length){
+    alert('Champs obligatoires manquants : ' + missing.map(f => f.nom).join(', '));
+    return;
+  }
+  closeElevePanel();
+  const toast = document.getElementById('toast');
+  toast.textContent = editingEleveRow ? '✓ Fiche mise à jour avec succès' : '✓ Apprenant créé avec succès';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+generateDemoEleves();
+renderElevesTable();
+
+/* ============================================================================
+   MODALE FICHE APPRENANT — consultation détaillée
+   ============================================================================ */
+function openFiche(row){
+  if(!row) return;
+  const nom = row.dataset.nom || '';
+  const prenom = row.dataset.prenom || '';
+  const classe = row.dataset.classe || '—';
+  const statut = row.dataset.statut || '—';
+  const matricule = row.dataset.matricule || '—';
+  const dateAffichee = row.children[3]?.textContent.trim() || '—';
+
+  document.getElementById('ficheNom').textContent = `${nom.toUpperCase()} ${prenom}`;
+  document.getElementById('ficheMatricule').textContent = matricule;
+  document.getElementById('ficheClasse').textContent = classe;
+  document.getElementById('ficheStatut').textContent = statut;
+  document.getElementById('ficheDate').textContent = dateAffichee;
+  document.getElementById('ficheParcoursClasse').textContent = classe;
+
+  // Onglet Identité — généré à partir des champs configurés dans Paramètres des dossiers
+  const grid = document.getElementById('ficheIdentiteGrid');
+  const demoValues = {
+    'Nom': nom.toUpperCase(), 'Prénom(s)': prenom, 'Sexe': (row.dataset.sexe || 'Féminin'),
+    'Date de naissance': '12/05/2016', 'Lieu de naissance': 'Cotonou', 'Nationalité': 'Béninoise',
+    'Adresse': 'Quartier Fidjrossè, Cotonou', 'Groupe sanguin': 'O+', 'Quartier': 'Fidjrossè',
+    'Allergies': 'Aucune connue', 'Situation de handicap': 'Aucune',
+  };
+  grid.innerHTML = formFields.map(f => `
+    <div class="fiche-field">
+      <label>${f.nom}</label>
+      <div class="val">${demoValues[f.nom] !== undefined ? demoValues[f.nom] : '—'}</div>
+    </div>
+  `).join('');
+
+  // Onglet Documents — généré à partir des types configurés dans Paramètres des dossiers
+  const docGrid = document.getElementById('ficheDocumentsGrid');
+  docGrid.innerHTML = docTypes.map((d, i) => {
+    const present = !(d.obligatoire && i % 3 === 0); // exemple : certains obligatoires manquants pour illustrer l'état "manquant"
+    return `
+      <div class="fiche-doc-card ${present ? '' : 'missing'}">
+        <div class="fiche-doc-icon ${present ? 'ok' : 'missing'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${present
+            ? '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/>'
+            : '<path d="M12 9v4M12 17h.01M10.3 3.9 2.6 18a2 2 0 0 0 1.8 3h15.2a2 2 0 0 0 1.8-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>'}</svg>
+        </div>
+        <div>
+          <div class="fiche-doc-title">${d.nom} ${d.obligatoire ? '<span style="color:var(--red);">*</span>' : ''}</div>
+          <div class="fiche-doc-sub">${present ? 'Fourni · ' + d.formats.join(', ') : 'Manquant · formats acceptés : ' + d.formats.join(', ')}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  switchFicheTab('identite', document.querySelector('.fiche-tab'));
+  document.getElementById('ficheOverlay').classList.add('show');
+}
+function closeFiche(){
+  document.getElementById('ficheOverlay').classList.remove('show');
+}
+function switchFicheTab(name, btn){
+  document.querySelectorAll('.fiche-panel-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('fiche-' + name).classList.add('active');
+  document.querySelectorAll('.fiche-tab').forEach(t => t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+/* ============================================================================
+   PARAMÈTRES DES DOSSIERS — Types de documents & champs du formulaire
+   ============================================================================ */
+
+// 🔌 BACKEND — Ces deux listes doivent être chargées depuis la base de
+// données (GET /api/config/types-documents et /api/config/champs-formulaire)
+// et chaque ajout/modification/suppression doit être persisté côté serveur.
+let docTypes = [
+  {nom:"Photo d'identité", formats:['JPG','PNG'], obligatoire:true},
+  {nom:"Acte de naissance", formats:['PDF','JPG'], obligatoire:true},
+  {nom:"Certificat de nationalité", formats:['PDF','JPG'], obligatoire:true},
+  {nom:"Bulletins de notes", formats:['PDF'], obligatoire:false},
+  {nom:"Certificat médical", formats:['PDF','JPG'], obligatoire:false},
+];
+let formFields = [
+  {nom:"Nom", type:"Texte", obligatoire:true},
+  {nom:"Prénom(s)", type:"Texte", obligatoire:true},
+  {nom:"Sexe", type:"Liste déroulante", obligatoire:true, options:["Masculin","Féminin"]},
+  {nom:"Date de naissance", type:"Date", obligatoire:true},
+  {nom:"Lieu de naissance", type:"Texte", obligatoire:true},
+  {nom:"Nationalité", type:"Texte", obligatoire:true},
+  {nom:"Adresse", type:"Texte", obligatoire:true},
+  {nom:"Groupe sanguin", type:"Liste déroulante", obligatoire:true, options:["A+","A-","B+","B-","AB+","AB-","O+","O-"]},
+  {nom:"Quartier", type:"Texte", obligatoire:true},
+  {nom:"Allergies", type:"Texte", obligatoire:true},
+  {nom:"Situation de handicap", type:"Liste déroulante", obligatoire:true, options:["Aucune","Motrice","Visuelle","Auditive","Autre"]},
+];
+
+function renderDocTypes(){
+  const tbody = document.getElementById('docTypesTableBody');
+  tbody.innerHTML = docTypes.map((d, i) => `
+    <tr>
+      <td><b>${d.nom}</b></td>
+      <td><div class="format-chips">${d.formats.map(f => `<span class="format-chip">${f}</span>`).join('')}</div></td>
+      <td>
+        <label class="toggle-switch">
+          <input type="checkbox" ${d.obligatoire ? 'checked' : ''} onchange="docTypes[${i}].obligatoire = this.checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td><span class="row-actions" onclick="confirmRemoveDocType(${i})" style="cursor:pointer;" title="Supprimer">🗑</span></td>
+    </tr>
+  `).join('');
+}
+function removeDocType(i){
+  docTypes.splice(i, 1);
+  renderDocTypes();
+}
+function confirmRemoveDocType(i){
+  showConfirm(
+    `Supprimer le type de document « ${docTypes[i].nom} » ?`,
+    `Les documents déjà fournis de ce type resteront dans les dossiers existants, mais ce type ne pourra plus être ajouté à de nouvelles fiches.`,
+    () => removeDocType(i)
+  );
+}
+function openDocTypePanel(){
+  document.getElementById('docTypeNom').value = '';
+  document.getElementById('fmtPdf').checked = true;
+  document.getElementById('fmtJpg').checked = true;
+  document.getElementById('fmtPng').checked = false;
+  document.getElementById('docTypeObligatoire').checked = false;
+  document.getElementById('docTypePanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeDocTypePanel(){
+  document.getElementById('docTypePanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+// 🔌 BACKEND — Remplacer par POST /api/config/types-documents
+function saveDocType(){
+  const nom = document.getElementById('docTypeNom').value.trim();
+  if(!nom) return;
+  const formats = [];
+  if(document.getElementById('fmtPdf').checked) formats.push('PDF');
+  if(document.getElementById('fmtJpg').checked) formats.push('JPG');
+  if(document.getElementById('fmtPng').checked) formats.push('PNG');
+  docTypes.push({nom, formats, obligatoire: document.getElementById('docTypeObligatoire').checked});
+  renderDocTypes();
+  closeDocTypePanel();
+}
+
+function renderFormFields(){
+  const tbody = document.getElementById('formFieldsTableBody');
+  tbody.innerHTML = formFields.map((f, i) => `
+    <tr>
+      <td><b>${f.nom}</b></td>
+      <td>
+        <span class="role-badge scol">${f.type}</span>
+        ${f.options && f.options.length ? `<div class="format-chips" style="margin-top:6px;">${f.options.map(o => `<span class="format-chip">${o}</span>`).join('')}</div>` : ''}
+      </td>
+      <td>
+        <label class="toggle-switch">
+          <input type="checkbox" ${f.obligatoire ? 'checked' : ''} onchange="formFields[${i}].obligatoire = this.checked">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td><span class="row-actions" onclick="confirmRemoveFormField(${i})" style="cursor:pointer;" title="Supprimer">🗑</span></td>
+    </tr>
+  `).join('');
+}
+function removeFormField(i){
+  formFields.splice(i, 1);
+  renderFormFields();
+}
+function confirmRemoveFormField(i){
+  showConfirm(
+    `Supprimer le champ « ${formFields[i].nom} » ?`,
+    `Ce champ n'apparaîtra plus dans le formulaire de création d'une fiche apprenant. Les fiches existantes ne seront pas modifiées.`,
+    () => removeFormField(i)
+  );
+}
+
+/* Modale de confirmation générique, réutilisable pour toute suppression */
+function showConfirm(title, text, onConfirm){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  const btn = document.getElementById('confirmActionBtn');
+  const newBtn = btn.cloneNode(true); // évite l'empilement d'anciens listeners
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.addEventListener('click', () => { onConfirm(); closeConfirm(); });
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+function closeConfirm(){
+  document.getElementById('confirmOverlay').classList.remove('show');
+}
+function toggleFieldOptions(){
+  const isListe = document.getElementById('fieldType').value === 'Liste déroulante';
+  document.getElementById('fieldOptionsWrap').style.display = isListe ? 'block' : 'none';
+}
+function openFormFieldPanel(){
+  document.getElementById('fieldNom').value = '';
+  document.getElementById('fieldType').value = 'Texte';
+  document.getElementById('fieldOptions').value = '';
+  document.getElementById('fieldObligatoire').checked = false;
+  toggleFieldOptions();
+  document.getElementById('formFieldPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeFormFieldPanel(){
+  document.getElementById('formFieldPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+// 🔌 BACKEND — Remplacer par POST /api/config/champs-formulaire
+function saveFormField(){
+  const nom = document.getElementById('fieldNom').value.trim();
+  if(!nom) return;
+  const type = document.getElementById('fieldType').value;
+  const options = type === 'Liste déroulante'
+    ? document.getElementById('fieldOptions').value.split(',').map(s => s.trim()).filter(Boolean)
+    : undefined;
+  formFields.push({nom, type, obligatoire: document.getElementById('fieldObligatoire').checked, options});
+  renderFormFields();
+  closeFormFieldPanel();
+}
+
+renderDocTypes();
+renderFormFields();
+
+function openPanel(){
+  document.getElementById('panel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closePanel(){
+  document.getElementById('panel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+let editingRow = null;
+function openEditUser(row){
+  editingRow = row;
+  document.getElementById('editNom').value = row.dataset.nom || '';
+  document.getElementById('editPrenom').value = row.dataset.prenom || '';
+  document.getElementById('editEmail').value = row.querySelector('.info span').textContent;
+  document.getElementById('editUserPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeEditUserPanel(){
+  document.getElementById('editUserPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+function closeAllPanels(){
+  closePanel();
+  closeEditUserPanel();
+  closeElevePanel();
+  closeDocTypePanel();
+  closeFormFieldPanel();
+}
+// 🔌 BACKEND — Remplacer par un appel PATCH /api/utilisateurs/{id} avec les
+// nouvelles valeurs, puis mettre à jour l'affichage seulement après
+// confirmation de succès du serveur (et afficher une erreur sinon).
+function saveEditUser(){
+  if(editingRow){
+    const nom = document.getElementById('editNom').value.trim();
+    const prenom = document.getElementById('editPrenom').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    editingRow.dataset.nom = nom;
+    editingRow.dataset.prenom = prenom;
+    editingRow.querySelector('.info b').textContent = `${nom.toUpperCase()} ${prenom}`.trim();
+    editingRow.querySelector('.info span').textContent = email;
+  }
+  closeEditUserPanel();
+  const toast = document.getElementById('toast');
+  toast.textContent = '✓ Profil mis à jour avec succès';
+  toast.classList.add('show');
+  setTimeout(() => { toast.classList.remove('show'); }, 3000);
+}
+
+function addPending(){
+  const email = document.getElementById('emailInput').value.trim();
+  const nom = document.getElementById('nomInput').value.trim();
+  const prenom = document.getElementById('prenomInput').value.trim();
+  if(!email || !email.includes('@')){
+    document.getElementById('emailInput').style.borderColor = 'var(--red)';
+    return;
+  }
+  const role = document.getElementById('roleSelect').value;
+  pending.push({email, nom, prenom, role});
+  renderPending();
+  document.getElementById('emailInput').value = '';
+  document.getElementById('nomInput').value = '';
+  document.getElementById('prenomInput').value = '';
+  document.getElementById('emailInput').style.borderColor = 'var(--line)';
+}
+
+function removePending(i){
+  pending.splice(i,1);
+  renderPending();
+}
+
+function renderPending(){
+  const section = document.getElementById('pendingSection');
+  const list = document.getElementById('pendingList');
+  const count = document.getElementById('pendingCount');
+  const saveBtn = document.getElementById('saveBtn');
+  const callout = document.getElementById('callout');
+  count.textContent = pending.length;
+  section.style.display = pending.length ? 'block' : 'none';
+  saveBtn.disabled = pending.length === 0;
+  callout.style.display = pending.length ? 'block' : 'none';
+  list.innerHTML = pending.map((p,i) => `
+    <div class="pending-item">
+      <div><span class="pmail">${p.prenom || p.nom ? (p.prenom + ' ' + p.nom).trim() + ' — ' : ''}${p.email}</span><br><span class="prole">${p.role}</span></div>
+      <button class="premove" onclick="removePending(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// 🔌 BACKEND — Actuellement, "enregistrer" ne fait qu'ajouter les lignes
+// visuellement dans le tableau (perdu au rechargement de la page). En
+// production, chaque invitation doit être envoyée via POST /api/utilisateurs
+// (ou en lot), puis la liste doit être rechargée depuis le serveur pour
+// refléter les vrais comptes créés.
+function saveInvites(){
+  const toast = document.getElementById('toast');
+  toast.textContent = `✓ ${pending.length} invitation${pending.length>1?'s':''} envoyée${pending.length>1?'s':''} avec succès`;
+  toast.classList.add('show');
+  pending.forEach(p => {
+    const tbody = document.getElementById('userTableBody');
+    const roleClass = {'Administrateur':'admin','Agent de scolarité':'scol','Enseignant':'ens','Direction':'dir'}[p.role];
+    const displayName = (p.prenom || p.nom) ? `${p.nom.toUpperCase()} ${p.prenom}`.trim() : '—';
+    const initials = ((p.prenom?.[0]||'') + (p.nom?.[0]||p.email[0])).toUpperCase() || p.email.substring(0,2).toUpperCase();
+    const row = document.createElement('tr');
+    row.className = 'pending';
+    row.dataset.role = p.role;
+    row.dataset.statut = 'Invitation en attente';
+    row.dataset.nom = p.nom;
+    row.dataset.prenom = p.prenom;
+    row.innerHTML = `
+      <td class="name-cell">
+        <div class="av" style="background:var(--gold-tint);color:#8A6717;">${initials}</div>
+        <div class="info"><b>${displayName}</b><span>${p.email}</span></div>
+      </td>
+      <td><span class="role-badge ${roleClass}">${p.role}</span></td>
+      <td><span class="status pending-status"><span class="dot"></span>Invitation en attente</span></td>
+      <td>—</td>
+      <td class="actions-cell" data-status="active"></td>
+    `;
+    tbody.appendChild(row);
+    initActionMenus(row);
+  });
+  pending = [];
+  renderPending();
+  setTimeout(() => { closePanel(); }, 600);
+  setTimeout(() => { toast.classList.remove('show'); }, 3200);
+  filterRows();
+}
+</script>
+</body>
+</html>
