@@ -17,6 +17,7 @@ class TypeDocument extends Model
         'description',
         'formats_acceptes',
         'obligatoire',
+        'protege',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class TypeDocument extends Model
         return [
             'formats_acceptes' => 'array',
             'obligatoire' => 'bool',
+            'protege' => 'bool',
         ];
     }
 

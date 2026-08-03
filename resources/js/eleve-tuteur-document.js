@@ -34,6 +34,8 @@ export function initEleveTuteurDocument() {
         });
     }
 
+    initEditTuteurPanel();
+
     if (fichePanel && documentForm) {
         const documentActionHidden = document.getElementById('add-document-action');
 
@@ -70,6 +72,56 @@ export function initEleveTuteurDocument() {
     }
 
     initDropzone();
+}
+
+/**
+ * "Modifier le tuteur" panel, opened from the pencil button on a tuteur
+ * card (built dynamically in eleve-fiche.js's renderFiche(), so it doesn't
+ * exist yet when this module's other init-time listeners are attached).
+ * Delegated on #fiche-parents-list, which is present in the static markup
+ * and simply gets its innerHTML replaced on every fiche render.
+ */
+function initEditTuteurPanel() {
+    const parentsList = document.getElementById('fiche-parents-list');
+    const form = document.getElementById('edit-tuteur-form');
+    if (!parentsList || !form) {
+        return;
+    }
+
+    const editUrlHidden = document.getElementById('edit-tuteur-edit-url');
+    const nomPrenomInput = document.getElementById('edit-tuteur-nom-prenom');
+    const lienSelect = document.getElementById('edit-tuteur-lien');
+    const telephoneInput = document.getElementById('edit-tuteur-telephone');
+    const emailInput = document.getElementById('edit-tuteur-email');
+
+    parentsList.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-edit-tuteur-trigger]');
+        if (!trigger) {
+            return;
+        }
+
+        form.action = trigger.dataset.editUrl;
+        // Mirrored into a hidden field so `old('_edit_url')` can restore the
+        // correct action if a validation error redirects back here.
+        if (editUrlHidden) {
+            editUrlHidden.value = trigger.dataset.editUrl;
+        }
+        if (nomPrenomInput) {
+            nomPrenomInput.value = trigger.dataset.editNomPrenom ?? '';
+        }
+        if (lienSelect) {
+            lienSelect.value = trigger.dataset.editLien ?? '';
+        }
+        if (telephoneInput) {
+            telephoneInput.value = trigger.dataset.editTelephone ?? '';
+        }
+        if (emailInput) {
+            emailInput.value = trigger.dataset.editEmail ?? '';
+        }
+
+        document.querySelector('[data-panel="edit-tuteur"]')?.classList.add('show');
+        document.querySelector('[data-panel-overlay="edit-tuteur"]')?.classList.add('show');
+    });
 }
 
 function showFileClientError() {

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Eleve extends Model
 {
@@ -98,6 +99,22 @@ class Eleve extends Model
     public function nomComplet(): string
     {
         return "{$this->nom} {$this->prenom}";
+    }
+
+    /**
+     * The élève's "Photo d'identité" document, if one has been uploaded —
+     * matched by type libellé (types de documents are admin-configurable,
+     * so there's no fixed id/enum to key on) rather than an exact string,
+     * so a rename like "Photo d'identité (2x2)" still matches. Used to show
+     * a real photo instead of initials on the fiche and in the list.
+     * Requires `documents.typeDocument` to already be eager-loaded.
+     */
+    public function photoIdentite(): ?DocumentNumerique
+    {
+        return $this->documents
+            ->filter(fn (DocumentNumerique $document) => Str::contains($document->typeDocument?->libelle ?? '', 'photo', ignoreCase: true))
+            ->sortByDesc('date_ajout')
+            ->first();
     }
 
     /**

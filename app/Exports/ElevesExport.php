@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use App\Enums\StatutEleve;
 use App\Models\Eleve;
+use App\Support\EleveFilters;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -11,13 +13,23 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class ElevesExport implements FromCollection, WithHeadings, WithMapping
 {
+    public function __construct(private readonly Request $request)
+    {
+    }
+
+    /**
+     * Same search/classe/statut/date de création filters as the on-screen
+     * list (see EleveController::index() / App\Support\EleveFilters) —
+     * "export to Excel" means "export what's currently filtered".
+     */
     public function collection(): Collection
     {
-        return Eleve::query()
+        $query = Eleve::query()
             ->with(['inscriptions' => fn ($q) => $q->latest('date_inscription')->limit(1)->with('classe')])
             ->orderBy('nom')
-            ->orderBy('prenom')
-            ->get();
+            ->orderBy('prenom');
+
+        return EleveFilters::apply($query, $this->request)->get();
     }
 
     /**

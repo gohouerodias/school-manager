@@ -18,12 +18,33 @@ class DocumentController extends Controller
      * tab of the fiche modal. Stored on the private "local" disk (student
      * documents aren't public); format is cross-checked against the
      * selected type's `formats_acceptes` in StoreDocumentEleveRequest.
+     *
+     * If this élève already has a document of the selected type (e.g.
+     * re-uploading the "Photo d'identité" to change it), the old file is
+     * deleted and the existing row is updated in place rather than
+     * accumulating a duplicate — this is what lets the photo be *changed*
+     * from the fiche even though its type de document is protected from
+     * being renamed/removed in "Paramètres des dossiers".
      */
     public function store(StoreDocumentEleveRequest $request, Eleve $eleve): RedirectResponse
     {
         $validated = $request->validated();
 
         $chemin = $request->file('fichier')->store('documents-eleves', 'local');
+
+        $existant = $eleve->documents()->where('type_document_id', $validated['type_document_id'])->first();
+
+        if ($existant) {
+            Storage::disk('local')->delete($existant->chemin_fichier);
+
+            $existant->update([
+                'televerse_par' => $request->user()->id,
+                'chemin_fichier' => $chemin,
+                'date_ajout' => now()->toDateString(),
+            ]);
+
+            return back()->with('toast', "Le document « {$existant->typeDocument->libelle} » a été remplacé sur la fiche de {$eleve->nomComplet()}.");
+        }
 
         DocumentNumerique::create([
             'eleve_id' => $eleve->id,

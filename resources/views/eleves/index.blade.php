@@ -5,7 +5,18 @@
 @section('content')
 <x-page-header title="Liste des apprenants" :subtitle="$subtitle">
     <x-slot:actions>
-        <x-export-buttons :excel-route="route('eleves.export.excel')" :pdf-route="route('eleves.export.pdf')" />
+        @php
+            $activeFilters = array_filter([
+                'search' => $search,
+                'classe' => $classeFilter,
+                'statut' => $statutFilter,
+                'date_creation' => $dateFilter,
+            ]);
+        @endphp
+        <x-export-buttons
+            :excel-route="route('eleves.export.excel', $activeFilters)"
+            :pdf-route="route('eleves.export.pdf', $activeFilters)"
+        />
         <button type="button" class="btn primary" data-panel-open="new-eleve">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Nouvel apprenant
@@ -14,12 +25,17 @@
 </x-page-header>
 
 <form method="GET" action="{{ route('eleves.index') }}" class="toolbar">
-    <x-toolbar-search name="search" :value="$search" placeholder="Rechercher par nom, prénom ou matricule..." />
+    <x-toolbar-search
+        name="search"
+        :value="$search"
+        placeholder="Rechercher par nom, prénom ou matricule..."
+        :live-search-url="route('eleves.index')"
+        live-search-target="eleves-table-region"
+    />
 
     <x-filter-select name="classe" :selected="$classeFilter" placeholder="Toutes les classes" :options="
-        collect(['sans_classe' => 'Sans classe attribuée'])
-            ->merge($classes->mapWithKeys(fn ($classe) => [(string) $classe->id => $classe->niveau->libelle.' — '.$classe->nom]))
-            ->all()
+        ['sans_classe' => 'Sans classe attribuée'] +
+        $classes->mapWithKeys(fn ($classe) => [(string) $classe->id => $classe->niveau->libelle.' — '.$classe->nom])->all()
     " />
 
     <x-filter-select name="statut" :selected="$statutFilter" placeholder="Tous les statuts" :options="[
@@ -39,97 +55,9 @@
     @endif
 </form>
 
-@if ($eleves->isEmpty())
-    <p class="table-empty-state">Aucun apprenant ne correspond à votre recherche.</p>
-@endif
-
-<x-data-table id="eleves-table">
-    <x-slot:head>
-        <th>Apprenant</th>
-        <th>Classe</th>
-        <th>Statut</th>
-        <th>Date de création</th>
-        <th>Documents</th>
-        <th></th>
-    </x-slot:head>
-
-    @foreach ($eleves as $eleve)
-        @php
-            $isArchived = $eleve->statut === \App\Enums\StatutEleve::Archive;
-            $inscription = $eleve->inscriptions->first();
-            $missingCount = $obligatoireTypeIds->diff($eleve->documents->pluck('type_document_id'))->count();
-            $champsMap = $eleve->valeursPersonnalisees->pluck('valeur', 'champ_personnalise_id');
-        @endphp
-        <tr>
-            <td class="name-cell">
-                <div class="avatar avatar-neutral">{{ mb_strtoupper(mb_substr($eleve->nom, 0, 1).mb_substr($eleve->prenom, 0, 1)) }}</div>
-                <div class="info"><b>{{ $eleve->nomComplet() }}</b><span>{{ $eleve->matricule }}</span></div>
-            </td>
-            <td>
-                @if ($inscription?->classe)
-                    <span class="classe-badge">{{ $inscription->classe->niveau->libelle }} — {{ $inscription->classe->nom }}</span>
-                @elseif ($eleve->niveauSouhaite)
-                    <span class="classe-badge none">Sans classe — {{ $eleve->niveauSouhaite->libelle }} souhaité</span>
-                @else
-                    <span class="classe-badge none">Sans classe</span>
-                @endif
-            </td>
-            <td>
-                <span @class(['status', $isArchived ? 'archived' : 'active'])>
-                    <span class="dot"></span>{{ $isArchived ? 'Archivé' : 'Actif' }}
-                </span>
-            </td>
-            <td>{{ $eleve->created_at->format('d/m/Y') }}</td>
-            <td>
-                @if ($missingCount === 0)
-                    <span class="doc-status-badge complet">✓ Complet</span>
-                @else
-                    <span class="doc-status-badge manquant">⚠ {{ $missingCount }} manquant(s)</span>
-                @endif
-            </td>
-            <td>
-                <x-action-menu>
-                    <button
-                        type="button"
-                        data-panel-open="fiche"
-                        data-fiche-trigger
-                        data-fiche-url="{{ route('eleves.fiche', $eleve) }}"
-                    >👁 Consulter la fiche</button>
-
-                    @if ($isArchived)
-                        <hr>
-                        <form method="POST" action="{{ route('eleves.desarchiver', $eleve) }}">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="positive">↺ Désarchiver</button>
-                        </form>
-                    @else
-                        <button
-                            type="button"
-                            data-panel-open="edit-eleve"
-                            data-edit-eleve-trigger
-                            data-edit-url="{{ route('eleves.update', $eleve) }}"
-                            data-edit-nom="{{ $eleve->nom }}"
-                            data-edit-prenom="{{ $eleve->prenom }}"
-                            data-edit-sexe="{{ $eleve->sexe }}"
-                            data-edit-date-naissance="{{ $eleve->date_naissance->format('Y-m-d') }}"
-                            data-edit-niveau-souhaite-id="{{ $eleve->niveau_souhaite_id }}"
-                            data-edit-champs="{{ json_encode($champsMap) }}"
-                        >✎ Modifier la fiche</button>
-                        <hr>
-                        <form method="POST" action="{{ route('eleves.archiver', $eleve) }}" onsubmit="return confirm('Archiver cette fiche ?');">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="danger">🗄 Archiver</button>
-                        </form>
-                    @endif
-                </x-action-menu>
-            </td>
-        </tr>
-    @endforeach
-</x-data-table>
-
-<x-pagination :paginator="$eleves" />
+<div id="eleves-table-region">
+    @include('eleves.partials.table')
+</div>
 
 {{-- Nouvel apprenant --}}
 <x-slide-panel id="new-eleve" title="Nouvel apprenant">
@@ -314,21 +242,31 @@
     id="fiche"
     data-tuteur-url-template="{{ route('eleves.tuteurs.store', ['eleve' => '__ID__']) }}"
     data-document-url-template="{{ route('eleves.documents.store', ['eleve' => '__ID__']) }}"
+    data-tuteur-update-url-template="{{ route('eleves.tuteurs.update', ['eleve' => '__EID__', 'parentTuteur' => '__PID__']) }}"
     data-tuteur-delete-url-template="{{ route('eleves.tuteurs.destroy', ['eleve' => '__EID__', 'parentTuteur' => '__PID__']) }}"
     data-document-delete-url-template="{{ route('eleves.documents.destroy', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
     data-document-view-url-template="{{ route('eleves.documents.show', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
     data-document-download-url-template="{{ route('eleves.documents.download', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
 >
+    <div class="fiche-breadcrumb-row">
+        <span class="fiche-breadcrumb-text">Dossier élève et documents / Liste des apprenants</span>
+        <button type="button" class="panel-close" data-panel-close="fiche">✕</button>
+    </div>
+
     <div class="fiche-head">
-        <div class="fiche-avatar" id="fiche-avatar"></div>
+        <div class="fiche-avatar">
+            <img id="fiche-avatar-img" src="" alt="" style="display:none;">
+            <svg id="fiche-avatar-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
         <div class="fiche-head-info">
-            <h2 id="fiche-nom"></h2>
-            <div class="fiche-meta">
+            <div class="fiche-head-title-row">
+                <h2><span id="fiche-nom-famille"></span> <span id="fiche-prenom"></span></h2>
                 <span class="classe-badge" id="fiche-matricule"></span>
-                <span class="status active" id="fiche-statut"></span>
+            </div>
+            <div class="fiche-meta-line">
+                Classe : <b id="fiche-classe">—</b> &nbsp; Statut : <b id="fiche-statut"></b> &nbsp; Date de création : <b id="fiche-date-creation"></b>
             </div>
         </div>
-        <button type="button" class="panel-close" data-panel-close="fiche">✕</button>
     </div>
 
     <div class="fiche-tabs">
@@ -413,6 +351,59 @@
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="add-tuteur">Annuler</button>
         <button type="submit" form="add-tuteur-form" class="btn dark">Enregistrer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier un tuteur (depuis la fiche ouverte) --}}
+<x-slide-panel id="edit-tuteur" title="Modifier le tuteur">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-tuteur-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-tuteur">
+        <input type="hidden" name="_edit_url" id="edit-tuteur-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('nom_prenom')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('lien_parente')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('telephone')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('email')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="edit-tuteur-nom-prenom">Nom et prénom</label>
+            <input type="text" id="edit-tuteur-nom-prenom" name="nom_prenom" placeholder="Ex : Grégoire Ahouansou" value="{{ old('nom_prenom') }}" required>
+            <div class="hint">Ce tuteur peut être lié à d'autres élèves (fratrie) : modifier ses informations ici les met à jour partout où il est enregistré.</div>
+        </div>
+
+        <div class="field">
+            <label for="edit-tuteur-lien">Lien de parenté</label>
+            <select class="role-select" id="edit-tuteur-lien" name="lien_parente" required>
+                @foreach (['Père', 'Mère', 'Tuteur légal', 'Autre'] as $lien)
+                    <option @selected(old('lien_parente') === $lien)>{{ $lien }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="edit-tuteur-telephone">Téléphone</label>
+            <input type="tel" id="edit-tuteur-telephone" name="telephone" placeholder="+229 XX XX XX XX" value="{{ old('telephone') }}" required>
+        </div>
+
+        <div class="field">
+            <label for="edit-tuteur-email">Adresse e-mail (optionnel)</label>
+            <input type="email" id="edit-tuteur-email" name="email" placeholder="exemple@email.com" value="{{ old('email') }}">
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-tuteur">Annuler</button>
+        <button type="submit" form="edit-tuteur-form" class="btn dark">Enregistrer</button>
     </x-slot:footer>
 </x-slide-panel>
 

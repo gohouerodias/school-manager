@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Eleves;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTuteurRequest;
+use App\Http\Requests\UpdateTuteurRequest;
 use App\Models\Eleve;
 use App\Models\ParentTuteur;
 use Illuminate\Http\RedirectResponse;
@@ -56,6 +57,54 @@ class TuteurController extends Controller
             : "{$validated['nom_prenom']} a été ajouté(e) comme tuteur de {$eleve->nomComplet()}.";
 
         return back()->with('toast', $message);
+    }
+
+    /**
+     * Edit a parent/tuteur's own information (nom, prénom, téléphone,
+     * email) from the "Parents / Tuteurs" tab, plus their lien de parenté
+     * with *this* élève. Since a ParentTuteur record can be shared across
+     * siblings (see store()), editing it here updates the same record
+     * everywhere it's linked — correct, since it's the same real person.
+     *
+     * If the edited nom + prénom + téléphone now match a *different*
+     * ParentTuteur already on file, that one is linked instead (mirroring
+     * store()'s dedup) rather than turning this record into a duplicate of
+     * it; the original record is simply detached from this élève.
+     */
+    public function update(UpdateTuteurRequest $request, Eleve $eleve, ParentTuteur $parentTuteur): RedirectResponse
+    {
+        abort_unless($eleve->parents()->where('parent_tuteurs.id', $parentTuteur->id)->exists(), 404);
+
+        $validated = $request->validated();
+
+        $mots = preg_split('/\s+/', trim($validated['nom_prenom'])) ?: [];
+        $nom = array_pop($mots) ?? $validated['nom_prenom'];
+        $prenom = implode(' ', $mots);
+
+        $autreExistant = ParentTuteur::query()
+            ->where('nom', $nom)
+            ->where('prenom', $prenom)
+            ->where('telephone', $validated['telephone'])
+            ->whereKeyNot($parentTuteur->id)
+            ->first();
+
+        if ($autreExistant) {
+            $eleve->parents()->detach($parentTuteur->id);
+            $eleve->parents()->syncWithoutDetaching([$autreExistant->id => ['lien_parente' => $validated['lien_parente']]]);
+
+            return back()->with('toast', "{$validated['nom_prenom']} correspond à un tuteur déjà enregistré : la fiche de {$eleve->nomComplet()} a été liée à ce dossier existant.");
+        }
+
+        $parentTuteur->update([
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'telephone' => $validated['telephone'],
+            'email' => $validated['email'] ?? null,
+        ]);
+
+        $eleve->parents()->updateExistingPivot($parentTuteur->id, ['lien_parente' => $validated['lien_parente']]);
+
+        return back()->with('toast', "Les informations de {$validated['nom_prenom']} ont été mises à jour.");
     }
 
     /**

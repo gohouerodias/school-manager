@@ -162,11 +162,11 @@ class DatabaseSeeder extends Seeder
     private function seedTypesDocuments(): Collection
     {
         $definitions = [
-            ['libelle' => 'Photo d\'identité', 'formats' => ['JPG', 'PNG'], 'obligatoire' => true],
-            ['libelle' => 'Acte de naissance', 'formats' => ['PDF', 'JPG'], 'obligatoire' => true],
-            ['libelle' => 'CIP', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false],
-            ['libelle' => 'NPI', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false],
-            ['libelle' => 'Certificat médical', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false],
+            ['libelle' => 'Photo d\'identité', 'formats' => ['JPG', 'PNG'], 'obligatoire' => true, 'protege' => true],
+            ['libelle' => 'Acte de naissance', 'formats' => ['PDF', 'JPG'], 'obligatoire' => true, 'protege' => false],
+            ['libelle' => 'CIP', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
+            ['libelle' => 'NPI', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
+            ['libelle' => 'Certificat médical', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
         ];
 
         return collect($definitions)->map(fn (array $data) => TypeDocument::create([
@@ -174,6 +174,7 @@ class DatabaseSeeder extends Seeder
             'description' => null,
             'formats_acceptes' => $data['formats'],
             'obligatoire' => $data['obligatoire'],
+            'protege' => $data['protege'],
         ]));
     }
 

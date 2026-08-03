@@ -24,7 +24,12 @@
 
         @foreach ($typesDocuments as $type)
             <tr>
-                <td><b>{{ $type->libelle }}</b></td>
+                <td>
+                    <b>{{ $type->libelle }}</b>
+                    @if ($type->protege)
+                        <span class="lock-badge" title="Ce type de document est protégé : il ne peut pas être modifié ni supprimé.">🔒 Protégé</span>
+                    @endif
+                </td>
                 <td>
                     <div class="chips">
                         @foreach ($type->formats_acceptes ?? [] as $format)
@@ -45,6 +50,7 @@
                             <input
                                 type="checkbox"
                                 @checked($type->obligatoire)
+                                @disabled($type->protege)
                                 onchange="document.getElementById('type-obligatoire-hidden-{{ $type->id }}').value = this.checked ? '1' : '0'; this.form.requestSubmit();"
                             >
                             <span class="toggle-slider"></span>
@@ -52,24 +58,30 @@
                     </form>
                 </td>
                 <td>
-                    <div class="row-actions-group">
-                        <button
-                            type="button"
-                            class="row-edit"
-                            title="Modifier"
-                            data-panel-open="edit-type-document"
-                            data-edit-type-document-trigger
-                            data-edit-url="{{ route('eleves.parametres.types-documents.update', $type) }}"
-                            data-edit-libelle="{{ $type->libelle }}"
-                            data-edit-formats="{{ implode(',', $type->formats_acceptes ?? []) }}"
-                            data-edit-obligatoire="{{ $type->obligatoire ? '1' : '0' }}"
-                        >✎</button>
-                        <form method="POST" action="{{ route('eleves.parametres.types-documents.destroy', $type) }}" onsubmit="return confirm('Supprimer ce type de document ?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="row-delete" title="Supprimer">🗑</button>
-                        </form>
-                    </div>
+                    @if ($type->protege)
+                        <div class="row-actions-group">
+                            <span class="row-edit disabled" title="Type de document protégé : non modifiable">🔒</span>
+                        </div>
+                    @else
+                        <div class="row-actions-group">
+                            <button
+                                type="button"
+                                class="row-edit"
+                                title="Modifier"
+                                data-panel-open="edit-type-document"
+                                data-edit-type-document-trigger
+                                data-edit-url="{{ route('eleves.parametres.types-documents.update', $type) }}"
+                                data-edit-libelle="{{ $type->libelle }}"
+                                data-edit-formats="{{ implode(',', $type->formats_acceptes ?? []) }}"
+                                data-edit-obligatoire="{{ $type->obligatoire ? '1' : '0' }}"
+                            >✎</button>
+                            <form method="POST" action="{{ route('eleves.parametres.types-documents.destroy', $type) }}" onsubmit="return confirm('Supprimer ce type de document ?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="row-delete" title="Supprimer">🗑</button>
+                            </form>
+                        </div>
+                    @endif
                 </td>
             </tr>
         @endforeach

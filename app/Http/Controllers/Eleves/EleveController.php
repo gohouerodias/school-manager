@@ -13,6 +13,7 @@ use App\Models\Inscription;
 use App\Models\Niveau;
 use App\Models\TypeDocument;
 use App\Models\ValeurChampPersonnalise;
+use App\Support\EleveFilters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,40 +38,29 @@ class EleveController extends Controller
         $query = Eleve::query()
             ->with([
                 'inscriptions' => fn ($q) => $q->latest('date_inscription')->limit(1)->with('classe.niveau'),
-                'documents',
+                'documents.typeDocument',
                 'valeursPersonnalisees',
                 'niveauSouhaite',
             ])
             ->orderBy('nom')
             ->orderBy('prenom');
 
-        if ($search !== '') {
-            $query->where(function ($inner) use ($search) {
-                $inner->where('nom', 'like', "%{$search}%")
-                    ->orWhere('prenom', 'like', "%{$search}%")
-                    ->orWhere('matricule', 'like', "%{$search}%");
-            });
-        }
-
-        if ($classeFilter === 'sans_classe') {
-            $query->whereDoesntHave('inscriptions');
-        } elseif ($classeFilter !== '') {
-            $query->whereHas('inscriptions', fn ($q) => $q->where('classe_id', $classeFilter));
-        }
-
-        if ($statutFilter === 'archive') {
-            $query->where('statut', StatutEleve::Archive);
-        } elseif ($statutFilter === 'actif') {
-            $query->where('statut', StatutEleve::Actif);
-        }
-
-        if ($dateFilter !== '') {
-            $query->whereDate('created_at', $dateFilter);
-        }
+        EleveFilters::apply($query, $request);
 
         $eleves = $query->paginate(self::PER_PAGE)->withQueryString();
 
         $obligatoireTypeIds = TypeDocument::query()->where('obligatoire', true)->pluck('id');
+
+        // Live search (resources/js/live-search.js): as the user types, the
+        // request is re-fired via fetch with this header instead of a full
+        // page reload, so only the table + pagination fragment is needed —
+        // skips the queries below that the rest of the page doesn't use.
+        if ($request->ajax()) {
+            return view('eleves.partials.table', [
+                'eleves' => $eleves,
+                'obligatoireTypeIds' => $obligatoireTypeIds,
+            ]);
+        }
 
         $classes = Classe::query()
             ->whereHas('anneeAcademique', fn ($q) => $q->where('est_active', true))
@@ -198,6 +188,8 @@ class EleveController extends Controller
 
         $champs = ChampPersonnalise::query()->orderBy('ordre')->get();
         $typesDocuments = TypeDocument::query()->orderBy('libelle')->get();
+        $inscriptionActuelle = $eleve->inscriptions->sortByDesc('date_inscription')->first();
+        $photoIdentite = $eleve->photoIdentite();
 
         return response()->json([
             'identite' => [
@@ -206,9 +198,16 @@ class EleveController extends Controller
                 'matricule' => $eleve->matricule,
                 'sexe' => $eleve->sexe,
                 'date_naissance' => $eleve->date_naissance->format('d/m/Y'),
+                'date_creation' => $eleve->created_at->format('d/m/Y'),
                 'statut' => $eleve->statut->value,
+                'classe' => $inscriptionActuelle?->classe
+                    ? "{$inscriptionActuelle->classe->niveau->libelle} — {$inscriptionActuelle->classe->nom}"
+                    : null,
                 'niveau_souhaite' => $eleve->niveauSouhaite?->libelle,
                 'a_une_classe' => $eleve->inscriptions->isNotEmpty(),
+                'photo_url' => $photoIdentite
+                    ? route('eleves.documents.show', ['eleve' => $eleve, 'document' => $photoIdentite])
+                    : null,
                 'champs' => $champs->map(fn (ChampPersonnalise $champ) => [
                     'libelle' => $champ->libelle,
                     'valeur' => $eleve->valeursPersonnalisees->firstWhere('champ_personnalise_id', $champ->id)?->valeur,

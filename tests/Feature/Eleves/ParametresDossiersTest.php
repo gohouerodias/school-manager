@@ -60,6 +60,50 @@ test('administrators can delete a type de document', function () {
     $this->assertDatabaseMissing('types_documents', ['id' => $type->id]);
 });
 
+test('a protégé type de document (Photo d\'identité) cannot be renamed, reformatted or toggled', function () {
+    $admin = User::factory()->administrateur()->create();
+    $type = TypeDocument::factory()->protege()->create([
+        'libelle' => "Photo d'identité",
+        'formats_acceptes' => ['JPG', 'PNG'],
+        'obligatoire' => true,
+    ]);
+
+    $response = $this->actingAs($admin)->patch(route('eleves.parametres.types-documents.update', $type), [
+        'libelle' => 'Nouveau nom',
+        'formats_acceptes' => ['PDF'],
+        'obligatoire' => '0',
+    ]);
+
+    $response->assertRedirect();
+    $type->refresh();
+    expect($type->libelle)->toBe("Photo d'identité");
+    expect($type->formats_acceptes)->toBe(['JPG', 'PNG']);
+    expect($type->obligatoire)->toBeTrue();
+});
+
+test('a protégé type de document cannot be deleted', function () {
+    $admin = User::factory()->administrateur()->create();
+    $type = TypeDocument::factory()->protege()->create(['libelle' => "Photo d'identité"]);
+
+    $response = $this->actingAs($admin)->delete(route('eleves.parametres.types-documents.destroy', $type));
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('types_documents', ['id' => $type->id]);
+});
+
+test('the parametres page hides the edit/delete controls for a protégé type de document', function () {
+    $admin = User::factory()->administrateur()->create();
+    $protege = TypeDocument::factory()->protege()->create(['libelle' => "Photo d'identité"]);
+    $libre = TypeDocument::factory()->create(['libelle' => 'Acte de naissance']);
+
+    $response = $this->actingAs($admin)->get(route('eleves.parametres.index'));
+
+    $response->assertOk();
+    $response->assertSee('🔒 Protégé');
+    $response->assertSee('data-edit-url="'.route('eleves.parametres.types-documents.update', $libre).'"', false);
+    $response->assertDontSee('data-edit-url="'.route('eleves.parametres.types-documents.update', $protege).'"', false);
+});
+
 test('administrators can add a texte champ personnalisé', function () {
     $admin = User::factory()->administrateur()->create();
 

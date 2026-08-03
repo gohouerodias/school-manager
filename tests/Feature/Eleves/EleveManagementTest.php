@@ -1,9 +1,11 @@
 <?php
 
 use App\Enums\StatutEleve;
+use App\Models\AnneeAcademique;
 use App\Models\ChampPersonnalise;
 use App\Models\Classe;
 use App\Models\Eleve;
+use App\Models\Inscription;
 use App\Models\Niveau;
 use App\Models\User;
 
@@ -22,6 +24,43 @@ test('administrators and agents de scolarité can view the eleves list', functio
 
     $this->actingAs($admin)->get(route('eleves.index'))->assertOk();
     $this->actingAs($agent)->get(route('eleves.index'))->assertOk();
+});
+
+test('the classe filter dropdown options use the real classe ids, not renumbered indexes', function () {
+    // Regression test: the options used to be built with Collection::merge()
+    // (array_merge() under the hood), which renumbers integer-like keys —
+    // so a classe with a real DB id of 1 was rendered as <option value="0">
+    // and selecting it filtered on the wrong id, showing nothing.
+    $admin = User::factory()->administrateur()->create();
+    $anneeActive = AnneeAcademique::factory()->create(['est_active' => true]);
+    $niveauCI = Niveau::factory()->create(['libelle' => 'CI']);
+    $niveauCP = Niveau::factory()->create(['libelle' => 'CP']);
+    $classeCI = Classe::factory()->create(['niveau_id' => $niveauCI->id, 'annee_academique_id' => $anneeActive->id, 'nom' => 'A']);
+    $classeCP = Classe::factory()->create(['niveau_id' => $niveauCP->id, 'annee_academique_id' => $anneeActive->id, 'nom' => 'A']);
+
+    $response = $this->actingAs($admin)->get(route('eleves.index'));
+
+    $response->assertOk();
+    $response->assertSee('<option value="'.$classeCI->id.'" >CI — A</option>', false);
+    $response->assertSee('<option value="'.$classeCP->id.'" >CP — A</option>', false);
+});
+
+test('filtering the eleves list by classe returns only élèves inscrits in that classe', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeActive = AnneeAcademique::factory()->create(['est_active' => true]);
+    $classeA = Classe::factory()->create(['annee_academique_id' => $anneeActive->id]);
+    $classeB = Classe::factory()->create(['annee_academique_id' => $anneeActive->id]);
+
+    $eleveA = Eleve::factory()->create(['nom' => 'Dansclassea']);
+    Inscription::factory()->create(['eleve_id' => $eleveA->id, 'classe_id' => $classeA->id]);
+    $eleveB = Eleve::factory()->create(['nom' => 'Dansclasseb']);
+    Inscription::factory()->create(['eleve_id' => $eleveB->id, 'classe_id' => $classeB->id]);
+
+    $response = $this->actingAs($admin)->get(route('eleves.index', ['classe' => $classeA->id]));
+
+    $response->assertOk();
+    $response->assertSee('Dansclassea');
+    $response->assertDontSee('Dansclasseb');
 });
 
 test('creating a fiche élève generates a sequential matricule and stores the fixed fields', function () {
@@ -198,6 +237,34 @@ test('the eleve list is filtered server-side by search, classe, statut and date 
     expect($match->id)->not->toBeNull();
     expect($other->id)->not->toBeNull();
     expect($archived->id)->not->toBeNull();
+});
+
+test('a live-search (XMLHttpRequest) request to the eleve list returns just the table partial', function () {
+    $admin = User::factory()->administrateur()->create();
+    Eleve::factory()->create(['nom' => 'Houngbo', 'prenom' => 'Kokou']);
+    Eleve::factory()->create(['nom' => 'Dossou', 'prenom' => 'Sylvie']);
+
+    $response = $this->actingAs($admin)->get(
+        route('eleves.index', ['search' => 'Houngbo']),
+        ['X-Requested-With' => 'XMLHttpRequest']
+    );
+
+    $response->assertOk();
+    $response->assertSee('Houngbo Kokou');
+    $response->assertDontSee('Dossou Sylvie');
+    // Just the table fragment: no page shell/toolbar around it.
+    $response->assertDontSee('<html', false);
+    $response->assertDontSee('Rechercher par nom, prénom ou matricule', false);
+});
+
+test('a normal (non-XMLHttpRequest) request to the eleve list still returns the full page', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    $response = $this->actingAs($admin)->get(route('eleves.index'));
+
+    $response->assertOk();
+    $response->assertSee('<html', false);
+    $response->assertSee('Rechercher par nom, prénom ou matricule', false);
 });
 
 test('the eleve list is always sorted alphabetically by nom then prénom', function () {

@@ -14,6 +14,7 @@ import { initEleveFiche } from './eleve-fiche';
 import { initEleveTuteurDocument } from './eleve-tuteur-document';
 import { initParametresDossiers } from './parametres-dossiers';
 import { initPanelErrorReopen } from './panel-error-reopen';
+import { initLiveSearch } from './live-search';
 
 document.addEventListener('DOMContentLoaded', () => {
     initPasswordToggles();
@@ -31,4 +32,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initEleveTuteurDocument();
     initParametresDossiers();
     initPanelErrorReopen();
+    initLiveSearch();
 });

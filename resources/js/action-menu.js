@@ -7,10 +7,16 @@
  * isn't clipped by `.data-card { overflow: hidden; }` — that clip is what
  * made the dropdown appear cut off for rows near the bottom/right of a
  * table.
+ *
+ * The trigger click is delegated on `document` (rather than bound directly
+ * to each `[data-action-menu-trigger]` at init time) so rows swapped in
+ * later — e.g. by the élèves list's live search, see live-search.js — keep
+ * working without needing to re-run this init function.
  */
 export function initActionMenus() {
-    document.querySelectorAll('[data-action-menu-trigger]').forEach((trigger) => {
-        trigger.addEventListener('click', (event) => {
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-action-menu-trigger]');
+        if (trigger) {
             event.stopPropagation();
             const menu = trigger.nextElementSibling;
             const isOpen = menu.classList.contains('show');
@@ -18,10 +24,9 @@ export function initActionMenus() {
             if (!isOpen) {
                 openMenu(trigger, menu);
             }
-        });
-    });
+            return;
+        }
 
-    document.addEventListener('click', (event) => {
         if (!event.target.closest('[data-action-menu]')) {
             closeAllMenus();
         }

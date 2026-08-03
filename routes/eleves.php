@@ -20,6 +20,7 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::patch('{eleve}/desarchiver', [EleveController::class, 'desarchiver'])->name('desarchiver');
         Route::get('{eleve}/fiche', [EleveController::class, 'fiche'])->name('fiche');
         Route::post('{eleve}/tuteurs', [TuteurController::class, 'store'])->name('tuteurs.store');
+        Route::patch('{eleve}/tuteurs/{parentTuteur}', [TuteurController::class, 'update'])->name('tuteurs.update');
         Route::delete('{eleve}/tuteurs/{parentTuteur}', [TuteurController::class, 'destroy'])->name('tuteurs.destroy');
         Route::post('{eleve}/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::get('{eleve}/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');

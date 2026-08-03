@@ -4,22 +4,33 @@
  * (Identité, Parents/Tuteurs, Parcours scolaire, Documents).
  */
 export function initEleveFiche() {
-    document.querySelectorAll('[data-fiche-trigger]').forEach((trigger) => {
-        trigger.addEventListener('click', () => {
-            // "Ajouter un tuteur"/"Ajouter un document" (eleve-tuteur-document.js)
-            // need to know which élève is currently open; the fiche URL is
-            // .../eleves/{id}/fiche, so the id is lifted straight from it.
-            const fichePanel = document.querySelector('[data-panel="fiche"]');
-            const match = trigger.dataset.ficheUrl?.match(/\/eleves\/(\d+)\/fiche/);
-            if (fichePanel && match) {
-                fichePanel.dataset.currentEleveId = match[1];
-            }
+    // Delegated on `document` (rather than bound directly to each
+    // `[data-fiche-trigger]` at init time) so rows swapped in later by the
+    // élèves list's live search (live-search.js) keep working. Since
+    // slide-panel.js's generic `[data-panel-open]` handling is *also*
+    // init-time-only, the panel is opened explicitly here too.
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-fiche-trigger]');
+        if (!trigger) {
+            return;
+        }
 
-            fetch(trigger.dataset.ficheUrl, { headers: { Accept: 'application/json' } })
-                .then((response) => response.json())
-                .then(renderFiche)
-                .catch(() => {});
-        });
+        // "Ajouter un tuteur"/"Ajouter un document" (eleve-tuteur-document.js)
+        // need to know which élève is currently open; the fiche URL is
+        // .../eleves/{id}/fiche, so the id is lifted straight from it.
+        const fichePanel = document.querySelector('[data-panel="fiche"]');
+        const match = trigger.dataset.ficheUrl?.match(/\/eleves\/(\d+)\/fiche/);
+        if (fichePanel && match) {
+            fichePanel.dataset.currentEleveId = match[1];
+        }
+
+        fetch(trigger.dataset.ficheUrl, { headers: { Accept: 'application/json' } })
+            .then((response) => response.json())
+            .then(renderFiche)
+            .catch(() => {});
+
+        document.querySelector('[data-panel="fiche"]')?.classList.add('show');
+        document.querySelector('[data-panel-overlay="fiche"]')?.classList.add('show');
     });
 
     document.querySelectorAll('[data-fiche-tab]').forEach((tabBtn) => {
@@ -41,15 +52,25 @@ export function initEleveFiche() {
 function renderFiche(data) {
     const { identite, parents, parcours, documents } = data;
 
-    setText('fiche-nom', `${identite.nom} ${identite.prenom}`);
+    setText('fiche-nom-famille', identite.nom);
+    setText('fiche-prenom', identite.prenom);
     setText('fiche-matricule', identite.matricule);
-    setText('fiche-avatar', initials(identite.nom, identite.prenom));
+    setText('fiche-classe', identite.classe || '—');
+    setText('fiche-date-creation', identite.date_creation);
+    setText('fiche-statut', identite.statut === 'archive' ? 'Archivé' : 'Actif');
 
-    const statutEl = document.getElementById('fiche-statut');
-    if (statutEl) {
-        const archived = identite.statut === 'archive';
-        statutEl.textContent = archived ? 'Archivé' : 'Actif';
-        statutEl.className = archived ? 'status archived' : 'status active';
+    const avatarImg = document.getElementById('fiche-avatar-img');
+    const avatarIcon = document.getElementById('fiche-avatar-icon');
+    if (avatarImg && avatarIcon) {
+        if (identite.photo_url) {
+            avatarImg.src = identite.photo_url;
+            avatarImg.style.display = 'block';
+            avatarIcon.style.display = 'none';
+        } else {
+            avatarImg.removeAttribute('src');
+            avatarImg.style.display = 'none';
+            avatarIcon.style.display = 'block';
+        }
     }
 
     const grid = document.getElementById('fiche-identite-grid');
@@ -79,7 +100,10 @@ function renderFiche(data) {
                         <b>${escapeHTML(p.nom)}</b> — ${escapeHTML(p.lien ?? '')}
                         <br><span>${escapeHTML(p.telephone ?? '—')}${p.email ? ' · ' + escapeHTML(p.email) : ''}</span>
                     </div>
-                    ${deleteFormHTML('tuteur-delete-url-template', eleveId, p.id, `Retirer ${p.nom} de la fiche ?`)}
+                    <div class="fiche-parent-actions">
+                        ${editTuteurTriggerHTML(eleveId, p)}
+                        ${deleteFormHTML('tuteur-delete-url-template', eleveId, p.id, `Retirer ${p.nom} de la fiche ?`)}
+                    </div>
                 </div>
             `).join('')
             : '<p class="table-empty-state">Aucun parent/tuteur enregistré.</p>';
@@ -134,6 +158,42 @@ function linkHTML(templateKey, eleveId, itemId, label, extraAttrs, icon) {
     const url = template.replace('__EID__', eleveId).replace('__DID__', itemId);
 
     return `<a href="${escapeHTML(url)}" class="fiche-item-btn" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" ${extraAttrs}>${icon}</a>`;
+}
+
+/**
+ * Builds the "Modifier" pencil button on a tuteur card. It only carries the
+ * data the edit-tuteur panel needs to prefill itself (data-edit-* attrs) —
+ * the actual click handling (opening the panel, populating its fields) is
+ * wired via event delegation in eleve-tuteur-document.js, since this button
+ * doesn't exist yet when that script's init-time listeners are attached.
+ */
+function editTuteurTriggerHTML(eleveId, parent) {
+    if (!eleveId || !parent.id) {
+        return '';
+    }
+
+    const fichePanel = document.querySelector('[data-panel="fiche"]');
+    const template = fichePanel?.dataset.tuteurUpdateUrlTemplate;
+    if (!template) {
+        return '';
+    }
+
+    const url = template.replace('__EID__', eleveId).replace('__PID__', parent.id);
+
+    return `
+        <button type="button" class="fiche-item-btn" title="Modifier" aria-label="Modifier"
+            data-edit-tuteur-trigger
+            data-edit-url="${escapeHTML(url)}"
+            data-edit-nom-prenom="${escapeHTML(parent.nom ?? '')}"
+            data-edit-lien="${escapeHTML(parent.lien ?? '')}"
+            data-edit-telephone="${escapeHTML(parent.telephone ?? '')}"
+            data-edit-email="${escapeHTML(parent.email ?? '')}"
+        >${editIcon()}</button>
+    `;
+}
+
+function editIcon() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 }
 
 function viewIcon() {
@@ -193,10 +253,6 @@ function setText(id, text) {
     if (el) {
         el.textContent = text;
     }
-}
-
-function initials(nom, prenom) {
-    return `${(nom[0] || '').toUpperCase()}${(prenom[0] || '').toUpperCase()}`;
 }
 
 function escapeHTML(value) {
