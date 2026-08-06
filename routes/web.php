@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 require __DIR__.'/auth.php';
 require __DIR__.'/comptes.php';
 require __DIR__.'/eleves.php';
+require __DIR__.'/tuteurs.php';
 
 Route::get('/', function () {
     return redirect()->route(auth()->check() ? 'dashboard' : 'login');

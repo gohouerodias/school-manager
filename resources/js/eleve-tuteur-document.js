@@ -1,3 +1,6 @@
+import { refreshDropdownSelect } from './dropdown-select';
+import { initTuteurQuickSearch } from './tuteur-quick-search';
+
 /**
  * "Ajouter un tuteur" / "Ajouter un document" panels, opened from within the
  * fiche apprenant modal (eleve-fiche.js). Both are shared singleton panels
@@ -11,6 +14,14 @@ export function initEleveTuteurDocument() {
     const fichePanel = document.querySelector('[data-panel="fiche"]');
     const tuteurForm = document.getElementById('add-tuteur-form');
     const documentForm = document.getElementById('add-document-form');
+
+    // Same reusable "does this parent already exist" quick-search used by
+    // the fiche élève wizard's étape 3 (see resources/js/tuteur-quick-search.js)
+    // — wiring it into a new form is just naming its fields "{prefix}-*" and
+    // calling this with that prefix, no extra JS needed.
+    const addTuteurQuickSearch = initTuteurQuickSearch('tuteur', {
+        rechercheUrl: fichePanel?.dataset.tuteurRechercheUrl,
+    });
 
     if (fichePanel && tuteurForm) {
         const tuteurActionHidden = document.getElementById('add-tuteur-action');
@@ -30,6 +41,11 @@ export function initEleveTuteurDocument() {
                     }
                 }
                 tuteurForm.reset();
+                // form.reset() doesn't fire `change` on individual fields,
+                // so the "Lien de parenté" custom dropdown's trigger label
+                // would otherwise still show whatever was picked last time.
+                refreshDropdownSelect(tuteurForm.querySelector('select'));
+                addTuteurQuickSearch.reset();
             });
         });
     }
@@ -51,6 +67,7 @@ export function initEleveTuteurDocument() {
                     }
                 }
                 documentForm.reset();
+                refreshDropdownSelect(documentForm.querySelector('select'));
                 resetDropzone();
                 updateFormatsHint();
                 hideFileClientError();
@@ -94,6 +111,10 @@ function initEditTuteurPanel() {
     const telephoneInput = document.getElementById('edit-tuteur-telephone');
     const emailInput = document.getElementById('edit-tuteur-email');
 
+    const editTuteurQuickSearch = initTuteurQuickSearch('edit-tuteur', {
+        rechercheUrl: document.querySelector('[data-panel="fiche"]')?.dataset.tuteurRechercheUrl,
+    });
+
     parentsList.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-edit-tuteur-trigger]');
         if (!trigger) {
@@ -111,6 +132,7 @@ function initEditTuteurPanel() {
         }
         if (lienSelect) {
             lienSelect.value = trigger.dataset.editLien ?? '';
+            refreshDropdownSelect(lienSelect);
         }
         if (telephoneInput) {
             telephoneInput.value = trigger.dataset.editTelephone ?? '';
@@ -118,6 +140,10 @@ function initEditTuteurPanel() {
         if (emailInput) {
             emailInput.value = trigger.dataset.editEmail ?? '';
         }
+
+        // Clear any suggestion/match left over from a previous "Modifier"
+        // opened during this same fiche session.
+        editTuteurQuickSearch.reset();
 
         document.querySelector('[data-panel="edit-tuteur"]')?.classList.add('show');
         document.querySelector('[data-panel-overlay="edit-tuteur"]')?.classList.add('show');

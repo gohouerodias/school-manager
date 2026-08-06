@@ -13,16 +13,25 @@ class Niveau extends Model
 
     protected $table = 'niveaux';
 
+    /**
+     * `premiere_scolarisation` (true only for Maternelle 1 / Maternelle 2):
+     * a child entering this niveau is assumed to be starting school for the
+     * first time, so the fiche élève wizard's "Documents" step doesn't ask
+     * for a bulletin/certificat from a previous school — see
+     * TypeDocument::$requis_si_transfert.
+     */
     protected $fillable = [
         'libelle',
         'ordre',
         'cycle',
+        'premiere_scolarisation',
     ];
 
     protected function casts(): array
     {
         return [
             'cycle' => CycleNiveau::class,
+            'premiere_scolarisation' => 'bool',
         ];
     }
 

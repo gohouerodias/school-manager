@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Connexion') — CSCMT</title>
+    @include('partials.page-loader')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="cscmt auth-shell">
+<div id="page-loader" aria-hidden="true">
+    <div class="page-loader-ring"><span></span><span></span><span></span></div>
+    <p class="page-loader-text">Chargement…</p>
+</div>
 
 <svg class="deco tl" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M100 100C100 100 60 70 30 75C10 78 0 60 5 45" stroke="#3D8B75" stroke-width="6" stroke-linecap="round"/>

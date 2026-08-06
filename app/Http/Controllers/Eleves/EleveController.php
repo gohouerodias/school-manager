@@ -37,7 +37,11 @@ class EleveController extends Controller
 
         $query = Eleve::query()
             ->with([
-                'inscriptions' => fn ($q) => $q->latest('date_inscription')->limit(1)->with('classe.niveau'),
+                // Not limited to the latest one: the éditable "Classe"
+                // dropdown (see Eleve::inscriptionActive()) needs to find
+                // the active-année Inscription specifically, which isn't
+                // necessarily the most recent one by date_inscription.
+                'inscriptions' => fn ($q) => $q->latest('date_inscription')->with('classe.niveau', 'classe.anneeAcademique'),
                 'documents.typeDocument',
                 'valeursPersonnalisees',
                 'niveauSouhaite',
@@ -51,6 +55,12 @@ class EleveController extends Controller
 
         $obligatoireTypeIds = TypeDocument::query()->where('obligatoire', true)->pluck('id');
 
+        $classes = Classe::query()
+            ->whereHas('anneeAcademique', fn ($q) => $q->where('est_active', true))
+            ->with('niveau')
+            ->get()
+            ->sortBy(fn (Classe $classe) => [$classe->niveau->ordre, $classe->nom]);
+
         // Live search (resources/js/live-search.js): as the user types, the
         // request is re-fired via fetch with this header instead of a full
         // page reload, so only the table + pagination fragment is needed —
@@ -59,14 +69,9 @@ class EleveController extends Controller
             return view('eleves.partials.table', [
                 'eleves' => $eleves,
                 'obligatoireTypeIds' => $obligatoireTypeIds,
+                'classes' => $classes,
             ]);
         }
-
-        $classes = Classe::query()
-            ->whereHas('anneeAcademique', fn ($q) => $q->where('est_active', true))
-            ->with('niveau')
-            ->get()
-            ->sortBy(fn (Classe $classe) => [$classe->niveau->ordre, $classe->nom]);
 
         $champsPersonnalises = ChampPersonnalise::query()->orderBy('ordre')->get();
         $typesDocuments = TypeDocument::query()->orderBy('libelle')->get();
@@ -110,7 +115,9 @@ class EleveController extends Controller
         $validated = $request->validated();
 
         $eleve = Eleve::create([
-            'matricule' => Eleve::genererMatricule(),
+            // Not generated here: issued by Educmaster and typed in by staff
+            // when they have it — may well be left blank at creation time.
+            'matricule' => $validated['matricule'] ?? null,
             'nom' => $validated['nom'],
             'prenom' => $validated['prenom'],
             'sexe' => $validated['sexe'],
@@ -131,7 +138,11 @@ class EleveController extends Controller
             ]);
         }
 
-        return back()->with('toast', "La fiche de {$eleve->nomComplet()} a été créée (matricule {$eleve->matricule}).");
+        $message = $eleve->matricule
+            ? "La fiche de {$eleve->nomComplet()} a été créée (matricule {$eleve->matricule})."
+            : "La fiche de {$eleve->nomComplet()} a été créée.";
+
+        return back()->with('toast', $message);
     }
 
     public function update(UpdateEleveRequest $request, Eleve $eleve): RedirectResponse
@@ -139,6 +150,7 @@ class EleveController extends Controller
         $validated = $request->validated();
 
         $eleve->update([
+            'matricule' => $validated['matricule'] ?? null,
             'nom' => $validated['nom'],
             'prenom' => $validated['prenom'],
             'sexe' => $validated['sexe'],
@@ -198,17 +210,23 @@ class EleveController extends Controller
                 'matricule' => $eleve->matricule,
                 'sexe' => $eleve->sexe,
                 'date_naissance' => $eleve->date_naissance->format('d/m/Y'),
+                // Raw Y-m-d value, alongside the display-formatted one above:
+                // needed to prefill the "Modifier" panel's <input type="date">
+                // (see eleve-fiche.js's renderFiche()).
+                'date_naissance_iso' => $eleve->date_naissance->format('Y-m-d'),
                 'date_creation' => $eleve->created_at->format('d/m/Y'),
                 'statut' => $eleve->statut->value,
                 'classe' => $inscriptionActuelle?->classe
                     ? "{$inscriptionActuelle->classe->niveau->libelle} — {$inscriptionActuelle->classe->nom}"
                     : null,
                 'niveau_souhaite' => $eleve->niveauSouhaite?->libelle,
+                'niveau_souhaite_id' => $eleve->niveau_souhaite_id,
                 'a_une_classe' => $eleve->inscriptions->isNotEmpty(),
                 'photo_url' => $photoIdentite
                     ? route('eleves.documents.show', ['eleve' => $eleve, 'document' => $photoIdentite])
                     : null,
                 'champs' => $champs->map(fn (ChampPersonnalise $champ) => [
+                    'id' => $champ->id,
                     'libelle' => $champ->libelle,
                     'valeur' => $eleve->valeursPersonnalisees->firstWhere('champ_personnalise_id', $champ->id)?->valeur,
                 ])->values(),

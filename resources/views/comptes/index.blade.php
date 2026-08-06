@@ -81,7 +81,10 @@
                             data-edit-email="{{ $user->email }}"
                         >✎ Modifier le profil</button>
                         <hr>
-                        <form method="POST" action="{{ route('comptes.archiver', $user) }}" onsubmit="return confirm('Archiver ce compte ?');">
+                        <form method="POST" action="{{ route('comptes.archiver', $user) }}"
+                              data-confirm-submit data-confirm-danger="1" data-confirm-label="Archiver"
+                              data-confirm-title="Archiver le compte"
+                              data-confirm-message="Archiver le compte de {{ $user->name }} ?">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="danger">🗄 Archiver le compte</button>

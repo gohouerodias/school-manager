@@ -17,7 +17,7 @@ export function initSlidePanels() {
     });
 }
 
-function togglePanel(id, show) {
+export function togglePanel(id, show) {
     document.querySelector(`[data-panel="${id}"]`)?.classList.toggle('show', show);
     document.querySelector(`[data-panel-overlay="${id}"]`)?.classList.toggle('show', show);
 }

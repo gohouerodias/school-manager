@@ -7,6 +7,7 @@ use App\Http\Requests\StoreTuteurRequest;
 use App\Http\Requests\UpdateTuteurRequest;
 use App\Models\Eleve;
 use App\Models\ParentTuteur;
+use App\Support\TuteurResolver;
 use Illuminate\Http\RedirectResponse;
 
 class TuteurController extends Controller
@@ -19,8 +20,11 @@ class TuteurController extends Controller
      * — since `parent_tuteurs` keeps them as separate columns.
      *
      * A parent/tuteur may already be on file (e.g. a sibling's file was
-     * created first): if an existing ParentTuteur matches on nom + prénom +
-     * téléphone, that record is reused instead of creating a duplicate
+     * created first): either the agent confirmed a match proposed by the
+     * "does this parent already exist" quick-search (existing_id, see
+     * resources/js/tuteur-quick-search.js), or an existing ParentTuteur
+     * matches on nom + prénom + téléphone — either way App\Support\
+     * TuteurResolver reuses that record instead of creating a duplicate
      * person. Either way, `syncWithoutDetaching` sets the lien_parente for
      * *this* élève — so resubmitting for a tuteur already linked here simply
      * updates their role rather than failing on the unique pivot pair.
@@ -29,26 +33,8 @@ class TuteurController extends Controller
     {
         $validated = $request->validated();
 
-        $mots = preg_split('/\s+/', trim($validated['nom_prenom'])) ?: [];
-        $nom = array_pop($mots) ?? $validated['nom_prenom'];
-        $prenom = implode(' ', $mots);
-
-        $tuteur = ParentTuteur::query()
-            ->where('nom', $nom)
-            ->where('prenom', $prenom)
-            ->where('telephone', $validated['telephone'])
-            ->first();
-
-        $estExistant = $tuteur !== null;
-
-        if (! $estExistant) {
-            $tuteur = ParentTuteur::create([
-                'nom' => $nom,
-                'prenom' => $prenom,
-                'telephone' => $validated['telephone'],
-                'email' => $validated['email'] ?? null,
-            ]);
-        }
+        $tuteur = TuteurResolver::resolveOrCreate($validated);
+        $estExistant = ! $tuteur->wasRecentlyCreated;
 
         $eleve->parents()->syncWithoutDetaching([$tuteur->id => ['lien_parente' => $validated['lien_parente']]]);
 
@@ -66,7 +52,9 @@ class TuteurController extends Controller
      * siblings (see store()), editing it here updates the same record
      * everywhere it's linked — correct, since it's the same real person.
      *
-     * If the edited nom + prénom + téléphone now match a *different*
+     * If the agent confirmed a match from the "does this parent already
+     * exist" quick-search (existing_id) pointing at a *different* tuteur, or
+     * the edited nom + prénom + téléphone happen to match a different
      * ParentTuteur already on file, that one is linked instead (mirroring
      * store()'s dedup) rather than turning this record into a duplicate of
      * it; the original record is simply detached from this élève.
@@ -77,16 +65,18 @@ class TuteurController extends Controller
 
         $validated = $request->validated();
 
-        $mots = preg_split('/\s+/', trim($validated['nom_prenom'])) ?: [];
-        $nom = array_pop($mots) ?? $validated['nom_prenom'];
-        $prenom = implode(' ', $mots);
+        [$nom, $prenom] = TuteurResolver::splitNomPrenom($validated['nom_prenom']);
 
-        $autreExistant = ParentTuteur::query()
-            ->where('nom', $nom)
-            ->where('prenom', $prenom)
-            ->where('telephone', $validated['telephone'])
-            ->whereKeyNot($parentTuteur->id)
-            ->first();
+        if (! empty($validated['existing_id']) && (int) $validated['existing_id'] !== $parentTuteur->id) {
+            $autreExistant = ParentTuteur::find($validated['existing_id']);
+        } else {
+            $autreExistant = ParentTuteur::query()
+                ->where('nom', $nom)
+                ->where('prenom', $prenom)
+                ->where('telephone', $validated['telephone'])
+                ->whereKeyNot($parentTuteur->id)
+                ->first();
+        }
 
         if ($autreExistant) {
             $eleve->parents()->detach($parentTuteur->id);

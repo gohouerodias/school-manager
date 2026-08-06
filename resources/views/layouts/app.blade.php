@@ -11,9 +11,14 @@
          .show) are actually visible to the user. --}}
     <meta name="reopen-panel" content="{{ old('_panel') }}">
     <title>@yield('title', 'Tableau de bord') — CSCMT</title>
+    @include('partials.page-loader')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="cscmt app-shell">
+<div id="page-loader" aria-hidden="true">
+    <div class="page-loader-ring"><span></span><span></span><span></span></div>
+    <p class="page-loader-text">Chargement…</p>
+</div>
 <div class="shell">
     <x-sidebar-nav />
 
@@ -38,6 +43,16 @@
         </div>
     </div>
 </div>
+
+{{-- Singleton confirmation dialog, reusable from any page: JS calls
+     askConfirmation({ message, onConfirm, onCancel }) (see
+     resources/js/confirm-modal.js) to repopulate + open it, instead of
+     each feature building its own modal. --}}
+<x-confirm-modal id="confirm-action" />
+
+{{-- Singleton image viewer, reusable from any page: JS calls
+     openImageLightbox(url) (see resources/js/image-lightbox.js). --}}
+<x-image-lightbox id="image-lightbox" />
 
 <x-flash-toast />
 </body>

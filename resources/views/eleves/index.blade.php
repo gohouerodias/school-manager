@@ -17,10 +17,10 @@
             :excel-route="route('eleves.export.excel', $activeFilters)"
             :pdf-route="route('eleves.export.pdf', $activeFilters)"
         />
-        <button type="button" class="btn primary" data-panel-open="new-eleve">
+        <a href="{{ route('eleves.wizard.create') }}" class="btn primary">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Nouvel apprenant
-        </button>
+        </a>
     </x-slot:actions>
 </x-page-header>
 
@@ -41,6 +41,7 @@
     <x-filter-select name="statut" :selected="$statutFilter" placeholder="Tous les statuts" :options="[
         'actif' => 'Actif',
         'archive' => 'Archivé',
+        'brouillon' => 'Brouillon',
     ]" />
 
     <div class="date-filter-wrap">
@@ -59,183 +60,24 @@
     @include('eleves.partials.table')
 </div>
 
-{{-- Nouvel apprenant --}}
-<x-slide-panel id="new-eleve" title="Nouvel apprenant">
-    <form method="POST" action="{{ route('eleves.store') }}" id="new-eleve-form">
-        @csrf
-        <input type="hidden" name="_panel" value="new-eleve">
+{{-- Hidden singleton form submitted by eleve-classe-assign.js once the
+     confirmation modal is accepted — action + classe_id are set from the
+     picked row/select right before submit(), same "one shared form"
+     pattern as the fiche's add-tuteur/add-document panels. --}}
+<form method="POST" action="" id="classe-assign-form" style="display:none;">
+    @csrf
+    @method('PATCH')
+    <input type="hidden" name="classe_id" id="classe-assign-classe-id">
+</form>
 
-        @error('nom')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('prenom')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('sexe')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('date_naissance')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('niveau_souhaite_id')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @foreach ($champsPersonnalises as $champ)
-            @error("champs.{$champ->id}")
-                <div class="alert-error">{{ $champ->libelle }} : {{ $message }}</div>
-            @enderror
-        @endforeach
-
-        <div class="field">
-            <label for="new-eleve-nom">Nom</label>
-            <input type="text" id="new-eleve-nom" name="nom" value="{{ old('nom') }}" required>
-        </div>
-
-        <div class="field">
-            <label for="new-eleve-prenom">Prénom(s)</label>
-            <input type="text" id="new-eleve-prenom" name="prenom" value="{{ old('prenom') }}" required>
-        </div>
-
-        <div class="field">
-            <label for="new-eleve-sexe">Sexe</label>
-            <select class="role-select" id="new-eleve-sexe" name="sexe" required>
-                <option value="M" @selected(old('sexe', 'M') === 'M')>Masculin</option>
-                <option value="F" @selected(old('sexe') === 'F')>Féminin</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label for="new-eleve-date-naissance">Date de naissance</label>
-            <input type="date" id="new-eleve-date-naissance" name="date_naissance" value="{{ old('date_naissance') }}" required>
-        </div>
-
-        @foreach ($champsPersonnalises as $champ)
-            <div class="field">
-                <label for="new-champ-{{ $champ->id }}">{{ $champ->libelle }}{{ $champ->obligatoire ? ' *' : '' }}</label>
-                @if ($champ->type->value === 'liste_deroulante')
-                    <select class="role-select" id="new-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" @if ($champ->obligatoire) required @endif>
-                        <option value="">—</option>
-                        @foreach ($champ->options ?? [] as $option)
-                            <option value="{{ $option }}" @selected(old("champs.{$champ->id}") === $option)>{{ $option }}</option>
-                        @endforeach
-                    </select>
-                @elseif ($champ->type->value === 'date')
-                    <input type="date" id="new-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" value="{{ old("champs.{$champ->id}") }}" @if ($champ->obligatoire) required @endif>
-                @elseif ($champ->type->value === 'nombre')
-                    <input type="number" id="new-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" value="{{ old("champs.{$champ->id}") }}" @if ($champ->obligatoire) required @endif>
-                @else
-                    <input type="text" id="new-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" value="{{ old("champs.{$champ->id}") }}" @if ($champ->obligatoire) required @endif>
-                @endif
-            </div>
-        @endforeach
-
-        <div class="field">
-            <label for="new-eleve-niveau-souhaite">Classe désirée</label>
-            <select class="role-select" id="new-eleve-niveau-souhaite" name="niveau_souhaite_id">
-                <option value="">Non précisé</option>
-                @foreach ($niveaux as $niveau)
-                    <option value="{{ $niveau->id }}" @selected((string) old('niveau_souhaite_id') === (string) $niveau->id)>{{ $niveau->libelle }}</option>
-                @endforeach
-            </select>
-            <div class="hint">Le matricule sera généré automatiquement à l'enregistrement. Ce niveau est indicatif pour la répartition à venir : l'apprenant reste « Sans classe attribuée » tant qu'une classe précise ne lui est pas assignée. Les documents s'ajoutent ensuite depuis l'onglet « Documents » de la fiche.</div>
-        </div>
-    </form>
-
-    <x-slot:footer>
-        <button type="button" class="btn ghost" data-panel-close="new-eleve">Annuler</button>
-        <button type="submit" form="new-eleve-form" class="btn dark">Enregistrer</button>
-    </x-slot:footer>
-</x-slide-panel>
-
-{{-- Modifier la fiche --}}
-<x-slide-panel id="edit-eleve" title="Modifier la fiche">
-    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-eleve-form">
-        @csrf
-        @method('PATCH')
-        <input type="hidden" name="_panel" value="edit-eleve">
-        <input type="hidden" name="_edit_url" id="edit-eleve-edit-url" value="{{ old('_edit_url') }}">
-
-        @error('nom')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('prenom')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('sexe')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('date_naissance')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('niveau_souhaite_id')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @foreach ($champsPersonnalises as $champ)
-            @error("champs.{$champ->id}")
-                <div class="alert-error">{{ $champ->libelle }} : {{ $message }}</div>
-            @enderror
-        @endforeach
-
-        <div class="field">
-            <label for="edit-eleve-nom">Nom</label>
-            <input type="text" id="edit-eleve-nom" name="nom" value="{{ old('nom') }}" required>
-        </div>
-
-        <div class="field">
-            <label for="edit-eleve-prenom">Prénom(s)</label>
-            <input type="text" id="edit-eleve-prenom" name="prenom" value="{{ old('prenom') }}" required>
-        </div>
-
-        <div class="field">
-            <label for="edit-eleve-sexe">Sexe</label>
-            <select class="role-select" id="edit-eleve-sexe" name="sexe" required>
-                <option value="M" @selected(old('sexe') === 'M')>Masculin</option>
-                <option value="F" @selected(old('sexe') === 'F')>Féminin</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label for="edit-eleve-date-naissance">Date de naissance</label>
-            <input type="date" id="edit-eleve-date-naissance" name="date_naissance" value="{{ old('date_naissance') }}" required>
-        </div>
-
-        @foreach ($champsPersonnalises as $champ)
-            <div class="field">
-                <label for="edit-champ-{{ $champ->id }}">{{ $champ->libelle }}{{ $champ->obligatoire ? ' *' : '' }}</label>
-                @if ($champ->type->value === 'liste_deroulante')
-                    <select class="role-select" id="edit-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" @if ($champ->obligatoire) required @endif>
-                        <option value="">—</option>
-                        @foreach ($champ->options ?? [] as $option)
-                            <option value="{{ $option }}" @selected(old("champs.{$champ->id}") === $option)>{{ $option }}</option>
-                        @endforeach
-                    </select>
-                @elseif ($champ->type->value === 'date')
-                    <input type="date" id="edit-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" value="{{ old("champs.{$champ->id}") }}" @if ($champ->obligatoire) required @endif>
-                @elseif ($champ->type->value === 'nombre')
-                    <input type="number" id="edit-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" value="{{ old("champs.{$champ->id}") }}" @if ($champ->obligatoire) required @endif>
-                @else
-                    <input type="text" id="edit-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]" value="{{ old("champs.{$champ->id}") }}" @if ($champ->obligatoire) required @endif>
-                @endif
-            </div>
-        @endforeach
-
-        <div class="field">
-            <label for="edit-eleve-niveau-souhaite">Classe désirée</label>
-            <select class="role-select" id="edit-eleve-niveau-souhaite" name="niveau_souhaite_id">
-                <option value="">Non précisé</option>
-                @foreach ($niveaux as $niveau)
-                    <option value="{{ $niveau->id }}" @selected((string) old('niveau_souhaite_id') === (string) $niveau->id)>{{ $niveau->libelle }}</option>
-                @endforeach
-            </select>
-            <div class="hint">Indicatif tant qu'aucune classe précise n'est assignée.</div>
-        </div>
-    </form>
-
-    <x-slot:footer>
-        <button type="button" class="btn ghost" data-panel-close="edit-eleve">Annuler</button>
-        <button type="submit" form="edit-eleve-form" class="btn dark">Enregistrer</button>
-    </x-slot:footer>
-</x-slide-panel>
+{{-- Same pattern, for eleve-statut-assign.js: submits to whichever of
+     eleves.archiver / eleves.desarchiver matches the picked option, once
+     the confirmation modal is accepted. No extra body fields needed —
+     both routes take none. --}}
+<form method="POST" action="" id="statut-assign-form" style="display:none;">
+    @csrf
+    @method('PATCH')
+</form>
 
 {{-- Fiche apprenant (consultation) --}}
 <x-fiche-modal
@@ -247,6 +89,8 @@
     data-document-delete-url-template="{{ route('eleves.documents.destroy', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
     data-document-view-url-template="{{ route('eleves.documents.show', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
     data-document-download-url-template="{{ route('eleves.documents.download', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
+    data-edit-eleve-url-template="{{ route('eleves.wizard.edit', ['eleve' => '__ID__']) }}"
+    data-tuteur-recherche-url="{{ route('eleves.wizard.tuteurs.recherche') }}"
 >
     <div class="fiche-breadcrumb-row">
         <span class="fiche-breadcrumb-text">Dossier élève et documents / Liste des apprenants</span>
@@ -255,6 +99,9 @@
 
     <div class="fiche-head">
         <div class="fiche-avatar">
+            {{-- Cliquable uniquement quand une vraie photo est affichée (voir
+                 .fiche-avatar img { cursor: pointer } et le click listener
+                 dans eleve-fiche.js) : ouvre resources/js/image-lightbox.js. --}}
             <img id="fiche-avatar-img" src="" alt="" style="display:none;">
             <svg id="fiche-avatar-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
@@ -277,6 +124,18 @@
     </div>
 
     <div class="fiche-tab-content" data-fiche-content="identite" style="display:block;">
+        <div class="fiche-actions-row">
+            {{-- Static link, re-pointed on every fiche render (see
+                 eleve-fiche.js's renderFiche() -> populateEditEleveTrigger())
+                 to the fiche élève wizard's "modifier" page for whichever
+                 élève is currently open — the wizard prefills itself
+                 server-side from the Eleve model, so no data-edit-* payload
+                 is needed here anymore. --}}
+            <a class="btn ghost" id="fiche-edit-eleve-trigger" href="#">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Modifier
+            </a>
+        </div>
         <div class="fiche-grid" id="fiche-identite-grid"></div>
     </div>
     <div class="fiche-tab-content" data-fiche-content="parents" style="display:none;">
@@ -308,6 +167,7 @@
         @csrf
         <input type="hidden" name="_panel" value="add-tuteur">
         <input type="hidden" name="_action" id="add-tuteur-action" value="{{ old('_action') }}">
+        <input type="hidden" name="existing_id" id="tuteur-existing-id" value="{{ old('existing_id') }}">
 
         @error('nom_prenom')
             <div class="alert-error">{{ $message }}</div>
@@ -322,10 +182,13 @@
             <div class="alert-error">{{ $message }}</div>
         @enderror
 
+        <div id="tuteur-match" class="wizard-tuteur-match" style="display:none;"></div>
+
         <div class="field">
             <label for="tuteur-nom-prenom">Nom et prénom</label>
-            <input type="text" id="tuteur-nom-prenom" name="nom_prenom" placeholder="Ex : Grégoire Ahouansou" value="{{ old('nom_prenom') }}" required>
-            <div class="hint">Si ce nom, prénom et téléphone correspondent à un tuteur déjà enregistré (ex : parent d'un autre élève), il sera lié à cette fiche plutôt que dupliqué.</div>
+            <input type="text" id="tuteur-nom-prenom" name="nom_prenom" placeholder="Ex : Grégoire Ahouansou" value="{{ old('nom_prenom') }}" required autocomplete="off">
+            <div id="tuteur-suggestions" class="wizard-tuteur-suggestions"></div>
+            <div class="hint">Si ce tuteur est déjà enregistré (ex : parent d'un autre élève), il sera proposé ci-dessus pendant la saisie et lié à cette fiche plutôt que dupliqué.</div>
         </div>
 
         <div class="field">
@@ -361,6 +224,7 @@
         @method('PATCH')
         <input type="hidden" name="_panel" value="edit-tuteur">
         <input type="hidden" name="_edit_url" id="edit-tuteur-edit-url" value="{{ old('_edit_url') }}">
+        <input type="hidden" name="existing_id" id="edit-tuteur-existing-id" value="{{ old('existing_id') }}">
 
         @error('nom_prenom')
             <div class="alert-error">{{ $message }}</div>
@@ -375,10 +239,13 @@
             <div class="alert-error">{{ $message }}</div>
         @enderror
 
+        <div id="edit-tuteur-match" class="wizard-tuteur-match" style="display:none;"></div>
+
         <div class="field">
             <label for="edit-tuteur-nom-prenom">Nom et prénom</label>
-            <input type="text" id="edit-tuteur-nom-prenom" name="nom_prenom" placeholder="Ex : Grégoire Ahouansou" value="{{ old('nom_prenom') }}" required>
-            <div class="hint">Ce tuteur peut être lié à d'autres élèves (fratrie) : modifier ses informations ici les met à jour partout où il est enregistré.</div>
+            <input type="text" id="edit-tuteur-nom-prenom" name="nom_prenom" placeholder="Ex : Grégoire Ahouansou" value="{{ old('nom_prenom') }}" required autocomplete="off">
+            <div id="edit-tuteur-suggestions" class="wizard-tuteur-suggestions"></div>
+            <div class="hint">Ce tuteur peut être lié à d'autres élèves (fratrie) : modifier ses informations ici les met à jour partout où il est enregistré. Si la nouvelle saisie correspond à un autre tuteur déjà enregistré, il sera proposé ci-dessus.</div>
         </div>
 
         <div class="field">

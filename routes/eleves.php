@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Eleves\ChampPersonnaliseController;
 use App\Http\Controllers\Eleves\DocumentController;
+use App\Http\Controllers\Eleves\EleveClasseController;
 use App\Http\Controllers\Eleves\EleveController;
 use App\Http\Controllers\Eleves\EleveExportController;
+use App\Http\Controllers\Eleves\EleveWizardController;
 use App\Http\Controllers\Eleves\ParametresDossiersController;
 use App\Http\Controllers\Eleves\TuteurController;
 use App\Http\Controllers\Eleves\TypeDocumentController;
@@ -16,7 +18,16 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::get('/', [EleveController::class, 'index'])->name('index');
         Route::post('/', [EleveController::class, 'store'])->name('store');
         Route::patch('{eleve}', [EleveController::class, 'update'])->name('update');
+
+        // Fiche élève wizard (création + modification) : voir EleveWizardController.
+        Route::get('nouveau', [EleveWizardController::class, 'create'])->name('wizard.create');
+        Route::post('nouveau', [EleveWizardController::class, 'store'])->name('wizard.store');
+        Route::get('tuteurs/recherche', [EleveWizardController::class, 'rechercheTuteur'])->name('wizard.tuteurs.recherche');
+        Route::get('{eleve}/modifier', [EleveWizardController::class, 'edit'])->name('wizard.edit');
+        Route::patch('{eleve}/modifier', [EleveWizardController::class, 'update'])->name('wizard.update');
+
         Route::patch('{eleve}/archiver', [EleveController::class, 'archiver'])->name('archiver');
+        Route::patch('{eleve}/classe', [EleveClasseController::class, 'update'])->name('classe.update');
         Route::patch('{eleve}/desarchiver', [EleveController::class, 'desarchiver'])->name('desarchiver');
         Route::get('{eleve}/fiche', [EleveController::class, 'fiche'])->name('fiche');
         Route::post('{eleve}/tuteurs', [TuteurController::class, 'store'])->name('tuteurs.store');

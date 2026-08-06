@@ -110,16 +110,18 @@ class DatabaseSeeder extends Seeder
     private function seedNiveaux(): Collection
     {
         $definitions = [
-            ['libelle' => 'CI', 'ordre' => 1, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CP', 'ordre' => 2, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CE1', 'ordre' => 3, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CE2', 'ordre' => 4, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CM1', 'ordre' => 5, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CM2', 'ordre' => 6, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => '6e', 'ordre' => 7, 'cycle' => CycleNiveau::College],
-            ['libelle' => '5e', 'ordre' => 8, 'cycle' => CycleNiveau::College],
-            ['libelle' => '4e', 'ordre' => 9, 'cycle' => CycleNiveau::College],
-            ['libelle' => '3e', 'ordre' => 10, 'cycle' => CycleNiveau::College],
+            ['libelle' => 'Maternelle 1', 'ordre' => 1, 'cycle' => CycleNiveau::Maternelle, 'premiere_scolarisation' => true],
+            ['libelle' => 'Maternelle 2', 'ordre' => 2, 'cycle' => CycleNiveau::Maternelle, 'premiere_scolarisation' => true],
+            ['libelle' => 'CI', 'ordre' => 3, 'cycle' => CycleNiveau::Primaire],
+            ['libelle' => 'CP', 'ordre' => 4, 'cycle' => CycleNiveau::Primaire],
+            ['libelle' => 'CE1', 'ordre' => 5, 'cycle' => CycleNiveau::Primaire],
+            ['libelle' => 'CE2', 'ordre' => 6, 'cycle' => CycleNiveau::Primaire],
+            ['libelle' => 'CM1', 'ordre' => 7, 'cycle' => CycleNiveau::Primaire],
+            ['libelle' => 'CM2', 'ordre' => 8, 'cycle' => CycleNiveau::Primaire],
+            ['libelle' => '6e', 'ordre' => 9, 'cycle' => CycleNiveau::College],
+            ['libelle' => '5e', 'ordre' => 10, 'cycle' => CycleNiveau::College],
+            ['libelle' => '4e', 'ordre' => 11, 'cycle' => CycleNiveau::College],
+            ['libelle' => '3e', 'ordre' => 12, 'cycle' => CycleNiveau::College],
         ];
 
         return collect($definitions)->map(fn (array $data) => Niveau::create($data));
@@ -167,6 +169,10 @@ class DatabaseSeeder extends Seeder
             ['libelle' => 'CIP', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
             ['libelle' => 'NPI', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
             ['libelle' => 'Certificat médical', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
+            // Shown by the fiche élève wizard's "Documents" step only when
+            // the classe désirée isn't Maternelle 1/2 (Niveau::premiere_scolarisation).
+            ['libelle' => "Bulletin de l'école précédente", 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false, 'requis_si_transfert' => true],
+            ['libelle' => 'Certificat de scolarité antérieure', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false, 'requis_si_transfert' => true],
         ];
 
         return collect($definitions)->map(fn (array $data) => TypeDocument::create([
@@ -175,6 +181,7 @@ class DatabaseSeeder extends Seeder
             'formats_acceptes' => $data['formats'],
             'obligatoire' => $data['obligatoire'],
             'protege' => $data['protege'],
+            'requis_si_transfert' => $data['requis_si_transfert'] ?? false,
         ]));
     }
 

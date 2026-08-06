@@ -12,12 +12,21 @@ class TypeDocument extends Model
 
     protected $table = 'types_documents';
 
+    /**
+     * `requis_si_transfert` (true for "Bulletin de l'école précédente" /
+     * "Certificat de scolarité antérieure"): shown in the fiche élève
+     * wizard's "Documents" step only when the classe désirée picked in
+     * step 1 isn't a Niveau with `premiere_scolarisation` — an élève
+     * transferring in from another school, unlike one starting at the
+     * maternelle. Independent of `obligatoire`, which is unconditional.
+     */
     protected $fillable = [
         'libelle',
         'description',
         'formats_acceptes',
         'obligatoire',
         'protege',
+        'requis_si_transfert',
     ];
 
     protected function casts(): array
@@ -26,6 +35,7 @@ class TypeDocument extends Model
             'formats_acceptes' => 'array',
             'obligatoire' => 'bool',
             'protege' => 'bool',
+            'requis_si_transfert' => 'bool',
         ];
     }
 

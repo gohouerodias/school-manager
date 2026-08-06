@@ -32,13 +32,13 @@
         <tbody>
             @foreach ($eleves as $eleve)
                 <tr>
-                    <td>{{ $eleve->matricule }}</td>
-                    <td>{{ $eleve->nom }}</td>
-                    <td>{{ $eleve->prenom }}</td>
-                    <td>{{ $eleve->sexe === 'F' ? 'Féminin' : 'Masculin' }}</td>
-                    <td>{{ $eleve->date_naissance->format('d/m/Y') }}</td>
+                    <td>{{ $eleve->matricule ?: '—' }}</td>
+                    <td>{{ $eleve->nom ?: '—' }}</td>
+                    <td>{{ $eleve->prenom ?: '—' }}</td>
+                    <td>{{ $eleve->sexe === 'F' ? 'Féminin' : ($eleve->sexe === 'M' ? 'Masculin' : '—') }}</td>
+                    <td>{{ $eleve->date_naissance?->format('d/m/Y') ?? '—' }}</td>
                     <td>{{ $eleve->inscriptions->first()?->classe?->nom ?? 'Sans classe' }}</td>
-                    <td><span class="badge">{{ $eleve->statut === \App\Enums\StatutEleve::Archive ? 'Archivé' : 'Actif' }}</span></td>
+                    <td><span class="badge">{{ match ($eleve->statut) { \App\Enums\StatutEleve::Archive => 'Archivé', \App\Enums\StatutEleve::Brouillon => 'Brouillon', default => 'Actif' } }}</span></td>
                 </tr>
             @endforeach
         </tbody>

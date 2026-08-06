@@ -1,3 +1,6 @@
+import { openImageLightbox } from './image-lightbox';
+import { showModalLoading } from './modal-loading';
+
 /**
  * "Consulter la fiche" modal (<x-fiche-modal id="fiche">): fetches
  * GET eleves/{eleve}/fiche as JSON on trigger click and renders the 4 tabs
@@ -24,13 +27,29 @@ export function initEleveFiche() {
             fichePanel.dataset.currentEleveId = match[1];
         }
 
+        const fichePanelEl = document.querySelector('[data-panel="fiche"]');
+        const hideLoading = showModalLoading(fichePanelEl);
+
         fetch(trigger.dataset.ficheUrl, { headers: { Accept: 'application/json' } })
             .then((response) => response.json())
             .then(renderFiche)
-            .catch(() => {});
+            .catch(() => {})
+            .finally(hideLoading);
 
-        document.querySelector('[data-panel="fiche"]')?.classList.add('show');
+        fichePanelEl?.classList.add('show');
         document.querySelector('[data-panel-overlay="fiche"]')?.classList.add('show');
+    });
+
+    // #fiche-avatar-img is a static, persistent element (its `src` is just
+    // updated on every renderFiche() call), so a plain one-time listener is
+    // enough — unlike the delegated listeners above, it doesn't need to
+    // survive rows being replaced by live search. It's only ever visible
+    // (see renderFiche()) when there's a real photo to show.
+    document.getElementById('fiche-avatar-img')?.addEventListener('click', (event) => {
+        const src = event.currentTarget.getAttribute('src');
+        if (src) {
+            openImageLightbox(src, "Photo d'identité");
+        }
     });
 
     document.querySelectorAll('[data-fiche-tab]').forEach((tabBtn) => {
@@ -51,10 +70,18 @@ export function initEleveFiche() {
 
 function renderFiche(data) {
     const { identite, parents, parcours, documents } = data;
+    const eleveId = document.querySelector('[data-panel="fiche"]')?.dataset.currentEleveId;
 
     setText('fiche-nom-famille', identite.nom);
     setText('fiche-prenom', identite.prenom);
-    setText('fiche-matricule', identite.matricule);
+    // Hidden rather than shown blank when the matricule (Educmaster, typed
+    // in manually) hasn't been entered yet — a badge reading nothing looks
+    // like a rendering glitch.
+    const matriculeBadge = document.getElementById('fiche-matricule');
+    if (matriculeBadge) {
+        matriculeBadge.textContent = identite.matricule ?? '';
+        matriculeBadge.style.display = identite.matricule ? 'inline-block' : 'none';
+    }
     setText('fiche-classe', identite.classe || '—');
     setText('fiche-date-creation', identite.date_creation);
     setText('fiche-statut', identite.statut === 'archive' ? 'Archivé' : 'Actif');
@@ -89,7 +116,7 @@ function renderFiche(data) {
         grid.innerHTML = allFields.map(([label, value]) => fieldHTML(label, value)).join('');
     }
 
-    const eleveId = document.querySelector('[data-panel="fiche"]')?.dataset.currentEleveId;
+    populateEditEleveTrigger(eleveId, identite);
 
     const parentsList = document.getElementById('fiche-parents-list');
     if (parentsList) {
@@ -192,6 +219,25 @@ function editTuteurTriggerHTML(eleveId, parent) {
     `;
 }
 
+/**
+ * Keeps the fiche's static "Modifier" link (#fiche-edit-eleve-trigger, in the
+ * Identité tab) pointed at the fiche élève wizard's "modifier" page for
+ * whichever élève's fiche is currently open. Unlike editTuteurTriggerHTML()
+ * below, this element isn't rebuilt on every render — it's a fixed <a> whose
+ * href is just refreshed here. The wizard page prefills itself server-side
+ * straight from the Eleve model, so unlike the old "Modifier la fiche" panel
+ * this used to open, no per-field data-edit-* payload is needed anymore.
+ */
+function populateEditEleveTrigger(eleveId, identite) {
+    const trigger = document.getElementById('fiche-edit-eleve-trigger');
+    if (!trigger) {
+        return;
+    }
+
+    const template = document.querySelector('[data-panel="fiche"]')?.dataset.editEleveUrlTemplate;
+    trigger.href = template && eleveId ? template.replace('__ID__', eleveId) : '#';
+}
+
 function editIcon() {
     return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 }
@@ -210,6 +256,10 @@ function downloadIcon() {
  * URL template stored on the fiche panel's dataset (`__EID__`/`__PID__` or
  * `__EID__`/`__DID__` placeholders) and the CSRF meta tag added to the
  * layout head, since this markup isn't server-rendered per item.
+ *
+ * Confirmation is handled by the shared red "danger" confirm-modal (see
+ * confirm-submit-form.js's `data-confirm-submit` wiring) rather than the
+ * browser's native confirm() popup.
  */
 function deleteFormHTML(templateKey, eleveId, itemId, confirmMessage) {
     if (!eleveId || !itemId) {
@@ -230,7 +280,9 @@ function deleteFormHTML(templateKey, eleveId, itemId, confirmMessage) {
     const token = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     return `
-        <form method="POST" action="${escapeHTML(url)}" class="fiche-item-delete-form" onsubmit="return confirm('${escapeHTML(confirmMessage).replace(/'/g, '&#39;')}')">
+        <form method="POST" action="${escapeHTML(url)}" class="fiche-item-delete-form"
+              data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+              data-confirm-message="${escapeHTML(confirmMessage)}">
             <input type="hidden" name="_token" value="${escapeHTML(token)}">
             <input type="hidden" name="_method" value="DELETE">
             <button type="submit" class="fiche-item-btn fiche-item-delete" title="Supprimer" aria-label="Supprimer">

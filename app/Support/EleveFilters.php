@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\StatutEleve;
+use App\Models\Eleve;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -16,8 +17,8 @@ use Illuminate\Http\Request;
 class EleveFilters
 {
     /**
-     * @param  Builder<\App\Models\Eleve>  $query
-     * @return Builder<\App\Models\Eleve>
+     * @param  Builder<Eleve>  $query
+     * @return Builder<Eleve>
      */
     public static function apply(Builder $query, Request $request): Builder
     {
@@ -27,11 +28,9 @@ class EleveFilters
         $dateFilter = (string) $request->input('date_creation', '');
 
         if ($search !== '') {
-            $query->where(function ($inner) use ($search) {
-                $inner->where('nom', 'like', "%{$search}%")
-                    ->orWhere('prenom', 'like', "%{$search}%")
-                    ->orWhere('matricule', 'like', "%{$search}%");
-            });
+            // MultiWordSearch (not a plain single LIKE) so typing "nom
+            // prénom" together still matches — see its docblock.
+            MultiWordSearch::apply($query, $search, ['nom', 'prenom', 'matricule']);
         }
 
         if ($classeFilter === 'sans_classe') {
@@ -44,6 +43,8 @@ class EleveFilters
             $query->where('statut', StatutEleve::Archive);
         } elseif ($statutFilter === 'actif') {
             $query->where('statut', StatutEleve::Actif);
+        } elseif ($statutFilter === 'brouillon') {
+            $query->where('statut', StatutEleve::Brouillon);
         }
 
         if ($dateFilter !== '') {

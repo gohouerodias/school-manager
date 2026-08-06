@@ -1,18 +1,31 @@
 /**
- * "Paramètres des dossiers" > "Ajouter un champ" panel: shows the Options
- * textarea only when the selected type is "Liste déroulante".
+ * "Paramètres des dossiers" > "Ajouter un champ" panel: the "Type" field is
+ * a grid of clickable cards wrapping hidden radio inputs (same
+ * hide-the-input-style-the-label pattern as .toggle-switch elsewhere in the
+ * app), rather than a plain <select>. This shows the Options textarea only
+ * when "Liste déroulante" is picked, and toggles a `.checked-card` class so
+ * CSS can highlight/animate the selected card (kept in JS rather than
+ * relying purely on a `:checked` CSS selector so it's simple to reset when
+ * the panel is reopened for a fresh "Ajouter un champ").
  */
 export function initParametresDossiers() {
-    const typeSelect = document.querySelector('[data-champ-type-select]');
+    const typeRadios = document.querySelectorAll('[data-champ-type-select]');
     const optionsField = document.getElementById('new-champ-options-field');
 
-    if (typeSelect && optionsField) {
-        const syncVisibility = () => {
-            optionsField.style.display = typeSelect.value === 'liste_deroulante' ? 'block' : 'none';
+    if (typeRadios.length) {
+        const syncCards = () => {
+            typeRadios.forEach((radio) => {
+                radio.closest('.type-choice-card')?.classList.toggle('checked-card', radio.checked);
+            });
+
+            if (optionsField) {
+                const selected = Array.from(typeRadios).find((radio) => radio.checked);
+                optionsField.style.display = selected?.value === 'liste_deroulante' ? 'block' : 'none';
+            }
         };
 
-        typeSelect.addEventListener('change', syncVisibility);
-        syncVisibility();
+        typeRadios.forEach((radio) => radio.addEventListener('change', syncCards));
+        syncCards();
     }
 
     initTypeDocumentEdit();

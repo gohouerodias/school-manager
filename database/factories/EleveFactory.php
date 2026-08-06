@@ -40,4 +40,13 @@ class EleveFactory extends Factory
             'date_archivage' => fake()->dateTimeBetween('-2 years', 'now')->format('Y-m-d'),
         ]);
     }
+
+    /**
+     * The matricule is issued by Educmaster, not this app — many real
+     * élèves will genuinely have none on file yet.
+     */
+    public function sansMatricule(): static
+    {
+        return $this->state(fn (array $attributes) => ['matricule' => null]);
+    }
 }

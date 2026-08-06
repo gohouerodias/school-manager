@@ -20,6 +20,7 @@ class TypeDocumentFactory extends Factory
             'formats_acceptes' => fake()->randomElements(['PDF', 'JPG', 'PNG'], fake()->numberBetween(1, 3)),
             'obligatoire' => fake()->boolean(70),
             'protege' => false,
+            'requis_si_transfert' => false,
         ];
     }
 
@@ -30,5 +31,14 @@ class TypeDocumentFactory extends Factory
     public function protege(): static
     {
         return $this->state(fn () => ['protege' => true]);
+    }
+
+    /**
+     * Only shown in the fiche élève wizard's "Documents" step when the
+     * classe désirée isn't Maternelle 1/2 — see Niveau::$premiere_scolarisation.
+     */
+    public function requisSiTransfert(): static
+    {
+        return $this->state(fn () => ['requis_si_transfert' => true]);
     }
 }

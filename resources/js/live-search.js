@@ -1,3 +1,7 @@
+import { enhanceDropdownSelectsIn } from './dropdown-select';
+import { markClasseAssignSelects } from './eleve-classe-assign';
+import { markStatutAssignSelects } from './eleve-statut-assign';
+
 /**
  * Generic debounced live search for any [data-live-search] input inside a
  * <form>: on each keystroke, the enclosing form is serialized (so other
@@ -67,6 +71,12 @@ function runSearch(url, form, target, spinner, signal) {
         .then((html) => {
             target.innerHTML = html;
             window.history.replaceState(null, '', requestUrl);
+            // The swapped-in HTML may contain <select>s (e.g. the éditable
+            // "Classe" column) that this one-time-at-load enhancement /
+            // baseline-tracking hasn't seen yet.
+            enhanceDropdownSelectsIn(target);
+            markClasseAssignSelects(target);
+            markStatutAssignSelects(target);
         })
         .catch((error) => {
             // AbortError just means a newer keystroke superseded this

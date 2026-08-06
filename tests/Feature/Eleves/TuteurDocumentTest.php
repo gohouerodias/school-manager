@@ -67,6 +67,27 @@ test('adding a tuteur matching an existing parent_tuteur (nom+prénom+téléphon
     ]);
 });
 
+test('adding a tuteur with an existing_id (confirmed by the quick-search) links that exact record instead of re-guessing from nom/prénom/téléphone', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create();
+    $existant = ParentTuteur::factory()->create(['nom' => 'Ahouansou', 'prenom' => 'Grégoire', 'telephone' => '+229 97 00 00 00']);
+
+    $response = $this->actingAs($agent)->post(route('eleves.tuteurs.store', $eleve), [
+        'existing_id' => $existant->id,
+        'nom_prenom' => 'Grégoire Ahouansou',
+        'lien_parente' => 'Père',
+        'telephone' => '+229 97 00 00 00',
+    ]);
+
+    $response->assertRedirect();
+    expect(ParentTuteur::where('nom', 'Ahouansou')->where('prenom', 'Grégoire')->count())->toBe(1);
+    $this->assertDatabaseHas('eleve_parent', [
+        'eleve_id' => $eleve->id,
+        'parent_tuteur_id' => $existant->id,
+        'lien_parente' => 'Père',
+    ]);
+});
+
 test('re-adding a tuteur already linked to this élève updates their role instead of failing', function () {
     $agent = User::factory()->agentScolarite()->create();
     $eleve = Eleve::factory()->create();
@@ -159,6 +180,34 @@ test('updating a tuteur to match another existing tuteur links that one instead 
         'eleve_id' => $eleve->id,
         'parent_tuteur_id' => $tuteurACorriger->id,
     ]);
+});
+
+test('updating a tuteur with an existing_id pointing at a different tuteur links that one instead of the fuzzy nom/prénom/téléphone match', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create();
+    $tuteurACorriger = ParentTuteur::factory()->create(['nom' => 'Ahouansou', 'prenom' => 'Gregoir', 'telephone' => '+229 97 00 00 01']);
+    $eleve->parents()->attach($tuteurACorriger->id, ['lien_parente' => 'Père']);
+    $tuteurExistant = ParentTuteur::factory()->create(['nom' => 'Somebody', 'prenom' => 'Else', 'telephone' => '+229 97 00 00 00']);
+
+    $response = $this->actingAs($agent)->patch(route('eleves.tuteurs.update', [$eleve, $tuteurACorriger]), [
+        'existing_id' => $tuteurExistant->id,
+        'nom_prenom' => 'Grégoire Ahouansou',
+        'lien_parente' => 'Père',
+        'telephone' => '+229 97 00 00 00',
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('eleve_parent', [
+        'eleve_id' => $eleve->id,
+        'parent_tuteur_id' => $tuteurExistant->id,
+        'lien_parente' => 'Père',
+    ]);
+    $this->assertDatabaseMissing('eleve_parent', [
+        'eleve_id' => $eleve->id,
+        'parent_tuteur_id' => $tuteurACorriger->id,
+    ]);
+    // The record being "corrected away from" is untouched, not overwritten.
+    $this->assertDatabaseHas('parent_tuteurs', ['id' => $tuteurACorriger->id, 'nom' => 'Ahouansou', 'prenom' => 'Gregoir']);
 });
 
 test('updating a tuteur not linked to this élève is rejected', function () {

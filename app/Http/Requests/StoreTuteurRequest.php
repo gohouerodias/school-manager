@@ -22,6 +22,11 @@ class StoreTuteurRequest extends FormRequest
             'lien_parente' => ['required', Rule::in(['Père', 'Mère', 'Tuteur légal', 'Autre'])],
             'telephone' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:150'],
+            // Set by the "does this parent already exist" quick-search (see
+            // resources/js/tuteur-quick-search.js) once the agent confirms a
+            // suggested match — lets App\Support\TuteurResolver associate
+            // that exact record instead of re-guessing from nom/prénom/téléphone.
+            'existing_id' => ['nullable', 'exists:parent_tuteurs,id'],
         ];
     }
 

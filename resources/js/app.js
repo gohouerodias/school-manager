@@ -1,4 +1,5 @@
 import './bootstrap';
+import { initPageLoader } from './page-loader';
 import { initPasswordToggles } from './password-toggle';
 import { initSlidePanels } from './slide-panel';
 import { initActionMenus } from './action-menu';
@@ -9,14 +10,22 @@ import { initAccountEdit } from './account-edit';
 import { initProfileMenu } from './profile-menu';
 import { initSidebar } from './sidebar';
 import { initGuideMenu } from './guide-menu';
-import { initEleveEdit } from './eleve-edit';
 import { initEleveFiche } from './eleve-fiche';
 import { initEleveTuteurDocument } from './eleve-tuteur-document';
 import { initParametresDossiers } from './parametres-dossiers';
 import { initPanelErrorReopen } from './panel-error-reopen';
 import { initLiveSearch } from './live-search';
+import { initRequiredFieldStyling } from './form-required';
+import { initDropdownSelects } from './dropdown-select';
+import { initConfirmModals } from './confirm-modal';
+import { initConfirmSubmitForms } from './confirm-submit-form';
+import { initEleveClasseAssign } from './eleve-classe-assign';
+import { initEleveStatutAssign } from './eleve-statut-assign';
+import { initTuteurList } from './tuteur-list';
+import { initEleveWizard } from './eleve-wizard';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initPageLoader();
     initPasswordToggles();
     initSlidePanels();
     initActionMenus();
@@ -27,10 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initProfileMenu();
     initSidebar();
     initGuideMenu();
-    initEleveEdit();
     initEleveFiche();
     initEleveTuteurDocument();
     initParametresDossiers();
     initPanelErrorReopen();
     initLiveSearch();
+    initDropdownSelects();
+    initRequiredFieldStyling();
+    initConfirmModals();
+    initConfirmSubmitForms();
+    initEleveClasseAssign();
+    initEleveStatutAssign();
+    initTuteurList();
+    initEleveWizard();
 });

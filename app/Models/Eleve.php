@@ -118,20 +118,17 @@ class Eleve extends Model
     }
 
     /**
-     * Sequential matricule per year, e.g. "2026-1000", "2026-1001"...
+     * The élève's Inscription for the currently active année académique, if
+     * any — distinct from "the latest inscription overall", which could be
+     * a past année's historical record. Used by the éditable "Classe"
+     * dropdown (list + EleveClasseController) so a classe change today
+     * never overwrites a prior year's Inscription. Requires
+     * `inscriptions.classe.anneeAcademique` to already be eager-loaded.
      */
-    public static function genererMatricule(): string
+    public function inscriptionActive(): ?Inscription
     {
-        $annee = now()->year;
-
-        $dernier = static::query()
-            ->where('matricule', 'like', "{$annee}-%")
-            ->orderByDesc('matricule')
-            ->value('matricule');
-
-        $sequence = $dernier ? ((int) substr($dernier, strlen((string) $annee) + 1)) + 1 : 1000;
-
-        return "{$annee}-{$sequence}";
+        return $this->inscriptions
+            ->first(fn (Inscription $inscription) => $inscription->classe?->anneeAcademique?->est_active === true);
     }
 
     public function archiver(): void

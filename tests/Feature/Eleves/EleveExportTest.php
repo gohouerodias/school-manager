@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\StatutEleve;
 use App\Exports\ElevesExport;
 use App\Models\Eleve;
+use App\Models\Inscription;
 use App\Models\User;
 use App\Support\EleveFilters;
 use Illuminate\Http\Request;
@@ -27,7 +29,7 @@ test('EleveFilters::apply filters by statut', function () {
 test('EleveFilters::apply filters by classe (sans_classe)', function () {
     $sansClasse = Eleve::factory()->create();
     $avecClasse = Eleve::factory()->create();
-    \App\Models\Inscription::factory()->create(['eleve_id' => $avecClasse->id]);
+    Inscription::factory()->create(['eleve_id' => $avecClasse->id]);
 
     $result = EleveFilters::apply(Eleve::query(), Request::create('/', 'GET', ['classe' => 'sans_classe']))->get();
 
@@ -76,4 +78,34 @@ test('the export buttons on the eleves list carry the active filters in their hr
     $response->assertOk();
     $response->assertSee('href="'.route('eleves.export.excel', ['statut' => 'archive']).'"', false);
     $response->assertSee('href="'.route('eleves.export.pdf', ['statut' => 'archive']).'"', false);
+});
+
+test('EleveFilters::apply filters by statut brouillon', function () {
+    Eleve::factory()->create();
+    $brouillon = Eleve::factory()->create(['statut' => StatutEleve::Brouillon]);
+
+    $result = EleveFilters::apply(Eleve::query(), Request::create('/', 'GET', ['statut' => 'brouillon']))->get();
+
+    expect($result->pluck('id')->all())->toBe([$brouillon->id]);
+});
+
+test('a brouillon fiche (no nom/prénom/date de naissance yet) does not break the excel or pdf export', function () {
+    // Regression test: ElevesExport::map() used to call ->format() directly
+    // on date_naissance, which is fatal once StatutEleve::Brouillon rows
+    // (whose fields may still be null) can reach the export.
+    $admin = User::factory()->administrateur()->create();
+    Eleve::factory()->create([
+        'matricule' => null,
+        'nom' => null,
+        'prenom' => null,
+        'sexe' => null,
+        'date_naissance' => null,
+        'statut' => StatutEleve::Brouillon,
+    ]);
+
+    $excel = new ElevesExport(Request::create('/', 'GET'));
+    expect($excel->map($excel->collection()->first()))->toBe(['—', '—', '—', '—', '—', 'Sans classe', 'Brouillon']);
+
+    $this->actingAs($admin)->get(route('eleves.export.pdf'))->assertOk();
+    $this->actingAs($admin)->get(route('eleves.export.excel'))->assertOk();
 });

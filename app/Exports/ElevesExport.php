@@ -13,9 +13,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class ElevesExport implements FromCollection, WithHeadings, WithMapping
 {
-    public function __construct(private readonly Request $request)
-    {
-    }
+    public function __construct(private readonly Request $request) {}
 
     /**
      * Same search/classe/statut/date de création filters as the on-screen
@@ -46,13 +44,19 @@ class ElevesExport implements FromCollection, WithHeadings, WithMapping
     public function map($eleve): array
     {
         return [
-            $eleve->matricule,
-            $eleve->nom,
-            $eleve->prenom,
-            $eleve->sexe,
-            $eleve->date_naissance->format('d/m/Y'),
+            $eleve->matricule ?? '—',
+            $eleve->nom ?? '—',
+            $eleve->prenom ?? '—',
+            $eleve->sexe ?? '—',
+            // Nullable: a fiche started via the wizard but not yet
+            // "Terminer"-ed (StatutEleve::Brouillon) may not have one yet.
+            $eleve->date_naissance?->format('d/m/Y') ?? '—',
             $eleve->inscriptions->first()?->classe?->nom ?? 'Sans classe',
-            $eleve->statut === StatutEleve::Archive ? 'Archivé' : 'Actif',
+            match ($eleve->statut) {
+                StatutEleve::Archive => 'Archivé',
+                StatutEleve::Brouillon => 'Brouillon',
+                default => 'Actif',
+            },
         ];
     }
 }

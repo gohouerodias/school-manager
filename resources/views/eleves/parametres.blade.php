@@ -60,7 +60,7 @@
                 <td>
                     @if ($type->protege)
                         <div class="row-actions-group">
-                            <span class="row-edit disabled" title="Type de document protégé : non modifiable">🔒</span>
+                            <span class="row-edit disabled" title="Type de document protégé : non modifiable">...</span>
                         </div>
                     @else
                         <div class="row-actions-group">
@@ -75,7 +75,10 @@
                                 data-edit-formats="{{ implode(',', $type->formats_acceptes ?? []) }}"
                                 data-edit-obligatoire="{{ $type->obligatoire ? '1' : '0' }}"
                             >✎</button>
-                            <form method="POST" action="{{ route('eleves.parametres.types-documents.destroy', $type) }}" onsubmit="return confirm('Supprimer ce type de document ?');">
+                            <form method="POST" action="{{ route('eleves.parametres.types-documents.destroy', $type) }}"
+                                  data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                                  data-confirm-title="Supprimer ce type de document"
+                                  data-confirm-message="Supprimer le type de document « {{ $type->libelle }} » ?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="row-delete" title="Supprimer">🗑</button>
@@ -141,7 +144,10 @@
                     </form>
                 </td>
                 <td>
-                    <form method="POST" action="{{ route('eleves.parametres.champs.destroy', $champ) }}" onsubmit="return confirm('Supprimer ce champ ? Les valeurs déjà saisies pour les apprenants seront perdues.');">
+                    <form method="POST" action="{{ route('eleves.parametres.champs.destroy', $champ) }}"
+                          data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                          data-confirm-title="Supprimer ce champ"
+                          data-confirm-message="Supprimer le champ « {{ $champ->libelle }} » ? Les valeurs déjà saisies pour les apprenants seront perdues.">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="row-delete" title="Supprimer">🗑</button>
@@ -262,12 +268,41 @@
         </div>
 
         <div class="field">
-            <label for="new-champ-type">Type</label>
-            <select class="role-select" id="new-champ-type" name="type" data-champ-type-select required>
+            <label>Type</label>
+            <div class="type-choice-grid" data-champ-type-group>
                 @foreach (\App\Enums\TypeChampPersonnalise::cases() as $type)
-                    <option value="{{ $type->value }}" @selected(old('type') === $type->value)>{{ $type->label() }}</option>
+                    <label class="type-choice-card">
+                        <input
+                            type="radio"
+                            name="type"
+                            value="{{ $type->value }}"
+                            data-champ-type-select
+                            @checked(old('type', 'texte') === $type->value)
+                            required
+                        >
+                        <span class="type-choice-icon">
+                            @switch($type)
+                                @case(\App\Enums\TypeChampPersonnalise::Texte)
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h7"/></svg>
+                                    @break
+                                @case(\App\Enums\TypeChampPersonnalise::Date)
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+                                    @break
+                                @case(\App\Enums\TypeChampPersonnalise::ListeDeroulante)
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>
+                                    @break
+                                @case(\App\Enums\TypeChampPersonnalise::Nombre)
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+                                    @break
+                            @endswitch
+                        </span>
+                        <span class="type-choice-label">{{ $type->label() }}</span>
+                        <span class="type-choice-check">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 13 4 4L19 7"/></svg>
+                        </span>
+                    </label>
                 @endforeach
-            </select>
+            </div>
         </div>
 
         <div class="field" id="new-champ-options-field" style="display:{{ old('type') === 'liste_deroulante' ? 'block' : 'none' }};">
