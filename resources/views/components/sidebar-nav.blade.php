@@ -3,15 +3,15 @@
     $isAdmin = $profil === \App\Enums\ProfilUtilisateur::Administrateur->value;
     $canSeeDossiers = in_array($profil, ['administrateur', 'agent_scolarite'], true);
     $dossiersOpen = request()->routeIs('eleves.*') || request()->routeIs('tuteurs.*');
+    $academiqueOpen = request()->routeIs('academique.*');
 
     // Each entry mirrors a zone of the app (see the class/use-case diagrams).
-    // "Gestion de compte" and "Dossier élève et documents" have real routes;
-    // the rest are the app's future feature areas and render as inert
-    // placeholders until built.
+    // "Gestion de compte", "Dossier élève et documents" and "Académique"
+    // have real routes; the rest are the app's future feature areas and
+    // render as inert placeholders until built.
     $items = [
         ['label' => 'Gestion de compte', 'icon' => 'users', 'route' => $isAdmin ? 'comptes.index' : null, 'pattern' => 'comptes.*'],
         ['label' => 'Sécurité et Administration', 'icon' => 'shield', 'route' => null, 'pattern' => null],
-        ['label' => 'Académique', 'icon' => 'academique', 'route' => null, 'pattern' => null],
         ['label' => 'Rapports', 'icon' => 'rapports', 'route' => null, 'pattern' => null],
     ];
 
@@ -74,6 +74,32 @@
                 <span class="nav-item disabled" title="Bientôt disponible">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons['folder'] !!}</svg>
                     <span class="nav-label">Dossier élève et documents</span>
+                </span>
+            @endif
+
+            @if ($isAdmin)
+                <div class="nav-group" data-nav-group>
+                    <button
+                        type="button"
+                        class="nav-item nav-parent"
+                        @class(['active' => $academiqueOpen])
+                        data-nav-parent-toggle
+                        aria-expanded="{{ $academiqueOpen ? 'true' : 'false' }}"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons['academique'] !!}</svg>
+                        <span class="nav-label">Académique</span>
+                        <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">{!! $icons['chevron'] !!}</svg>
+                    </button>
+
+                    <div class="nav-submenu" data-nav-submenu @if ($academiqueOpen) style="display:block;" @endif>
+                        <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*')])>Années académiques</a>
+                        <a href="{{ route('academique.niveaux-matieres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.niveaux-matieres.*')])>Niveaux &amp; matières</a>
+                    </div>
+                </div>
+            @else
+                <span class="nav-item disabled" title="Bientôt disponible">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons['academique'] !!}</svg>
+                    <span class="nav-label">Académique</span>
                 </span>
             @endif
 

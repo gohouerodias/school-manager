@@ -51,4 +51,29 @@ class AnneeAcademique extends Model
     {
         return $this->hasMany(AffectationEnseignant::class);
     }
+
+    /**
+     * Curriculum rows (niveau + matière + coefficient) configured for this
+     * année — see NiveauMatiere.
+     *
+     * @return HasMany<NiveauMatiere, $this>
+     */
+    public function niveauMatieres(): HasMany
+    {
+        return $this->hasMany(NiveauMatiere::class);
+    }
+
+    /**
+     * Makes this the one active année académique, deactivating any other —
+     * only one année can be "active" at a time (enforced here, not at the DB
+     * level; see the `annees_academiques` migration). Called by
+     * Academique\AnneeAcademiqueController::demarrer(), after the previous
+     * active année's élèves have been promoted into this one (see
+     * App\Services\PromotionAnnuelleService).
+     */
+    public function activer(): void
+    {
+        static::query()->where('id', '!=', $this->id)->where('est_active', true)->update(['est_active' => false]);
+        $this->update(['est_active' => true]);
+    }
 }

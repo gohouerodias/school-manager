@@ -13,6 +13,8 @@ import { initGuideMenu } from './guide-menu';
 import { initEleveFiche } from './eleve-fiche';
 import { initEleveTuteurDocument } from './eleve-tuteur-document';
 import { initParametresDossiers } from './parametres-dossiers';
+import { initAcademiqueSettings } from './academique-settings';
+import { initAnneeAcademiqueShow } from './annee-academique-show';
 import { initPanelErrorReopen } from './panel-error-reopen';
 import { initLiveSearch } from './live-search';
 import { initRequiredFieldStyling } from './form-required';
@@ -39,6 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initEleveFiche();
     initEleveTuteurDocument();
     initParametresDossiers();
+    initAcademiqueSettings();
+    initAnneeAcademiqueShow();
     initPanelErrorReopen();
     initLiveSearch();
     initDropdownSelects();

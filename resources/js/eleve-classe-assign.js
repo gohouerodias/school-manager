@@ -47,6 +47,7 @@ export function initEleveClasseAssign() {
             title: 'Modifier la classe',
             message: `Confirmer l'affectation de ${eleveNom} à « ${newLabel} » ?`,
             confirmLabel: 'Confirmer',
+            danger: true,
             onConfirm: () => submitClasseChange(select, newValue),
             onCancel: () => {
                 select.value = previousValue;

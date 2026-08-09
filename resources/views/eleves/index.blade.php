@@ -109,6 +109,10 @@
             <div class="fiche-head-title-row">
                 <h2><span id="fiche-nom-famille"></span> <span id="fiche-prenom"></span></h2>
                 <span class="classe-badge" id="fiche-matricule"></span>
+                {{-- Internal "CSC-{id}" identifier (see Eleve::identifiantVirtuel()) —
+                     always shown, unlike the official Educmaster matricule above
+                     which is manually entered and often still empty. --}}
+                <span class="classe-badge none" id="fiche-identifiant-virtuel" title="Identifiant interne CSC"></span>
             </div>
             <div class="fiche-meta-line">
                 Classe : <b id="fiche-classe">—</b> &nbsp; Statut : <b id="fiche-statut"></b> &nbsp; Date de création : <b id="fiche-date-creation"></b>

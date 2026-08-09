@@ -419,11 +419,22 @@ test('the fiche endpoint returns identité, parcours and documents data', functi
 
     $response->assertOk();
     $response->assertJsonStructure([
-        'identite' => ['nom', 'prenom', 'matricule', 'sexe', 'date_naissance', 'statut', 'champs'],
+        'identite' => ['nom', 'prenom', 'matricule', 'identifiant_virtuel', 'sexe', 'date_naissance', 'statut', 'champs'],
         'parents',
         'parcours',
         'documents',
     ]);
+});
+
+test('the fiche endpoint exposes a "CSC-{id}" identifiant virtuel, always present even without an official matricule', function () {
+    $admin = User::factory()->administrateur()->create();
+    $eleve = Eleve::factory()->create(['matricule' => null]);
+
+    $response = $this->actingAs($admin)->getJson(route('eleves.fiche', $eleve));
+
+    $response->assertOk();
+    $response->assertJsonPath('identite.matricule', null);
+    $response->assertJsonPath('identite.identifiant_virtuel', "CSC-{$eleve->id}");
 });
 
 test('the fiche endpoint returns the raw fields needed to prefill the "Modifier" panel', function () {

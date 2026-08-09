@@ -208,6 +208,7 @@ class EleveController extends Controller
                 'nom' => $eleve->nom,
                 'prenom' => $eleve->prenom,
                 'matricule' => $eleve->matricule,
+                'identifiant_virtuel' => $eleve->identifiantVirtuel(),
                 'sexe' => $eleve->sexe,
                 'date_naissance' => $eleve->date_naissance->format('d/m/Y'),
                 // Raw Y-m-d value, alongside the display-formatted one above:

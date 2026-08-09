@@ -1,6 +1,6 @@
 <svg viewBox="0 0 2180 2150" xmlns="http://www.w3.org/2000/svg" role="img">
 <title>Diagramme de cas d'utilisation (v12)</title>
-<desc>Diagramme UML des cas d'utilisation, version 6, reorganise en zones (Securite et administration, Dossier eleve et documents, Academique, Rapports, Authentification) avec un acteur abstrait Gestionnaire qui factorise les cas partages entre Administrateur et Agent de Scolarite, afin de reduire le nombre de lignes et les croisements.</desc>
+<desc>Diagramme UML des cas d'utilisation, version 6, reorganise en zones (Securite et administration, Dossier eleve et documents, Academique, Rapports, Authentification) avec un acteur abstrait Gestionnaire qui factorise les cas partages entre Administrateur et Agent de Scolarite, afin de reduire le nombre de lignes et les croisements. Note ajoutee: "Affecter un enseignant a une classe/matiere" peut etre execute plusieurs fois pour le meme enseignant et la meme classe, une fois par matiere (voir AffectationEnseignant dans le diagramme de classes).</desc>
 <rect x="0" y="0" width="2180" height="2150" fill="#ffffff"/>
 
 <defs>
@@ -206,6 +206,18 @@
   <g>
     <ellipse cx="400" cy="710" rx="100" ry="45.5" fill="#ffffff" stroke="#888888" stroke-width="1.5"/>
     <text x="400" y="701.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">Affecter un</text><text x="400" y="714.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">enseignant a une</text><text x="400" y="727.0" text-anchor="middle" font-size="11.5" fill="#1a1a1a" font-family="sans-serif">classe/matiere</text>
+  </g>
+
+  <g>
+    <path d="M 850 1280 L 1156 1280 L 1170 1294 L 1170 1394 L 850 1394 Z"
+          fill="#fffceb" stroke="#b8a165" stroke-width="1.2" stroke-dasharray="4,3"/>
+    <path d="M 1156 1280 L 1156 1294 L 1170 1294" fill="none" stroke="#b8a165" stroke-width="1.2" stroke-dasharray="4,3"/>
+    <text x="862" y="1298" font-size="10.5" font-style="italic" fill="#6b5a1e" font-family="sans-serif">Note: un enseignant peut etre</text>
+    <text x="862" y="1314" font-size="10.5" font-style="italic" fill="#6b5a1e" font-family="sans-serif">affecte a plusieurs matieres</text>
+    <text x="862" y="1330" font-size="10.5" font-style="italic" fill="#6b5a1e" font-family="sans-serif">dans une meme classe (une</text>
+    <text x="862" y="1346" font-size="10.5" font-style="italic" fill="#6b5a1e" font-family="sans-serif">affectation distincte par</text>
+    <text x="862" y="1362" font-size="10.5" font-style="italic" fill="#6b5a1e" font-family="sans-serif">matiere).</text>
+    <line x1="900" y1="1280" x2="470" y2="753" stroke="#b8a165" stroke-width="1" stroke-dasharray="3,3"/>
   </g>
 
   <g>

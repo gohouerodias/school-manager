@@ -13,11 +13,12 @@ import { togglePanel } from './slide-panel';
  *       onCancel: () => { ... }, // optional — also fires on ✕ / overlay click
  *   });
  *
- * Pass `danger: true` for destructive actions (delete, archive) — the
- * modal's title/message turn red and the confirm button switches from
- * `.btn.dark` to `.btn.danger`, visually flagging that this one can't be
- * casually undone. See resources/js/confirm-submit-form.js for the reusable
- * "data-confirm-submit" form wiring that uses this.
+ * Pass `danger: true` for destructive/risky actions (delete, archive, change
+ * classe) — the modal's title/message turn red, a big ⚠️ appears above the
+ * message, and the confirm button switches from `.btn.dark` to `.btn.danger`,
+ * visually flagging that this one deserves a second look. See
+ * resources/js/confirm-submit-form.js for the reusable "data-confirm-submit"
+ * form wiring that uses this.
  *
  * Only one confirmation can be pending at a time per modalId (default
  * "confirm-action"), which matches how it's used in practice (a single
@@ -38,6 +39,7 @@ export function askConfirmation({
     const confirmButton = document.querySelector(`[data-confirm-confirm="${modalId}"]`);
     const titleEl = document.querySelector(`[data-confirm-title="${modalId}"]`);
     const modalEl = document.querySelector(`.confirm-modal[data-panel="${modalId}"]`);
+    const iconEl = document.querySelector(`[data-confirm-icon="${modalId}"]`);
 
     if (!messageEl || !confirmButton) {
         // No confirm modal in the DOM (shouldn't happen given the layout
@@ -54,6 +56,9 @@ export function askConfirmation({
     confirmButton.classList.toggle('dark', !danger);
     confirmButton.classList.toggle('danger', danger);
     modalEl?.classList.toggle('confirm-modal--danger', danger);
+    if (iconEl) {
+        iconEl.style.display = danger ? 'block' : 'none';
+    }
 
     pending[modalId] = { onConfirm, onCancel };
 

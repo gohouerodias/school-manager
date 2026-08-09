@@ -15,6 +15,10 @@
         <button type="button" class="panel-close" data-panel-close="{{ $id }}">✕</button>
     </div>
     <div class="panel-body">
+        {{-- Shown only for destructive actions (askConfirmation({ danger: true }),
+             see confirm-modal.js) — a big warning emoji makes "supprimer" /
+             "archiver" / "changer de classe" confirmations impossible to miss. --}}
+        <div class="confirm-modal-icon" data-confirm-icon="{{ $id }}" style="display:none;" aria-hidden="true">⚠️</div>
         <p class="confirm-modal-message" data-confirm-message="{{ $id }}"></p>
     </div>
     <div class="panel-foot">

@@ -102,6 +102,19 @@ class Eleve extends Model
     }
 
     /**
+     * Internal, always-available identifier ("CSC-{id}") derived from the
+     * élève's own primary key — distinct from `matricule`, which is the
+     * official Educmaster number, manually entered by staff and often still
+     * empty for a newly created fiche (see the migration making `matricule`
+     * nullable). Shown on the fiche élève so staff always have *some*
+     * stable identifier to reference before an official matricule exists.
+     */
+    public function identifiantVirtuel(): string
+    {
+        return "CSC-{$this->id}";
+    }
+
+    /**
      * The élève's "Photo d'identité" document, if one has been uploaded —
      * matched by type libellé (types de documents are admin-configurable,
      * so there's no fixed id/enum to key on) rather than an exact string,

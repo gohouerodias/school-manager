@@ -82,6 +82,11 @@ function renderFiche(data) {
         matriculeBadge.textContent = identite.matricule ?? '';
         matriculeBadge.style.display = identite.matricule ? 'inline-block' : 'none';
     }
+    // Internal "CSC-{id}" identifier (Eleve::identifiantVirtuel()) — unlike
+    // the matricule above, it's derived from the élève's own id, so it's
+    // always available and always shown, even before an official Educmaster
+    // matricule has been entered.
+    setText('fiche-identifiant-virtuel', identite.identifiant_virtuel ?? '');
     setText('fiche-classe', identite.classe || '—');
     setText('fiche-date-creation', identite.date_creation);
     setText('fiche-statut', identite.statut === 'archive' ? 'Archivé' : 'Actif');

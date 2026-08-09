@@ -120,7 +120,11 @@ function initTuteurPendingList(form) {
         rechercheUrl: form.dataset.tuteurRechercheUrl,
     });
 
-    let pending = [];
+    // Rehydrates the pending list from old('tuteurs') (see wizard.blade.php's
+    // data-old-tuteurs) so a failed "Terminer" — for a reason unrelated to
+    // étape 3, e.g. a missing document — doesn't silently wipe out tuteurs
+    // the agent had already added to the list before submitting.
+    let pending = parseOldTuteurs(form.dataset.oldTuteurs);
 
     function renderPending() {
         pendingCount.textContent = String(pending.length);
@@ -146,6 +150,8 @@ function initTuteurPendingList(form) {
             });
         });
     }
+
+    renderPending();
 
     addBtn.addEventListener('click', () => {
         const nomPrenom = nomPrenomInput.value.trim();
@@ -193,6 +199,39 @@ function initTuteurPendingList(form) {
             });
         });
     });
+}
+
+/**
+ * Parses the `data-old-tuteurs` JSON (see wizard.blade.php) back into the
+ * shape initTuteurPendingList()'s `pending` array expects. Tolerant of
+ * missing/malformed data (no old input yet, or a genuinely empty tuteurs
+ * array) — always falls back to an empty list rather than throwing.
+ */
+function parseOldTuteurs(raw) {
+    if (!raw) {
+        return [];
+    }
+
+    let parsed;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        return [];
+    }
+
+    if (!Array.isArray(parsed)) {
+        return [];
+    }
+
+    return parsed
+        .filter((item) => item && String(item.nom_prenom ?? '').trim() !== '')
+        .map((item) => ({
+            existingId: item.existing_id || null,
+            nomPrenom: String(item.nom_prenom ?? ''),
+            lien: item.lien_parente || 'Père',
+            telephone: String(item.telephone ?? ''),
+            email: String(item.email ?? ''),
+        }));
 }
 
 function escapeHTML(value) {

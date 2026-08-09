@@ -24,4 +24,18 @@ class Matiere extends Model
             ->withPivot('coefficient')
             ->withTimestamps();
     }
+
+    /**
+     * Niveaux whose curriculum includes this matière, for whichever année(s)
+     * académique(s) — see Niveau::matieresPour() for the année-scoped view.
+     *
+     * @return BelongsToMany<Niveau, $this>
+     */
+    public function niveaux(): BelongsToMany
+    {
+        return $this->belongsToMany(Niveau::class, 'niveau_matiere')
+            ->using(NiveauMatiere::class)
+            ->withPivot(['annee_academique_id', 'coefficient'])
+            ->withTimestamps();
+    }
 }

@@ -75,6 +75,14 @@
     id="eleve-wizard-form"
     enctype="multipart/form-data"
     data-tuteur-recherche-url="{{ route('eleves.wizard.tuteurs.recherche') }}"
+    {{-- When "Terminer" fails validation (e.g. a missing document at étape 4),
+         Laravel flashes the raw submission back via old() — every plain input
+         below already reads old('field', ...) so it survives the reload, but
+         the "Parents / Tuteurs" pending list is built client-side in JS
+         (eleve-wizard.js) and would otherwise reset to empty on every page
+         load. Passing old('tuteurs') through here lets initTuteurPendingList()
+         rehydrate it instead of making the agent re-type every tuteur. --}}
+    data-old-tuteurs="{{ old('tuteurs') ? json_encode(old('tuteurs')) : '' }}"
 >
     @csrf
     @if ($eleve)
