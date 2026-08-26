@@ -15,6 +15,7 @@ import { initEleveTuteurDocument } from './eleve-tuteur-document';
 import { initParametresDossiers } from './parametres-dossiers';
 import { initAcademiqueSettings } from './academique-settings';
 import { initAnneeAcademiqueShow } from './annee-academique-show';
+import { initTabs } from './tabs';
 import { initPanelErrorReopen } from './panel-error-reopen';
 import { initLiveSearch } from './live-search';
 import { initRequiredFieldStyling } from './form-required';
@@ -25,6 +26,7 @@ import { initEleveClasseAssign } from './eleve-classe-assign';
 import { initEleveStatutAssign } from './eleve-statut-assign';
 import { initTuteurList } from './tuteur-list';
 import { initEleveWizard } from './eleve-wizard';
+import { initExamens } from './examens';
 
 document.addEventListener('DOMContentLoaded', () => {
     initPageLoader();
@@ -43,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initParametresDossiers();
     initAcademiqueSettings();
     initAnneeAcademiqueShow();
+    initTabs();
     initPanelErrorReopen();
     initLiveSearch();
     initDropdownSelects();
@@ -53,4 +56,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initEleveStatutAssign();
     initTuteurList();
     initEleveWizard();
+    initExamens();
 });

@@ -5,17 +5,17 @@ use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\User;
 
-test('an administrateur can create a niveau', function () {
+test('an administrateur can create a niveau, appended in last position', function () {
     $admin = User::factory()->administrateur()->create();
+    $ordreMax = (int) (Niveau::query()->max('ordre') ?? 0);
 
     $response = $this->actingAs($admin)->post(route('academique.niveaux.store'), [
         'libelle' => 'CP',
-        'ordre' => 2,
         'cycle' => 'primaire',
     ]);
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('niveaux', ['libelle' => 'CP', 'ordre' => 2, 'cycle' => 'primaire']);
+    $this->assertDatabaseHas('niveaux', ['libelle' => 'CP', 'ordre' => $ordreMax + 1, 'cycle' => 'primaire']);
 });
 
 test('a non-administrateur cannot create a niveau', function () {
@@ -23,7 +23,6 @@ test('a non-administrateur cannot create a niveau', function () {
 
     $response = $this->actingAs($agent)->post(route('academique.niveaux.store'), [
         'libelle' => 'CP',
-        'ordre' => 2,
         'cycle' => 'primaire',
     ]);
 
@@ -37,11 +36,44 @@ test('creating a niveau with an already-used libellé fails validation', functio
 
     $response = $this->actingAs($admin)->from(route('academique.niveaux-matieres.index'))->post(route('academique.niveaux.store'), [
         'libelle' => 'CP',
-        'ordre' => 5,
         'cycle' => 'primaire',
     ]);
 
     $response->assertSessionHasErrors('libelle');
+});
+
+test('an administrateur can move a niveau up, swapping ordre with its predecessor', function () {
+    $admin = User::factory()->administrateur()->create();
+    $premier = Niveau::factory()->create(['ordre' => 21]);
+    $second = Niveau::factory()->create(['ordre' => 22]);
+
+    $response = $this->actingAs($admin)->post(route('academique.niveaux.monter', $second));
+
+    $response->assertRedirect();
+    expect($second->fresh()->ordre)->toBe(21);
+    expect($premier->fresh()->ordre)->toBe(22);
+});
+
+test('an administrateur can move a niveau down, swapping ordre with its successor', function () {
+    $admin = User::factory()->administrateur()->create();
+    $premier = Niveau::factory()->create(['ordre' => 21]);
+    $second = Niveau::factory()->create(['ordre' => 22]);
+
+    $response = $this->actingAs($admin)->post(route('academique.niveaux.descendre', $premier));
+
+    $response->assertRedirect();
+    expect($premier->fresh()->ordre)->toBe(22);
+    expect($second->fresh()->ordre)->toBe(21);
+});
+
+test('moving the first niveau up does nothing', function () {
+    $admin = User::factory()->administrateur()->create();
+    $premier = Niveau::factory()->create(['ordre' => 21]);
+    Niveau::factory()->create(['ordre' => 22]);
+
+    $this->actingAs($admin)->post(route('academique.niveaux.monter', $premier));
+
+    expect($premier->fresh()->ordre)->toBe(21);
 });
 
 test('a niveau with classes already attached cannot be deleted', function () {
@@ -83,17 +115,16 @@ test('creating a matière with an already-used nom fails validation', function (
     $response->assertSessionHasErrors('nom');
 });
 
-test('updating a niveau changes its fields', function () {
+test('updating a niveau changes its fields (its ordre is untouched)', function () {
     $admin = User::factory()->administrateur()->create();
-    $niveau = Niveau::factory()->create(['libelle' => 'CI', 'ordre' => 1]);
+    $niveau = Niveau::factory()->create(['libelle' => 'CI', 'ordre' => 21, 'premiere_scolarisation' => false]);
 
     $response = $this->actingAs($admin)->patch(route('academique.niveaux.update', $niveau), [
         'libelle' => 'CI',
-        'ordre' => 3,
         'cycle' => 'primaire',
         'premiere_scolarisation' => '1',
     ]);
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('niveaux', ['id' => $niveau->id, 'ordre' => 3, 'premiere_scolarisation' => true]);
+    $this->assertDatabaseHas('niveaux', ['id' => $niveau->id, 'ordre' => 21, 'premiere_scolarisation' => true]);
 });

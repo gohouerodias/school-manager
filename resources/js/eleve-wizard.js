@@ -22,6 +22,7 @@ export function initEleveWizard() {
 
     initStepNavigation();
     initDocumentConditionality();
+    initWizardDropzones();
     initTuteurPendingList(form);
 }
 
@@ -96,6 +97,85 @@ function initDocumentConditionality() {
 
     select.addEventListener('change', update);
     update();
+}
+
+/**
+ * Étape 4's file fields: same click-to-browse + drag-and-drop dropzone as
+ * "Ajouter un document" (see eleve-tuteur-document.js's initDropzone()), but
+ * generalized to wire up several instances at once (one per type de
+ * document) instead of a single hardcoded set of element ids — each
+ * [data-wizard-dropzone] finds its own input/text/filename via querySelector
+ * rather than a global id, so this scales to however many document fields
+ * the "Paramètres des dossiers" config defines.
+ */
+function initWizardDropzones() {
+    document.querySelectorAll('[data-wizard-dropzone]').forEach((dropzone) => {
+        const fileInput = dropzone.querySelector('input[type="file"]');
+        const textBlock = dropzone.querySelector('.wizard-dropzone-text');
+        const filenameLabel = dropzone.querySelector('.wizard-dropzone-filename');
+
+        if (!fileInput || !filenameLabel) {
+            return;
+        }
+
+        function showSelectedFile(file) {
+            if (!file) {
+                resetDropzone();
+                return;
+            }
+
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+            filenameLabel.textContent = `📎 ${file.name} (${sizeMb} Mo)`;
+            filenameLabel.style.display = 'block';
+            textBlock.style.display = 'none';
+            dropzone.classList.add('has-file');
+        }
+
+        function resetDropzone() {
+            filenameLabel.style.display = 'none';
+            filenameLabel.textContent = '';
+            textBlock.style.display = 'block';
+            dropzone.classList.remove('has-file');
+        }
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', () => showSelectedFile(fileInput.files[0]));
+
+        ['dragenter', 'dragover'].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'dragend'].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.remove('dragover');
+            });
+        });
+
+        dropzone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            dropzone.classList.remove('dragover');
+
+            const file = event.dataTransfer?.files?.[0];
+            if (file) {
+                fileInput.files = event.dataTransfer.files;
+                showSelectedFile(file);
+            }
+        });
+    });
 }
 
 function initTuteurPendingList(form) {

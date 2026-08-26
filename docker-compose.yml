@@ -1,0 +1,45 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: school-manager-app
+        restart: unless-stopped
+        env_file: .env.docker
+        ports:
+            - "8000:8000"
+        volumes:
+            - storage:/var/www/html/storage
+        depends_on:
+            db:
+                condition: service_healthy
+
+    db:
+        image: mysql:8.0
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: school_manager
+            MYSQL_USER: school_manager
+            MYSQL_PASSWORD: school_manager
+            MYSQL_ROOT_PASSWORD: root
+        volumes:
+            - db-data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    phpmyadmin:
+        image: phpmyadmin:latest
+        restart: unless-stopped
+        environment:
+            PMA_HOST: db
+        ports:
+            - "8081:80"
+        depends_on:
+            - db
+
+volumes:
+    db-data:
+    storage:

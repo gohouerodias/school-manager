@@ -414,6 +414,20 @@ button.classe-badge:hover { filter: brightness(0.95); }
 }
 
 /* Paramètres des dossiers: config sections (types de documents, champs) */
+/* Generic content tabs (see initTabs(), resources/js/tabs.js): a nav row of
+   buttons toggling which [data-tab-panel] is visible — same pill-tab visual
+   language as .wizard-step but without its numbered-step/linear-progress
+   semantics, for pages made of several independent config sections (see
+   academique/annees/show.blade.php: programme / classes / affectations). */
+.tabs-nav { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab-btn {
+    padding: 11px 18px; font-size: 13px; font-weight: 600; color: var(--ink-muted);
+    background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer;
+    white-space: nowrap; font-family: 'Inter', sans-serif; transition: color .15s ease, border-color .15s ease;
+}
+.tab-btn:hover { color: var(--green-deep); }
+.tab-btn.active { color: var(--green-deep); border-bottom-color: var(--gold); }
+
 .config-section { margin-bottom: 32px; }
 .config-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .config-section-head h2 { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: var(--green-deep); margin: 0; }
@@ -430,6 +444,30 @@ button.classe-badge:hover { filter: brightness(0.95); }
     font-size: 10px; padding: 0; line-height: 1;
 }
 .chip-remove:hover { color: var(--red); }
+.chip-edit {
+    background: none; border: none; cursor: pointer; color: var(--ink-muted);
+    font-size: 10px; padding: 0; line-height: 1;
+}
+.chip-edit:hover { color: var(--green-deep); }
+
+/* ↑/↓ reordering (see NiveauController::monter()/descendre()): a niveau's
+   ordre is never typed by hand, only nudged one step at a time. */
+.reorder-buttons { display: flex; align-items: center; gap: 6px; }
+.reorder-btn {
+    width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--line); background: var(--paper-raised);
+    color: var(--ink-muted); cursor: pointer; font-size: 9px; line-height: 1; display: flex; align-items: center; justify-content: center;
+}
+.reorder-btn:hover:not(:disabled) { color: var(--green-deep); border-color: var(--green); }
+.reorder-btn:disabled { opacity: .3; cursor: default; }
+.reorder-rank { font-size: 11.5px; font-weight: 600; color: var(--ink-muted); min-width: 22px; text-align: center; }
+
+/* Read-only value shown in a slide-panel field the user can't edit (e.g.
+   the fixed niveau in "Modifier la classe") — same box as an input, but
+   inert, so it doesn't read as an empty/broken field. */
+.field-static {
+    font-size: 13px; font-weight: 600; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+}
 .type-badge {
     font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block;
     background: var(--blue-tint); color: var(--blue); margin-bottom: 6px;
@@ -761,3 +799,12 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 
 .wizard-document-field .hint { color: var(--green-deep); font-weight: 600; }
 .wizard-document-formats { font-weight: 500; color: var(--ink-muted); text-transform: uppercase; font-size: 11px; letter-spacing: .02em; }
+
+/* Étape 4's file fields reuse the same .dropzone look as "Ajouter un
+   document" (see initWizardDropzones() in eleve-wizard.js) instead of a bare
+   <input type="file">, one dropzone per type de document. */
+.wizard-dropzone { min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.wizard-dropzone.has-file { border-style: solid; border-color: var(--green); background: var(--green-tint); }
+.wizard-dropzone.has-file:hover { background: var(--green-tint); }
+.wizard-dropzone-filename { font-size: 13px; }
+.field.invalid .wizard-dropzone { border-color: var(--red); background: var(--red-tint); }

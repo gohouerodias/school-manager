@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Espace Enseignant — Registre numérique CSCMT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF8F5;
+    --paper-raised:#FFFFFF;
+    --ink:#33383A;
+    --ink-muted:#787F82;
+    --line:#E2DFD8;
+    --green:#3D8B75;
+    --green-deep:#26594A;
+    --green-darker:#1B4038;
+    --green-tint:#E5F1EC;
+    --gold:#EFA03B;
+    --gold-tint:#FCEEDA;
+    --red:#C6392F;
+    --red-tint:#FAE7E4;
+    --blue:#3B6EA5;
+    --blue-tint:#E7EEF6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  .shell{display:flex;min-height:100vh;align-items:stretch;}
+
+  /* Sidebar */
+  .sidebar{width:230px;flex-shrink:0;background:var(--green-deep);display:flex;flex-direction:column;}
+  .sidebar-header{display:flex;align-items:center;gap:10px;padding:16px 14px;border-bottom:1px solid rgba(255,255,255,.14);}
+  .rail-burger{width:34px;height:34px;border-radius:8px;border:none;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .rail-burger:hover{background:rgba(255,255,255,.18);}
+  .sidebar-logo{width:30px;height:30px;border-radius:7px;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:var(--green-deep);}
+  .sidebar-wordmark{color:#fff;font-family:'Fraunces',serif;font-weight:600;font-size:14px;white-space:nowrap;}
+  .sidebar-inner{flex:1;padding:16px 10px;}
+  .sidebar-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);padding:8px 12px 6px;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    padding:11px 13px;border-radius:9px;background:none;border:none;color:rgba(255,255,255,.82);
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:3px;
+  }
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-item.active{background:#fff;color:var(--green-deep);}
+
+  .teacher-card{margin:auto 10px 14px;padding:12px;border-radius:11px;background:rgba(255,255,255,.08);}
+  .teacher-card .name{color:#fff;font-size:12.5px;font-weight:700;}
+  .teacher-card .role{color:rgba(255,255,255,.6);font-size:11px;}
+
+  .main{flex:1;min-width:0;}
+  .app{max-width:1280px;margin:0 auto;padding:26px 30px 60px;}
+
+  /* Topbar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--line);}
+  .guide-link{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green-deep);background:none;text-decoration:none;padding:8px 13px;border:1px solid var(--line);border-radius:20px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .guide-link:hover{background:var(--green-tint);border-color:var(--green);}
+  .guide-link svg{width:14px;height:14px;}
+  .profile-wrap{display:flex;align-items:center;gap:10px;}
+  .user-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-muted);background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;font-family:'Inter',sans-serif;}
+  .user-chip:hover{background:var(--green-tint);}
+  .avatar{width:28px;height:28px;border-radius:50%;background:var(--gold-tint);color:#8A6717;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;}
+  .btn{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:9px 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:opacity .15s ease;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{opacity:.88;}
+  .btn.primary{background:var(--green);color:#fff;}
+  .btn.ghost{background:transparent;color:var(--ink-muted);border-color:var(--line);}
+  .btn.dark{background:var(--green-deep);color:#fff;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- Vue : Mes classes ---- */
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;}
+  .page-head h1{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin:0 0 4px;color:var(--green-deep);}
+  .page-head p{margin:0;font-size:13.5px;color:var(--ink-muted);}
+
+  .classes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .class-card{background:var(--paper-raised);border:1px solid var(--line);border-radius:14px;padding:22px;cursor:pointer;transition:box-shadow .15s ease, transform .15s ease;}
+  .class-card:hover{box-shadow:0 10px 26px rgba(38,89,74,.12);transform:translateY(-2px);}
+  .class-card .badge-year{font-size:10.5px;font-weight:700;color:var(--gold);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px;}
+  .class-card h3{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin:0 0 10px;color:var(--green-deep);}
+  .subject-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .subject-chip{font-size:11px;font-weight:700;background:var(--green-tint);color:var(--green);padding:4px 10px;border-radius:20px;}
+  .titulaire-badge{font-size:11px;font-weight:700;background:var(--gold-tint);color:#8A6717;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+  .titulaire-badge svg{width:11px;height:11px;}
+  .class-stat-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-muted);margin-bottom:12px;}
+  .class-stat-row b{color:var(--ink);font-weight:700;}
+  .progress-track{height:7px;border-radius:10px;background:var(--paper);overflow:hidden;margin-bottom:16px;}
+  .progress-fill{height:100%;background:var(--green);border-radius:10px;}
+  .progress-fill.warn{background:var(--gold);}
+  .class-card .btn{width:100%;justify-content:center;}
+  .hint{font-size:11.5px;color:var(--ink-muted);}
+
+  /* ---- Vue : Saisie des notes ---- */
+  .grade-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+  .back-link{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-muted);cursor:pointer;margin-bottom:10px;}
+  .back-link:hover{color:var(--green);}
+  .back-link svg{width:15px;height:15px;}
+  .grade-title-row{display:flex;align-items:center;gap:12px;}
+  .grade-title-row h1{font-family:'Fraunces',serif;font-size:23px;font-weight:600;margin:0;color:var(--green-deep);}
+  .period-select{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--paper-raised);font-size:12.5px;font-weight:600;color:var(--ink);font-family:'Inter',sans-serif;}
+
+  .grade-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap;}
+  .search{position:relative;width:280px;}
+  .search input{width:100%;padding:9px 13px 9px 36px;border-radius:8px;border:1px solid var(--line);font-family:'Inter',sans-serif;font-size:13px;background:var(--paper-raised);}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ink-muted);}
+
+  .legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink-muted);align-items:center;}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .legend .dot{width:8px;height:8px;border-radius:2px;}
+
+  .sheet-wrap{border:1px solid var(--line);border-radius:14px;overflow:auto;background:var(--paper-raised);max-height:640px;position:relative;}
+  table.sheet{border-collapse:separate;border-spacing:0;width:100%;}
+  table.sheet thead th{
+    position:sticky;top:0;z-index:3;background:#F4F1EA;
+    font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-muted);font-weight:700;
+    padding:12px 10px;border-bottom:1px solid var(--line);border-right:1px solid #EDE9DF;text-align:center;white-space:nowrap;
+  }
+  table.sheet thead th .sub{display:block;font-size:9.5px;font-weight:600;color:var(--ink-muted);text-transform:none;letter-spacing:0;margin-top:1px;}
+  table.sheet thead th.col-student{
+    position:sticky;left:0;top:0;z-index:4;text-align:left;background:#F4F1EA;min-width:210px;
+  }
+  table.sheet tbody th.row-student{
+    position:sticky;left:0;z-index:2;background:var(--paper-raised);border-right:1px solid var(--line);border-bottom:1px solid #F0EBDD;
+    padding:8px 12px;text-align:left;font-weight:600;min-width:210px;
+  }
+  table.sheet tbody tr:hover th.row-student, table.sheet tbody tr:hover td{background:#FBF9F4;}
+  .student-cell{display:flex;align-items:center;gap:9px;}
+  .student-cell .av{width:28px;height:28px;border-radius:50%;background:var(--green-tint);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+  .student-cell .txt b{display:block;font-size:12.5px;font-weight:600;color:var(--ink);}
+  .student-cell .txt span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-muted);}
+
+  table.sheet td{border-bottom:1px solid #F0EBDD;border-right:1px solid #F0EBDD;padding:0;text-align:center;min-width:92px;}
+  td.note-cell input{
+    width:100%;height:44px;border:none;background:transparent;text-align:center;
+    font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--ink);
+  }
+  td.note-cell input:focus{outline:2px solid var(--green);outline-offset:-2px;background:var(--green-tint);}
+  td.note-cell input::placeholder{color:#C9C4B6;font-weight:400;}
+  td.note-cell.low input{color:var(--red);}
+  td.note-cell.high input{color:var(--green);}
+
+  td.col-moyenne{background:#FAF7EE;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--green-deep);min-width:80px;}
+  th.col-moyenne-h{min-width:80px;}
+
+  td.col-comment{min-width:60px;}
+  .comment-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--paper-raised);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-muted);}
+  .comment-btn:hover{background:var(--green-tint);color:var(--green-deep);}
+  .comment-btn.filled{background:var(--gold-tint);border-color:var(--gold);color:#8A6717;}
+  th.col-comment-h{min-width:60px;}
+
+  /* Panneau commentaire */
+  .overlay{position:fixed;inset:0;background:rgba(18,52,30,.25);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:40;}
+  .overlay.show{opacity:1;pointer-events:auto;}
+  .panel{position:fixed;top:0;right:0;height:100%;width:420px;background:var(--paper-raised);box-shadow:-8px 0 30px rgba(18,52,30,.12);transform:translateX(100%);transition:transform .3s ease;z-index:50;display:flex;flex-direction:column;}
+  .panel.show{transform:translateX(0);}
+  .panel-head{padding:22px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;}
+  .panel-head h2{font-family:'Fraunces',serif;font-size:16px;margin:0 0 4px;color:var(--green-deep);}
+  .panel-head p{margin:0;font-size:12px;color:var(--ink-muted);}
+  .panel-close{cursor:pointer;color:var(--ink-muted);font-size:20px;background:none;border:none;line-height:1;}
+  .panel-body{padding:22px 24px;flex:1;overflow-y:auto;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:7px;}
+  .field textarea{width:100%;min-height:120px;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;}
+  .rating-options{display:flex;flex-direction:column;gap:8px;}
+  .rating-option{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink);}
+  .rating-option.selected{border-color:var(--green);background:var(--green-tint);}
+  .rating-option .symbol{width:22px;height:22px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;}
+  .panel-foot{padding:18px 24px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;}
+  .comment-section-label{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);
+    margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line);
+  }
+  .subject-comment-field{margin-bottom:16px;}
+  .subject-comment-field label{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .subject-comment-field textarea{width:100%;min-height:60px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:'Inter',sans-serif;font-size:12.5px;resize:vertical;}
+  .titulaire-lock{
+    display:flex;gap:9px;align-items:flex-start;background:var(--gold-tint);border-radius:9px;
+    padding:11px 13px;margin-bottom:16px;font-size:11.5px;color:#8A6717;line-height:1.5;
+  }
+  .titulaire-lock svg{width:16px;height:16px;flex-shrink:0;margin-top:1px;}
+  .rating-options.locked .rating-option{pointer-events:none;opacity:.55;}
+  textarea.locked{background:var(--paper);pointer-events:none;opacity:.7;}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green-deep);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s ease;z-index:60;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <button class="rail-burger" title="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="sidebar-logo">CSCMT</div>
+      <span class="sidebar-wordmark">Registre CSCMT</span>
+    </div>
+    <div class="sidebar-inner">
+      <div class="sidebar-label">Navigation</div>
+      <button class="nav-item active" onclick="showView('classes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+        Mes classes
+      </button>
+    </div>
+    <div class="teacher-card">
+      <div class="name">M. Houngbo Kokou</div>
+      <div class="role">Enseignant · CM1-A, CM1-B, CM2-A</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="app">
+
+      <div class="topbar">
+        <a class="guide-link" href="guide-utilisation.pdf" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          Guide d'utilisation
+        </a>
+        <div class="profile-wrap">
+          <button class="user-chip">
+            <div class="avatar">KH</div>
+            HOUNGBO Kokou · Enseignant
+          </button>
+          <button class="btn ghost" onclick="alert('Déconnexion (démo)')">Se déconnecter</button>
+        </div>
+      </div>
+
+      <!-- ============== VUE 1 : MES CLASSES ============== -->
+      <div class="view active" id="view-classes">
+        <div class="page-head">
+          <div>
+            <h1>Mes classes</h1>
+            <p>3 classes vous sont attribuées pour l'année académique 2025-2026</p>
+          </div>
+        </div>
+
+        <div class="classes-grid" id="classesGrid"></div>
+      </div>
+
+      <!-- ============== VUE 2 : SAISIE DES NOTES ============== -->
+      <div class="view" id="view-grades">
+        <div class="back-link" onclick="showView('classes')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="m15 18-6-6 6-6"/></svg>
+          Retour à mes classes
+        </div>
+
+        <div class="grade-topbar">
+          <div class="grade-title-row">
+            <h1 id="className">CM1-A</h1>
+            <span id="classTitulaireBadge"></span>
+            <select class="period-select" id="periodSelect" onchange="onPeriodChange()">
+              <option>Évaluation N°6 — Février 2026</option>
+              <option>Évaluation N°5 — Janvier 2026</option>
+              <option>Évaluation N°4 — Décembre 2025</option>
+              <option>Évaluation N°3 — Novembre 2025</option>
+            </select>
+          </div>
+          <button class="btn ghost" onclick="alert('Export Excel de la classe (démo)')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+            Exporter en Excel
+          </button>
+        </div>
+
+        <div class="grade-toolbar">
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="studentSearch" placeholder="Rechercher un apprenant..." oninput="filterStudents()">
+          </div>
+          <div class="legend">
+            <span><span class="dot" style="background:var(--red);"></span> Note &lt; 10</span>
+            <span><span class="dot" style="background:var(--green);"></span> Note ≥ 16</span>
+            <span><span class="dot" style="background:var(--gold);"></span> Commentaire ajouté</span>
+          </div>
+        </div>
+
+        <div class="sheet-wrap">
+          <table class="sheet" id="sheetTable">
+            <thead>
+              <tr id="sheetHeadRow">
+                <th class="col-student">Apprenant</th>
+                <!-- colonnes matières injectées en JS -->
+                <th class="col-moyenne-h">Moyenne<span class="sub">/20</span></th>
+                <th class="col-comment-h">Commentaire</th>
+              </tr>
+            </thead>
+            <tbody id="sheetBody"></tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:12px;color:var(--ink-muted);font-size:11.5px;">
+          Cliquez directement dans une case pour saisir ou modifier une note. Videz la case pour supprimer une note. Les modifications sont enregistrées automatiquement.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeCommentPanel()"></div>
+
+<div class="panel" id="commentPanel">
+  <div class="panel-head">
+    <div>
+      <h2 id="commentStudentName">Commentaire</h2>
+      <p id="commentPeriodLabel">Évaluation N°6 — Février 2026</p>
+    </div>
+    <button class="panel-close" onclick="closeCommentPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="comment-section-label">Commentaire par matière</div>
+    <div id="subjectCommentsWrap"></div>
+
+    <div class="comment-section-label" style="margin-top:8px;">Bulletin mensuel (commentaire général)</div>
+    <div id="titulaireLockNote" class="titulaire-lock" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>Réservé au titulaire de la classe — <b id="titulaireLockName"></b>. Vous pouvez consulter ce commentaire, mais seul le titulaire peut le modifier.</span>
+    </div>
+    <div class="field">
+      <label>Résultat global du mois</label>
+      <div class="rating-options" id="ratingOptions">
+        <div class="rating-option" data-rating="Très bien"><span class="symbol">☺</span>Très bien</div>
+        <div class="rating-option" data-rating="Bien"><span class="symbol">☺</span>Bien</div>
+        <div class="rating-option" data-rating="Assez bien"><span class="symbol">○</span>Assez bien</div>
+        <div class="rating-option" data-rating="Passable"><span class="symbol">○</span>Passable</div>
+        <div class="rating-option" data-rating="Médiocre"><span class="symbol">◐</span>Médiocre</div>
+        <div class="rating-option" data-rating="Mal"><span class="symbol">◐</span>Mal</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Commentaire sur les résultats et recommandations aux parents</label>
+      <textarea id="commentText" placeholder="Ex : Travail très satisfaisant. Doit renforcer sa capacité en lecture-écriture."></textarea>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeCommentPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveComment()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Enregistré</div>
+
+<script>
+/* ============================================================================
+   DONNÉES DE DÉMONSTRATION
+   🔌 BACKEND — Toutes les données ci-dessous (classes, apprenants, notes,
+   commentaires) sont fictives, générées uniquement pour la démo. À remplacer
+   par des appels API réels :
+     - GET /api/enseignant/classes
+     - GET /api/classes/{id}/apprenants?periode=...
+     - PATCH /api/notes/{apprenantId}/{matiere}?periode=...   (créer/modifier)
+     - DELETE /api/notes/{apprenantId}/{matiere}?periode=...  (supprimer, case vidée)
+     - PATCH /api/commentaires/{apprenantId}?periode=...
+   ============================================================================ */
+
+const classesData = {
+  'CM1-A': { matieres: ['Français', 'Mathématique'], titulaire: true, titulaireNom: 'HOUNGBO Kokou (vous)' },
+  'CM1-B': { matieres: ['Français'], titulaire: false, titulaireNom: 'TRAORÉ Aïcha' },
+  'CM2-A': { matieres: ['Anglais'], titulaire: false, titulaireNom: 'DOSSOU Sylvie' },
+};
+
+const prenoms = ['Emmanuel','Grâce','Josué','Ruth','Samuel','Naomie','David','Esther','Isaac','Rebecca','Élie','Deborah','Jonas','Rachel','Timothée','Abigaël','Nathan','Léa','Gabriel','Sarah','Emmanuella','Ariel','Prisca','Josias'];
+const noms = ['Ahouansou','Biaou','Capo-Chichi','Dossa','Egounlety','Fassinou','Gnonlonfoun','Houinsou','Kiki','Loko','Mensah','Nonvide','Okoumassoun','Pognon','Sossou','Toko','Vidjannagni','Yehouenou','Zinsou','Agbo','Bokossa','Dansou','Edorh','Sagbo'];
+
+let studentsByClass = {};
+function generateStudents(classe, count){
+  const mats = classesData[classe].matieres;
+  const list = [];
+  for(let i=0;i<count;i++){
+    const prenom = prenoms[i % prenoms.length];
+    const nom = noms[(i*5) % noms.length];
+    const notes = {};
+    mats.forEach(m => {
+      const r = (i + m.length) % 5;
+      notes[m] = r === 0 ? null : (8 + ((i * 3 + m.length * 2) % 13)); // certaines cases vides volontairement
+    });
+    list.push({
+      id: `${classe}-${i}`, nom, prenom,
+      matricule: `2026-${1000 + i}`,
+      notes,
+      subjectComments: (i % 7 === 0) ? { [mats[0]]: "Bonne participation en classe, doit consolider les acquis." } : {},
+      comment: (i % 6 === 0 && classesData[classe].titulaire) ? { rating: 'Bien', text: "Travail sérieux, participe activement en classe." } : null,
+    });
+  }
+  return list;
+}
+Object.keys(classesData).forEach(c => {
+  studentsByClass[c] = generateStudents(c, c === 'CM1-A' ? 24 : c === 'CM1-B' ? 22 : 20);
+});
+
+let currentClass = 'CM1-A';
+
+function renderClassCards(){
+  const grid = document.getElementById('classesGrid');
+  grid.innerHTML = Object.keys(classesData).map(classe => {
+    const cfg = classesData[classe];
+    const students = studentsByClass[classe];
+    const totalCells = students.length * cfg.matieres.length;
+    let filled = 0;
+    students.forEach(s => cfg.matieres.forEach(m => { if(s.notes[m] !== null && s.notes[m] !== undefined) filled++; }));
+    const pct = Math.round((filled / totalCells) * 100);
+    return `
+      <div class="class-card" onclick="openClass('${classe}')">
+        <div class="badge-year">Année 2025-2026</div>
+        <h3>${classe}</h3>
+        <div class="subject-chips">
+          ${cfg.matieres.map(m => `<span class="subject-chip">${m}</span>`).join('')}
+          ${cfg.titulaire ? `<span class="titulaire-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Titulaire</span>` : ''}
+        </div>
+        <div class="class-stat-row"><span>Apprenants</span><b>${students.length}</b></div>
+        <div class="class-stat-row"><span>Notes saisies — Février 2026</span><b>${filled}/${totalCells}</b></div>
+        <div class="progress-track"><div class="progress-fill ${pct < 60 ? 'warn' : ''}" style="width:${pct}%;"></div></div>
+        ${!cfg.titulaire ? `<div class="hint" style="margin-bottom:10px;">Titulaire de la classe : <b>${cfg.titulaireNom}</b></div>` : ''}
+        <button class="btn primary">Ouvrir la classe</button>
+      </div>`;
+  }).join('');
+}
+renderClassCards();
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(name === 'classes') document.querySelector('.nav-item').classList.add('active');
+}
+
+function openClass(classe){
+  currentClass = classe;
+  const cfg = classesData[classe];
+  document.getElementById('className').textContent = classe;
+  document.getElementById('classTitulaireBadge').innerHTML = cfg.titulaire
+    ? `<span class="titulaire-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Vous êtes titulaire</span>`
+    : `<span class="hint">Titulaire de la classe : <b>${cfg.titulaireNom}</b></span>`;
+  renderSheet();
+  showView('grades');
+}
+
+function computeMoyenne(student){
+  const vals = Object.values(student.notes).filter(v => v !== null && v !== undefined && v !== '');
+  if(!vals.length) return null;
+  const sum = vals.reduce((a,b) => a + Number(b), 0);
+  return (sum / vals.length);
+}
+
+function renderSheet(){
+  const mats = classesData[currentClass].matieres;
+  const headRow = document.getElementById('sheetHeadRow');
+  headRow.innerHTML = `<th class="col-student">Apprenant</th>` +
+    mats.map(m => `<th>${m}<span class="sub">/20</span></th>`).join('') +
+    `<th class="col-moyenne-h">Moyenne<span class="sub">/20</span></th><th class="col-comment-h">Commentaire</th>`;
+
+  const body = document.getElementById('sheetBody');
+  const students = studentsByClass[currentClass];
+  body.innerHTML = students.map(st => {
+    const initials = (st.prenom[0] + st.nom[0]).toUpperCase();
+    const moyenne = computeMoyenne(st);
+    const moyenneTxt = moyenne === null ? '—' : moyenne.toFixed(2);
+    return `
+      <tr data-student="${st.id}" data-search="${(st.nom + ' ' + st.prenom).toLowerCase()}">
+        <th class="row-student">
+          <div class="student-cell">
+            <div class="av">${initials}</div>
+            <div class="txt"><b>${st.nom.toUpperCase()} ${st.prenom}</b><span>${st.matricule}</span></div>
+          </div>
+        </th>
+        ${mats.map(m => {
+          const val = st.notes[m];
+          const cls = val !== null && val !== undefined ? (val < 10 ? 'low' : (val >= 16 ? 'high' : '')) : '';
+          return `<td class="note-cell ${cls}" data-matiere="${m}">
+            <input type="number" min="0" max="20" step="0.5" value="${val !== null && val !== undefined ? val : ''}" placeholder="—"
+              onchange="onNoteChange('${st.id}','${m}',this)">
+          </td>`;
+        }).join('')}
+        <td class="col-moyenne">${moyenneTxt}</td>
+        <td class="col-comment">
+          <button class="comment-btn ${(st.comment || Object.keys(st.subjectComments).length) ? 'filled' : ''}" onclick="openCommentPanel('${st.id}')" title="Commentaire mensuel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// 🔌 BACKEND — Remplacer par PATCH /api/notes/{id}/{matiere} (ou DELETE si la case est vidée)
+function onNoteChange(studentId, matiere, input){
+  const student = studentsByClass[currentClass].find(s => s.id === studentId);
+  const raw = input.value.trim();
+  if(raw === ''){
+    student.notes[matiere] = null;
+  } else {
+    let v = Math.max(0, Math.min(20, Number(raw)));
+    student.notes[matiere] = v;
+  }
+  renderSheet();
+  filterStudents();
+  showToast(raw === '' ? '✓ Note supprimée' : '✓ Note enregistrée');
+}
+
+function filterStudents(){
+  const q = document.getElementById('studentSearch').value.trim().toLowerCase();
+  document.querySelectorAll('#sheetBody tr').forEach(tr => {
+    tr.style.display = (!q || tr.dataset.search.includes(q)) ? '' : 'none';
+  });
+}
+
+function onPeriodChange(){
+  // 🔌 BACKEND — Recharger les notes de la classe pour la période sélectionnée :
+  // GET /api/classes/{id}/apprenants?periode=...
+  showToast('Période changée (démo — mêmes notes affichées)');
+}
+
+/* ---------- Commentaire mensuel ---------- */
+let currentCommentStudent = null;
+function openCommentPanel(studentId){
+  const cfg = classesData[currentClass];
+  const student = studentsByClass[currentClass].find(s => s.id === studentId);
+  currentCommentStudent = studentId;
+
+  document.getElementById('commentStudentName').textContent = `${student.nom.toUpperCase()} ${student.prenom}`;
+  document.getElementById('commentPeriodLabel').textContent = document.getElementById('periodSelect').value;
+
+  // Section 1 — un champ par matière enseignée par vous dans cette classe
+  const subjWrap = document.getElementById('subjectCommentsWrap');
+  subjWrap.innerHTML = cfg.matieres.map(m => `
+    <div class="subject-comment-field">
+      <label>Commentaire — ${m}</label>
+      <textarea id="subjComment_${m}" placeholder="Votre observation pour ${m} ce mois-ci...">${student.subjectComments[m] || ''}</textarea>
+    </div>
+  `).join('');
+
+  // Section 2 — bulletin mensuel global, verrouillé si non-titulaire
+  const isTitulaire = cfg.titulaire;
+  document.getElementById('titulaireLockNote').style.display = isTitulaire ? 'none' : 'flex';
+  document.getElementById('titulaireLockName').textContent = cfg.titulaireNom;
+  document.getElementById('ratingOptions').classList.toggle('locked', !isTitulaire);
+  document.getElementById('commentText').classList.toggle('locked', !isTitulaire);
+  document.getElementById('commentText').readOnly = !isTitulaire;
+
+  document.getElementById('commentText').value = student.comment ? student.comment.text : '';
+  document.querySelectorAll('.rating-option').forEach(o => {
+    o.classList.toggle('selected', student.comment && o.dataset.rating === student.comment.rating);
+  });
+
+  document.getElementById('commentPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeCommentPanel(){
+  document.getElementById('commentPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+document.querySelectorAll('.rating-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    if(document.getElementById('ratingOptions').classList.contains('locked')) return;
+    document.querySelectorAll('.rating-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+// 🔌 BACKEND — Deux appels distincts :
+//   PATCH /api/commentaires-matiere/{apprenantId}/{matiere}?periode=...  (tout enseignant concerné)
+//   PATCH /api/commentaires-bulletin/{apprenantId}?periode=...           (titulaire uniquement —
+//   le serveur doit rejeter cette requête si l'enseignant n'est pas titulaire de la classe)
+function saveComment(){
+  const cfg = classesData[currentClass];
+  const student = studentsByClass[currentClass].find(s => s.id === currentCommentStudent);
+
+  cfg.matieres.forEach(m => {
+    const val = document.getElementById(`subjComment_${m}`).value.trim();
+    if(val) student.subjectComments[m] = val; else delete student.subjectComments[m];
+  });
+
+  if(cfg.titulaire){
+    const selected = document.querySelector('.rating-option.selected');
+    const text = document.getElementById('commentText').value.trim();
+    student.comment = (selected || text) ? { rating: selected ? selected.dataset.rating : null, text } : null;
+  }
+
+  closeCommentPanel();
+  renderSheet();
+  filterStudents();
+  showToast('✓ Commentaire(s) enregistré(s)');
+}
+
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+renderSheet();
+</script>
+</body>
+</html>

@@ -14,13 +14,17 @@ class StoreNiveauRequest extends FormRequest
     }
 
     /**
+     * `ordre` isn't submitted — a new niveau is always appended last (see
+     * NiveauController::store()); reordering afterwards is done via the ↑/↓
+     * buttons (NiveauController::monter()/descendre()), not by typing a
+     * number.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'libelle' => ['required', 'string', 'max:50', Rule::unique('niveaux', 'libelle')],
-            'ordre' => ['required', 'integer', 'min:1'],
             'cycle' => ['required', Rule::enum(CycleNiveau::class)],
             'premiere_scolarisation' => ['boolean'],
         ];
@@ -34,7 +38,6 @@ class StoreNiveauRequest extends FormRequest
         return [
             'libelle.required' => 'Le libellé du niveau est obligatoire.',
             'libelle.unique' => 'Ce niveau existe déjà.',
-            'ordre.required' => "L'ordre du niveau est obligatoire.",
             'cycle.required' => 'Le cycle est obligatoire.',
         ];
     }

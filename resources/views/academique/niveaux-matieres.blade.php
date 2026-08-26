@@ -23,8 +23,8 @@
 
     <x-data-table id="niveaux-table">
         <x-slot:head>
+            <th>Position</th>
             <th>Libellé</th>
-            <th>Ordre</th>
             <th>Cycle</th>
             <th>Première scolarisation</th>
             <th></th>
@@ -32,8 +32,25 @@
 
         @foreach ($niveaux as $niveau)
             <tr>
+                <td>
+                    {{-- L'ordre lui-même ne se tape plus à la main — un nouveau
+                         niveau est toujours ajouté en dernière position (voir
+                         NiveauController::store()) ; ces deux flèches
+                         permutent son ordre avec son voisin immédiat
+                         (monter()/descendre()). --}}
+                    <div class="reorder-buttons">
+                        <form method="POST" action="{{ route('academique.niveaux.monter', $niveau) }}">
+                            @csrf
+                            <button type="submit" class="reorder-btn" title="Monter" @disabled($loop->first)>▲</button>
+                        </form>
+                        <span class="reorder-rank">#{{ $loop->iteration }}</span>
+                        <form method="POST" action="{{ route('academique.niveaux.descendre', $niveau) }}">
+                            @csrf
+                            <button type="submit" class="reorder-btn" title="Descendre" @disabled($loop->last)>▼</button>
+                        </form>
+                    </div>
+                </td>
                 <td><b>{{ $niveau->libelle }}</b></td>
-                <td>{{ $niveau->ordre }}</td>
                 <td><span class="chip">{{ ucfirst($niveau->cycle->value) }}</span></td>
                 <td>{{ $niveau->premiere_scolarisation ? 'Oui' : 'Non' }}</td>
                 <td>
@@ -46,7 +63,6 @@
                             data-edit-niveau-trigger
                             data-edit-url="{{ route('academique.niveaux.update', $niveau) }}"
                             data-edit-libelle="{{ $niveau->libelle }}"
-                            data-edit-ordre="{{ $niveau->ordre }}"
                             data-edit-cycle="{{ $niveau->cycle->value }}"
                             data-edit-premiere-scolarisation="{{ $niveau->premiere_scolarisation ? '1' : '0' }}"
                         >✎</button>
@@ -118,19 +134,11 @@
         @error('libelle')
             <div class="alert-error">{{ $message }}</div>
         @enderror
-        @error('ordre')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
 
         <div class="field">
             <label for="new-niveau-libelle">Libellé</label>
             <input type="text" id="new-niveau-libelle" name="libelle" placeholder="Ex : CM1" value="{{ old('libelle') }}" required>
-        </div>
-
-        <div class="field">
-            <label for="new-niveau-ordre">Ordre (position dans le cursus)</label>
-            <input type="number" id="new-niveau-ordre" name="ordre" min="1" value="{{ old('ordre') }}" required>
-            <div class="hint">Détermine le "niveau supérieur" lors du passage à l'année suivante.</div>
+            <div class="hint">Le niveau est ajouté en dernière position — utilisez les flèches ▲▼ du tableau pour le repositionner ensuite.</div>
         </div>
 
         <div class="field">
@@ -168,18 +176,10 @@
         @error('libelle')
             <div class="alert-error">{{ $message }}</div>
         @enderror
-        @error('ordre')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
 
         <div class="field">
             <label for="edit-niveau-libelle">Libellé</label>
             <input type="text" id="edit-niveau-libelle" name="libelle" value="{{ old('libelle') }}" required>
-        </div>
-
-        <div class="field">
-            <label for="edit-niveau-ordre">Ordre (position dans le cursus)</label>
-            <input type="number" id="edit-niveau-ordre" name="ordre" min="1" value="{{ old('ordre') }}" required>
         </div>
 
         <div class="field">

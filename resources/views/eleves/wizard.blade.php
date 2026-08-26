@@ -254,7 +254,13 @@
                             <span class="wizard-document-formats">({{ implode(', ', $type->formats_acceptes) }})</span>
                         @endif
                     </label>
-                    <input type="file" id="wizard-document-{{ $type->id }}" name="documents[{{ $type->id }}]">
+                    <div class="dropzone wizard-dropzone" data-wizard-dropzone tabindex="0">
+                        <input type="file" id="wizard-document-{{ $type->id }}" name="documents[{{ $type->id }}]" hidden>
+                        <div class="dropzone-text wizard-dropzone-text">
+                            <b>📎 Glissez-déposez</b> ou <b>parcourez vos fichiers</b>
+                        </div>
+                        <div class="dropzone-filename wizard-dropzone-filename" style="display:none;"></div>
+                    </div>
                     @if ($documentExistant)
                         <div class="hint">Déjà fourni — choisissez un fichier pour le remplacer.</div>
                     @endif

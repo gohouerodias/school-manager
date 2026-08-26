@@ -16,7 +16,6 @@ function initNiveauEdit() {
     }
 
     const libelleInput = document.getElementById('edit-niveau-libelle');
-    const ordreInput = document.getElementById('edit-niveau-ordre');
     const cycleSelect = document.getElementById('edit-niveau-cycle');
     const premiereScolarisationCheckbox = document.getElementById('edit-niveau-premiere-scolarisation');
     const editUrlHidden = document.getElementById('edit-niveau-edit-url');
@@ -28,7 +27,6 @@ function initNiveauEdit() {
                 editUrlHidden.value = trigger.dataset.editUrl;
             }
             libelleInput.value = trigger.dataset.editLibelle ?? '';
-            ordreInput.value = trigger.dataset.editOrdre ?? '';
             cycleSelect.value = trigger.dataset.editCycle ?? 'primaire';
             premiereScolarisationCheckbox.checked = trigger.dataset.editPremiereScolarisation === '1';
         });

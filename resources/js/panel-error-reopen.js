@@ -15,4 +15,13 @@ export function initPanelErrorReopen() {
 
     document.querySelector(`[data-panel="${panelId}"]`)?.classList.add('show');
     document.querySelector(`[data-panel-overlay="${panelId}"]`)?.classList.add('show');
+
+    // If the trigger that opens this panel lives inside a [data-tab-panel]
+    // (see academique/annees/show.blade.php's tabs + resources/js/tabs.js),
+    // switch to that tab too — otherwise the reopened panel's @error
+    // messages would sit behind a hidden tab the user never asked to leave.
+    const tab = document.querySelector(`[data-panel-open="${panelId}"]`)?.closest('[data-tab-panel]')?.dataset.tabPanel;
+    if (tab) {
+        document.querySelector(`[data-tab-btn="${tab}"]`)?.click();
+    }
 }

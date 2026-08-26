@@ -3,17 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\Classe;
-use App\Models\Niveau;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * A classe's nom isn't typed freely — it's "{niveau->libelle} {lettre}"
- * (see initClasseLettreFilter() in annee-academique-show.js, which only
- * lets the admin pick a `lettre` not already used by another classe of the
- * chosen niveau in this année, so this uniqueness check is mostly a
- * server-side safety net for a stale/tampered select).
+ * Only the classe's lettre can be changed — its niveau stays fixed (see
+ * ClasseController::update()'s doc comment for why), so uniqueness only
+ * needs to be re-checked against the classe's own (unchanged) niveau/année.
  */
-class StoreClasseRequest extends FormRequest
+class UpdateClasseRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -26,7 +23,6 @@ class StoreClasseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'niveau_id' => ['required', 'exists:niveaux,id'],
             'lettre' => ['required', 'string', 'regex:/^[A-Z]$/'],
         ];
     }
@@ -34,22 +30,20 @@ class StoreClasseRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if ($validator->errors()->has('niveau_id') || $validator->errors()->has('lettre')) {
+            if ($validator->errors()->has('lettre')) {
                 return;
             }
 
-            $niveau = Niveau::find($this->input('niveau_id'));
-            if (! $niveau) {
-                return;
-            }
-
-            $anneeAcademiqueId = $this->route('anneeAcademique')?->id;
-            $nom = "{$niveau->libelle} {$this->input('lettre')}";
+            /** @var Classe $classe */
+            $classe = $this->route('classe');
+            $classe->loadMissing('niveau');
+            $nom = "{$classe->niveau->libelle} {$this->input('lettre')}";
 
             $existe = Classe::query()
-                ->where('annee_academique_id', $anneeAcademiqueId)
-                ->where('niveau_id', $niveau->id)
+                ->where('annee_academique_id', $classe->annee_academique_id)
+                ->where('niveau_id', $classe->niveau_id)
                 ->where('nom', $nom)
+                ->where('id', '!=', $classe->id)
                 ->exists();
 
             if ($existe) {
@@ -64,7 +58,6 @@ class StoreClasseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'niveau_id.required' => 'Le niveau est obligatoire.',
             'lettre.required' => 'La lettre de la classe est obligatoire (ex : A).',
             'lettre.regex' => 'La lettre doit être une seule lettre majuscule, de A à Z.',
         ];

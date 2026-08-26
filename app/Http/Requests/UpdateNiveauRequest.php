@@ -14,13 +14,14 @@ class UpdateNiveauRequest extends FormRequest
     }
 
     /**
+     * `ordre` isn't editable here either — see StoreNiveauRequest's note.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'libelle' => ['required', 'string', 'max:50', Rule::unique('niveaux', 'libelle')->ignore($this->route('niveau'))],
-            'ordre' => ['required', 'integer', 'min:1'],
             'cycle' => ['required', Rule::enum(CycleNiveau::class)],
             'premiere_scolarisation' => ['boolean'],
         ];
@@ -34,7 +35,6 @@ class UpdateNiveauRequest extends FormRequest
         return [
             'libelle.required' => 'Le libellé du niveau est obligatoire.',
             'libelle.unique' => 'Ce niveau existe déjà.',
-            'ordre.required' => "L'ordre du niveau est obligatoire.",
             'cycle.required' => 'Le cycle est obligatoire.',
         ];
     }

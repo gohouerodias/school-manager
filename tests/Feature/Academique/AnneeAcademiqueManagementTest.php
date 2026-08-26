@@ -46,27 +46,46 @@ test('adding a classe to an année copies the niveau’s programme into classe_m
 
     $response = $this->actingAs($admin)->post(route('academique.annees.classes.store', $anneeAcademique), [
         'niveau_id' => $niveau->id,
-        'nom' => "{$niveau->libelle} A",
+        'lettre' => 'A',
     ]);
 
     $response->assertRedirect();
     $classe = Classe::where('annee_academique_id', $anneeAcademique->id)->where('niveau_id', $niveau->id)->firstOrFail();
+    expect($classe->nom)->toBe("{$niveau->libelle} A");
     expect($classe->matieres()->count())->toBe(2);
     $this->assertDatabaseHas('classe_matiere', ['classe_id' => $classe->id, 'matiere_id' => $francais->id, 'coefficient' => 4]);
 });
 
-test('a classe with the same nom already used in this niveau/année is rejected', function () {
+test('a classe with a lettre already used in this niveau/année is rejected', function () {
     $admin = User::factory()->administrateur()->create();
     $anneeAcademique = AnneeAcademique::factory()->create();
-    $niveau = Niveau::factory()->create();
+    $niveau = Niveau::factory()->create(['libelle' => 'CM1']);
     Classe::factory()->create(['niveau_id' => $niveau->id, 'annee_academique_id' => $anneeAcademique->id, 'nom' => 'CM1 A']);
 
     $response = $this->actingAs($admin)->from(route('academique.annees.show', $anneeAcademique))->post(route('academique.annees.classes.store', $anneeAcademique), [
         'niveau_id' => $niveau->id,
-        'nom' => 'CM1 A',
+        'lettre' => 'A',
     ]);
 
-    $response->assertSessionHasErrors('nom');
+    $response->assertSessionHasErrors('lettre');
+});
+
+test('modifying a classe renames it and resynchronizes its matières from the niveau', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->create(['libelle' => 'CM1']);
+    $classe = Classe::factory()->create(['niveau_id' => $niveau->id, 'annee_academique_id' => $anneeAcademique->id, 'nom' => 'CM1 A']);
+    $ancienneMatiere = Matiere::factory()->create();
+    $classe->matieres()->attach($ancienneMatiere->id, ['coefficient' => 99]);
+    $nouvelleMatiere = Matiere::factory()->create();
+    NiveauMatiere::create(['niveau_id' => $niveau->id, 'matiere_id' => $nouvelleMatiere->id, 'annee_academique_id' => $anneeAcademique->id, 'coefficient' => 4]);
+
+    $response = $this->actingAs($admin)->patch(route('academique.classes.update', $classe), ['lettre' => 'B']);
+
+    $response->assertRedirect();
+    $classe->refresh();
+    expect($classe->nom)->toBe('CM1 B');
+    expect($classe->matieres()->pluck('matieres.id')->all())->toBe([$nouvelleMatiere->id]);
 });
 
 test('a classe with inscriptions cannot be deleted', function () {
@@ -88,8 +107,9 @@ test('an administrateur can add a matière to a niveau’s programme for an ann�
 
     $response = $this->actingAs($admin)->post(route('academique.annees.niveau-matieres.store', $anneeAcademique), [
         'niveau_id' => $niveau->id,
-        'matiere_id' => $matiere->id,
-        'coefficient' => 3,
+        'matieres' => [
+            ['matiere_id' => $matiere->id, 'coefficient' => 3],
+        ],
     ]);
 
     $response->assertRedirect();
@@ -101,6 +121,27 @@ test('an administrateur can add a matière to a niveau’s programme for an ann�
     ]);
 });
 
+test('an administrateur can add several matières to a niveau’s programme at once', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->create();
+    $francais = Matiere::factory()->create();
+    $maths = Matiere::factory()->create();
+
+    $response = $this->actingAs($admin)->post(route('academique.annees.niveau-matieres.store', $anneeAcademique), [
+        'niveau_id' => $niveau->id,
+        'matieres' => [
+            ['matiere_id' => $francais->id, 'coefficient' => 4],
+            ['matiere_id' => $maths->id, 'coefficient' => 5],
+        ],
+    ]);
+
+    $response->assertRedirect();
+    expect($niveau->matieresPour($anneeAcademique))->toHaveCount(2);
+    $this->assertDatabaseHas('niveau_matiere', ['niveau_id' => $niveau->id, 'matiere_id' => $francais->id, 'coefficient' => 4]);
+    $this->assertDatabaseHas('niveau_matiere', ['niveau_id' => $niveau->id, 'matiere_id' => $maths->id, 'coefficient' => 5]);
+});
+
 test('adding the same matière twice to the same niveau/année is rejected', function () {
     $admin = User::factory()->administrateur()->create();
     $anneeAcademique = AnneeAcademique::factory()->create();
@@ -110,11 +151,28 @@ test('adding the same matière twice to the same niveau/année is rejected', fun
 
     $response = $this->actingAs($admin)->from(route('academique.annees.show', $anneeAcademique))->post(route('academique.annees.niveau-matieres.store', $anneeAcademique), [
         'niveau_id' => $niveau->id,
-        'matiere_id' => $matiere->id,
-        'coefficient' => 5,
+        'matieres' => [
+            ['matiere_id' => $matiere->id, 'coefficient' => 5],
+        ],
     ]);
 
-    $response->assertSessionHasErrors('matiere_id');
+    $response->assertSessionHasErrors('matieres');
+});
+
+test('modifying a niveau_matiere coefficient cascades to already-created classes of that niveau', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->create();
+    $matiere = Matiere::factory()->create();
+    $niveauMatiere = NiveauMatiere::create(['niveau_id' => $niveau->id, 'matiere_id' => $matiere->id, 'annee_academique_id' => $anneeAcademique->id, 'coefficient' => 3]);
+    $classe = Classe::factory()->create(['niveau_id' => $niveau->id, 'annee_academique_id' => $anneeAcademique->id]);
+    $classe->matieres()->attach($matiere->id, ['coefficient' => 3]);
+
+    $response = $this->actingAs($admin)->patch(route('academique.niveau-matieres.update', $niveauMatiere), ['coefficient' => 6]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('niveau_matiere', ['id' => $niveauMatiere->id, 'coefficient' => 6]);
+    $this->assertDatabaseHas('classe_matiere', ['classe_id' => $classe->id, 'matiere_id' => $matiere->id, 'coefficient' => 6]);
 });
 
 test('an administrateur can affect an enseignant to a classe for a matière in its programme', function () {

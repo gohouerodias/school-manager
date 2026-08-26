@@ -94,6 +94,7 @@
                     <div class="nav-submenu" data-nav-submenu @if ($academiqueOpen) style="display:block;" @endif>
                         <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*')])>Années académiques</a>
                         <a href="{{ route('academique.niveaux-matieres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.niveaux-matieres.*')])>Niveaux &amp; matières</a>
+                        <a href="{{ route('academique.examens.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.examens.*')])>Examens</a>
                     </div>
                 </div>
             @else
