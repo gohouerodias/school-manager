@@ -212,6 +212,9 @@
   .confirm-box h3{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--ink);margin:0 0 8px;}
   .confirm-box p{font-size:13px;color:var(--ink-muted);margin:0 0 20px;line-height:1.5;}
   .confirm-actions{display:flex;gap:10px;justify-content:center;}
+
+  /* Ces 2 panneaux s'ouvrent par-dessus la fiche apprenant (déjà en z-index 70) */
+  #addTuteurPanel, #addDocumentPanel{ z-index: 95; }
   table{width:100%;border-collapse:collapse;}
   thead th{
     text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
@@ -391,14 +394,14 @@
   .nav-submenu.open{max-height:160px;}
   .sidebar.collapsed .nav-submenu{display:none;}
   .nav-subitem{
-    display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+    display:flex;align-items:center;width:100%;text-align:left;
     padding:9px 13px 9px 30px;border-radius:8px;background:none;border:none;
     color:rgba(255,255,255,.68);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
     cursor:pointer;margin:2px 0;position:relative;
   }
-  .nav-subitem .sub-arrow{
-    position:absolute;left:14px;top:50%;transform:translateY(-50%);
-    width:11px;height:11px;opacity:.65;flex-shrink:0;
+  .nav-subitem:before{
+    content:'';position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6;
   }
   .nav-subitem:hover{background:rgba(255,255,255,.08);color:#fff;}
   .nav-subitem.active{background:rgba(255,255,255,.14);color:#fff;}
@@ -488,14 +491,8 @@
             <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
           </button>
           <div class="nav-submenu open" id="submenu-dossiers">
-            <button class="nav-subitem" data-panel="dossiers-liste" onclick="switchPanel('dossiers-liste', this)">
-              <svg class="sub-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-              Liste des apprenants
-            </button>
-            <button class="nav-subitem" data-panel="dossiers-parametres" onclick="switchPanel('dossiers-parametres', this)">
-              <svg class="sub-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-              Paramètres des dossiers
-            </button>
+            <button class="nav-subitem" data-panel="dossiers-liste" onclick="switchPanel('dossiers-liste', this)">Liste des apprenants</button>
+            <button class="nav-subitem" data-panel="dossiers-parametres" onclick="switchPanel('dossiers-parametres', this)">Paramètres des dossiers</button>
           </div>
         </div>
         <button class="nav-item" data-panel="academique" onclick="switchPanel('academique', this)" title="Académique">
@@ -587,6 +584,7 @@
           </div>
           <select class="filter-select" id="filterClasse" onchange="filterEleves()">
             <option value="">Toutes les classes</option>
+            <option value="__aucune__">Sans classe attribuée</option>
             <option value="CI">CI</option>
             <option value="CP">CP</option>
             <option value="CE1">CE1</option>
@@ -595,7 +593,6 @@
             <option value="CM1-B">CM1-B</option>
             <option value="CM2-A">CM2-A</option>
             <option value="CM2-B">CM2-B</option>
-            <option value="__aucune__">Sans classe attribuée</option>
           </select>
           <select class="filter-select" id="filterEleveStatut" onchange="filterEleves()">
             <option value="">Tous les statuts</option>
@@ -694,10 +691,107 @@
 
       </div>
       <div id="panel-academique" class="dashboard-panel" style="display:none;">
-        <div class="empty-panel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>
-          <p>Panneau « Académique » — contenu à définir prochainement.</p>
+
+        <div class="page-head">
+          <div>
+            <h1>Gestion académique</h1>
+            <p>Matières, calendrier des évaluations, affectation des enseignants et règles de passage</p>
+          </div>
         </div>
+
+        <!-- SECTION 1 — Matières par niveau -->
+        <div class="config-section">
+          <div class="config-section-head">
+            <div>
+              <h2>Matières par niveau</h2>
+              <p>Liste des matières enseignées, avec les niveaux concernés et le barème par défaut.</p>
+            </div>
+            <button class="btn primary" onclick="openMatierePanel()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter une matière
+            </button>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr><th>Matière</th><th>Niveaux concernés</th><th>Barème</th><th></th></tr>
+              </thead>
+              <tbody id="matieresTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 2 — Calendrier des évaluations sommatives -->
+        <div class="config-section">
+          <div class="config-section-head">
+            <div>
+              <h2>Calendrier des évaluations sommatives</h2>
+              <p>Détermine les périodes que les enseignants voient dans leur sélecteur, et bloque la saisie en dehors des dates définies.</p>
+            </div>
+            <button class="btn primary" onclick="openEvaluationPanel()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter une évaluation
+            </button>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr><th>N°</th><th>Libellé</th><th>Mois</th><th>Ouverture</th><th>Fermeture</th><th>Statut</th><th></th></tr>
+              </thead>
+              <tbody id="evaluationsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 3 — Affectation des enseignants -->
+        <div class="config-section">
+          <div class="config-section-head">
+            <div>
+              <h2>Affectation des enseignants</h2>
+              <p>Pour chaque classe : quels enseignants, pour quelles matières, et qui est le titulaire (seul habilité à valider le bulletin mensuel).</p>
+            </div>
+          </div>
+          <div class="card">
+            <table>
+              <thead>
+                <tr><th>Classe</th><th>Enseignants affectés</th><th>Titulaire</th><th></th></tr>
+              </thead>
+              <tbody id="affectationsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 4 — Seuil de passage en classe supérieure -->
+        <div class="config-section">
+          <div class="config-section-head">
+            <div>
+              <h2>Seuil de passage en classe supérieure</h2>
+              <p>Moyenne annuelle minimale à partir de laquelle le système propose automatiquement « Admis ». La direction garde la main pour valider ou modifier chaque décision.</p>
+            </div>
+          </div>
+          <div class="card" style="padding:22px 24px;">
+            <div style="display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap;">
+              <div class="field" style="margin:0; max-width:220px;">
+                <label>Moyenne minimale requise (sur 20)</label>
+                <input type="number" id="seuilPassage" value="10" min="0" max="20" step="0.5">
+              </div>
+              <label class="toggle-label" style="padding-bottom:11px;">
+                <span class="toggle-switch"><input type="checkbox" id="seuilParNiveau" onchange="toggleSeuilParNiveau()"><span class="toggle-slider"></span></span>
+                Définir un seuil différent par niveau
+              </label>
+              <button class="btn dark" style="margin-bottom:0;" onclick="saveSeuil()">Enregistrer</button>
+            </div>
+            <div id="seuilParNiveauWrap" style="display:none; margin-top:18px; padding-top:18px; border-top:1px solid var(--line);">
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px;">
+                <div class="field" style="margin:0;"><label>CI — CP</label><input type="number" value="10" min="0" max="20" step="0.5"></div>
+                <div class="field" style="margin:0;"><label>CE1 — CE2</label><input type="number" value="10" min="0" max="20" step="0.5"></div>
+                <div class="field" style="margin:0;"><label>CM1</label><input type="number" value="10" min="0" max="20" step="0.5"></div>
+                <div class="field" style="margin:0;"><label>CM2</label><input type="number" value="10" min="0" max="20" step="0.5"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       <div id="panel-rapports" class="dashboard-panel" style="display:none;">
         <div class="empty-panel">
@@ -1000,13 +1094,18 @@
         </div>
 
         <div class="fiche-panel-section" id="fiche-parents">
-          <div class="fiche-grid">
+          <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+            <button class="btn primary" onclick="openAddTuteurPanel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter un tuteur
+            </button>
+          </div>
+          <div class="fiche-grid" id="ficheParentsGrid">
             <div class="fiche-field"><label>Nom du parent/tuteur</label><div class="val">Grégoire (Père)</div></div>
             <div class="fiche-field"><label>Téléphone</label><div class="val">+229 97 XX XX XX</div></div>
             <div class="fiche-field"><label>Nom du parent/tuteur</label><div class="val">Christelle (Mère)</div></div>
             <div class="fiche-field"><label>Téléphone</label><div class="val">+229 96 XX XX XX</div></div>
           </div>
-          <p class="hint" style="margin-top:16px;">Exemple de contenu — à relier à la fiche parent/tuteur réelle une fois la base connectée.</p>
         </div>
 
         <div class="fiche-panel-section" id="fiche-parcours">
@@ -1020,10 +1119,148 @@
         </div>
 
         <div class="fiche-panel-section" id="fiche-documents">
+          <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+            <button class="btn primary" onclick="openAddDocumentPanel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter un document
+            </button>
+          </div>
           <div id="ficheDocumentsGrid" class="doc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="panel" id="addTuteurPanel">
+  <div class="panel-head">
+    <h2>Ajouter un tuteur</h2>
+    <button class="panel-close" onclick="closeAddTuteurPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nom et prénom</label><input type="text" id="tuteurNom" placeholder="Ex : Grégoire Ahouansou"></div>
+    <div class="field">
+      <label>Lien de parenté</label>
+      <select class="role-select" id="tuteurLien">
+        <option>Père</option><option>Mère</option><option>Tuteur légal</option><option>Autre</option>
+      </select>
+    </div>
+    <div class="field"><label>Téléphone</label><input type="tel" id="tuteurTelephone" placeholder="+229 XX XX XX XX"></div>
+    <div class="field"><label>Adresse e-mail (optionnel)</label><input type="email" id="tuteurEmail" placeholder="exemple@email.com"></div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeAddTuteurPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveTuteur()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="addDocumentPanel">
+  <div class="panel-head">
+    <h2>Ajouter un document</h2>
+    <button class="panel-close" onclick="closeAddDocumentPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field">
+      <label>Type de document</label>
+      <select class="role-select" id="documentType" onchange="updateDocumentFormatsHint()"></select>
+    </div>
+    <div class="field">
+      <label>Fichier</label>
+      <div class="dropzone">
+        Glissez-déposez un fichier ici, ou <b>parcourir vos fichiers</b><br>
+        <span id="documentFormatsHint">PDF, JPG ou PNG — 5 Mo maximum</span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeAddDocumentPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveDocument()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="matierePanel">
+  <div class="panel-head">
+    <h2>Ajouter une matière</h2>
+    <button class="panel-close" onclick="closeMatierePanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Nom de la matière</label><input type="text" id="matiereNom" placeholder="Ex : Éducation civique"></div>
+    <div class="field">
+      <label>Niveaux concernés</label>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="niveauCheck" value="CI" style="width:15px;height:15px;accent-color:var(--green);"> CI</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="niveauCheck" value="CP" style="width:15px;height:15px;accent-color:var(--green);"> CP</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="niveauCheck" value="CE1" style="width:15px;height:15px;accent-color:var(--green);"> CE1</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="niveauCheck" value="CE2" style="width:15px;height:15px;accent-color:var(--green);"> CE2</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="niveauCheck" value="CM1" style="width:15px;height:15px;accent-color:var(--green);"> CM1</label>
+        <label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="niveauCheck" value="CM2" style="width:15px;height:15px;accent-color:var(--green);"> CM2</label>
+      </div>
+    </div>
+    <div class="field"><label>Barème</label>
+      <select class="role-select" id="matiereBareme"><option>/20</option><option>/10</option></select>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeMatierePanel()">Annuler</button>
+    <button class="btn dark" onclick="saveMatiere()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="evaluationPanel">
+  <div class="panel-head">
+    <h2>Ajouter une évaluation</h2>
+    <button class="panel-close" onclick="closeEvaluationPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="field"><label>Numéro</label><input type="number" id="evalNumero" min="1"></div>
+    <div class="field"><label>Libellé</label><input type="text" id="evalLibelle" placeholder="Ex : Évaluation N°7"></div>
+    <div class="field">
+      <label>Mois</label>
+      <select class="role-select" id="evalMois">
+        <option>Septembre</option><option>Octobre</option><option>Novembre</option><option>Décembre</option>
+        <option>Janvier</option><option>Février</option><option>Mars</option><option>Avril</option>
+        <option>Mai</option><option>Juin</option>
+      </select>
+    </div>
+    <div class="field"><label>Date d'ouverture de la saisie</label><input type="date" id="evalOuverture"></div>
+    <div class="field"><label>Date de fermeture de la saisie</label><input type="date" id="evalFermeture"></div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn ghost" onclick="closeEvaluationPanel()">Annuler</button>
+    <button class="btn dark" onclick="saveEvaluation()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="panel" id="affectationPanel" style="width:480px;">
+  <div class="panel-head">
+    <h2 id="affectationTitle">Affectation — CM1-A</h2>
+    <button class="panel-close" onclick="closeAffectationPanel()">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="pending-list-title">Enseignants affectés à cette classe</div>
+    <div id="affectationList" style="margin-bottom:22px;"></div>
+
+    <div class="pending-list-title">Ajouter un enseignant à cette classe</div>
+    <div class="field">
+      <label>Enseignant</label>
+      <select class="role-select" id="affEnseignant">
+        <option>HOUNGBO Kokou</option><option>TRAORÉ Aïcha</option><option>DOSSOU Sylvie</option><option>ADJOVI Roméo</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Matière(s) enseignée(s) dans cette classe</label>
+      <div id="affMatieresCheck" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;"></div>
+    </div>
+    <button class="btn add-pending" onclick="addAffectation()">+ Ajouter à la classe</button>
+
+    <div class="pending-list-title" style="margin-top:26px;">Titulaire de la classe</div>
+    <div class="field">
+      <select class="role-select" id="affTitulaire" onchange="setTitulaire()"></select>
+      <div class="hint">Seuls les enseignants déjà affectés à cette classe peuvent être désignés titulaire.</div>
+    </div>
+  </div>
+  <div class="panel-foot">
+    <button class="btn dark" style="width:100%; justify-content:center;" onclick="closeAffectationPanel()">Fermer</button>
   </div>
 </div>
 
@@ -1610,6 +1847,78 @@ function switchFicheTab(name, btn){
   if(btn) btn.classList.add('active');
 }
 
+/* Ajouter un tuteur (depuis la fiche ouverte) */
+function openAddTuteurPanel(){
+  document.getElementById('tuteurNom').value = '';
+  document.getElementById('tuteurLien').value = 'Père';
+  document.getElementById('tuteurTelephone').value = '';
+  document.getElementById('tuteurEmail').value = '';
+  document.getElementById('addTuteurPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeAddTuteurPanel(){
+  document.getElementById('addTuteurPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+// 🔌 BACKEND — Remplacer par POST /api/apprenants/{id}/tuteurs
+function saveTuteur(){
+  const nom = document.getElementById('tuteurNom').value.trim();
+  const lien = document.getElementById('tuteurLien').value;
+  const tel = document.getElementById('tuteurTelephone').value.trim();
+  if(!nom || !tel){ alert('Merci de renseigner au moins le nom et le téléphone du tuteur.'); return; }
+  const grid = document.getElementById('ficheParentsGrid');
+  grid.insertAdjacentHTML('beforeend', `
+    <div class="fiche-field"><label>Nom du parent/tuteur</label><div class="val">${nom} (${lien})</div></div>
+    <div class="fiche-field"><label>Téléphone</label><div class="val">${tel}</div></div>
+  `);
+  closeAddTuteurPanel();
+  const toast = document.getElementById('toast');
+  toast.textContent = '✓ Tuteur ajouté avec succès';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+/* Ajouter un document (depuis la fiche ouverte) */
+function openAddDocumentPanel(){
+  const select = document.getElementById('documentType');
+  select.innerHTML = docTypes.map(d => `<option value="${d.nom}">${d.nom}${d.obligatoire ? ' *' : ''}</option>`).join('');
+  updateDocumentFormatsHint();
+  document.getElementById('addDocumentPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function updateDocumentFormatsHint(){
+  const nom = document.getElementById('documentType').value || docTypes[0]?.nom;
+  const dt = docTypes.find(d => d.nom === nom);
+  document.getElementById('documentFormatsHint').textContent = dt ? `${dt.formats.join(', ')} — 5 Mo maximum` : 'PDF, JPG ou PNG — 5 Mo maximum';
+}
+function closeAddDocumentPanel(){
+  document.getElementById('addDocumentPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+// 🔌 BACKEND — Remplacer par un vrai upload de fichier :
+// POST /api/apprenants/{id}/documents (multipart/form-data)
+function saveDocument(){
+  const nom = document.getElementById('documentType').value;
+  const dt = docTypes.find(d => d.nom === nom);
+  const grid = document.getElementById('ficheDocumentsGrid');
+  grid.insertAdjacentHTML('afterbegin', `
+    <div class="fiche-doc-card">
+      <div class="fiche-doc-icon ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+      </div>
+      <div>
+        <div class="fiche-doc-title">${nom} ${dt?.obligatoire ? '<span style="color:var(--red);">*</span>' : ''}</div>
+        <div class="fiche-doc-sub">Fourni · ajouté à l'instant</div>
+      </div>
+    </div>
+  `);
+  closeAddDocumentPanel();
+  const toast = document.getElementById('toast');
+  toast.textContent = '✓ Document ajouté avec succès';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
 /* ============================================================================
    PARAMÈTRES DES DOSSIERS — Types de documents & champs du formulaire
    ============================================================================ */
@@ -1768,6 +2077,226 @@ function saveFormField(){
 renderDocTypes();
 renderFormFields();
 
+/* ============================================================================
+   GESTION ACADÉMIQUE — Matières, calendrier, affectations, seuil de passage
+   🔌 BACKEND — Toutes les données ci-dessous sont fictives (démo). À remplacer
+   par de vrais appels API :
+     GET/POST/DELETE /api/config/matieres
+     GET/POST/DELETE /api/config/evaluations
+     GET/POST/DELETE /api/config/affectations/{classeId}
+     PATCH /api/config/affectations/{classeId}/titulaire
+     GET/PATCH /api/config/seuil-passage
+   ============================================================================ */
+
+let matieres = [
+  { nom: "Français", niveaux: ["CI","CP","CE1","CE2","CM1","CM2"], bareme: "/20" },
+  { nom: "Mathématique", niveaux: ["CI","CP","CE1","CE2","CM1","CM2"], bareme: "/20" },
+  { nom: "Anglais", niveaux: ["CM1","CM2"], bareme: "/20" },
+  { nom: "EA (Dessin / Chant)", niveaux: ["CI","CP","CE1","CE2"], bareme: "/20" },
+  { nom: "EPS", niveaux: ["CI","CP","CE1","CE2","CM1","CM2"], bareme: "/20" },
+];
+
+function renderMatieres(){
+  const tbody = document.getElementById('matieresTableBody');
+  tbody.innerHTML = matieres.map((m, i) => `
+    <tr>
+      <td><b>${m.nom}</b></td>
+      <td><div class="format-chips">${m.niveaux.map(n => `<span class="format-chip">${n}</span>`).join('')}</div></td>
+      <td>${m.bareme}</td>
+      <td><span class="row-actions" onclick="confirmRemoveMatiere(${i})" style="cursor:pointer;" title="Supprimer">🗑</span></td>
+    </tr>
+  `).join('');
+}
+function openMatierePanel(){
+  document.getElementById('matiereNom').value = '';
+  document.querySelectorAll('.niveauCheck').forEach(c => c.checked = false);
+  document.getElementById('matiereBareme').value = '/20';
+  document.getElementById('matierePanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeMatierePanel(){
+  document.getElementById('matierePanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+function saveMatiere(){
+  const nom = document.getElementById('matiereNom').value.trim();
+  if(!nom) return;
+  const niveaux = Array.from(document.querySelectorAll('.niveauCheck:checked')).map(c => c.value);
+  matieres.push({ nom, niveaux, bareme: document.getElementById('matiereBareme').value });
+  renderMatieres();
+  closeMatierePanel();
+}
+function removeMatiere(i){ matieres.splice(i,1); renderMatieres(); }
+function confirmRemoveMatiere(i){
+  showConfirm(`Supprimer la matière « ${matieres[i].nom} » ?`,
+    `Elle ne sera plus proposée pour l'affectation des enseignants ni pour la saisie des notes futures. L'historique existant est conservé.`,
+    () => removeMatiere(i));
+}
+
+let evaluations = [
+  { num: 1, libelle: "Évaluation N°1", mois: "Octobre", ouverture: "2025-10-01", fermeture: "2025-10-25" },
+  { num: 2, libelle: "Évaluation N°2", mois: "Novembre", ouverture: "2025-11-01", fermeture: "2025-11-25" },
+  { num: 3, libelle: "Évaluation N°3", mois: "Décembre", ouverture: "2025-12-01", fermeture: "2025-12-20" },
+  { num: 4, libelle: "Évaluation N°4", mois: "Janvier", ouverture: "2026-01-05", fermeture: "2026-01-25" },
+  { num: 5, libelle: "Évaluation N°5", mois: "Janvier", ouverture: "2026-01-26", fermeture: "2026-01-31" },
+  { num: 6, libelle: "Évaluation N°6", mois: "Février", ouverture: "2026-02-01", fermeture: "2026-02-25" },
+];
+
+function evalStatus(ev){
+  const today = new Date('2026-02-10'); // 🔌 BACKEND — utiliser la date réelle du serveur
+  const open = new Date(ev.ouverture), close = new Date(ev.fermeture);
+  if(today < open) return { label: 'À venir', cls: 'archived' };
+  if(today > close) return { label: 'Fermée', cls: 'archived' };
+  return { label: 'Ouverte', cls: 'active' };
+}
+function renderEvaluations(){
+  const tbody = document.getElementById('evaluationsTableBody');
+  tbody.innerHTML = evaluations.map((ev, i) => {
+    const st = evalStatus(ev);
+    return `
+      <tr>
+        <td>${ev.num}</td>
+        <td><b>${ev.libelle}</b></td>
+        <td>${ev.mois}</td>
+        <td>${ev.ouverture.split('-').reverse().join('/')}</td>
+        <td>${ev.fermeture.split('-').reverse().join('/')}</td>
+        <td><span class="status ${st.cls}"><span class="dot"></span>${st.label}</span></td>
+        <td><span class="row-actions" onclick="confirmRemoveEvaluation(${i})" style="cursor:pointer;" title="Supprimer">🗑</span></td>
+      </tr>`;
+  }).join('');
+}
+function openEvaluationPanel(){
+  document.getElementById('evalNumero').value = evaluations.length + 1;
+  document.getElementById('evalLibelle').value = `Évaluation N°${evaluations.length + 1}`;
+  document.getElementById('evalMois').value = 'Mars';
+  document.getElementById('evalOuverture').value = '';
+  document.getElementById('evalFermeture').value = '';
+  document.getElementById('evaluationPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeEvaluationPanel(){
+  document.getElementById('evaluationPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+function saveEvaluation(){
+  const ouverture = document.getElementById('evalOuverture').value;
+  const fermeture = document.getElementById('evalFermeture').value;
+  if(!ouverture || !fermeture){ alert('Merci de renseigner les dates d\'ouverture et de fermeture.'); return; }
+  evaluations.push({
+    num: Number(document.getElementById('evalNumero').value),
+    libelle: document.getElementById('evalLibelle').value.trim(),
+    mois: document.getElementById('evalMois').value,
+    ouverture, fermeture,
+  });
+  renderEvaluations();
+  closeEvaluationPanel();
+}
+function removeEvaluation(i){ evaluations.splice(i,1); renderEvaluations(); }
+function confirmRemoveEvaluation(i){
+  showConfirm(`Supprimer « ${evaluations[i].libelle} » ?`,
+    `Les notes déjà saisies pour cette période resteraient orphelines. À utiliser uniquement si aucune note n'a encore été saisie.`,
+    () => removeEvaluation(i));
+}
+
+let affectations = {
+  'CM1-A': { titulaire: 'HOUNGBO Kokou', profs: [
+    { enseignant: 'HOUNGBO Kokou', matieres: ['Français','Mathématique'] },
+  ]},
+  'CM1-B': { titulaire: 'TRAORÉ Aïcha', profs: [
+    { enseignant: 'HOUNGBO Kokou', matieres: ['Français'] },
+    { enseignant: 'TRAORÉ Aïcha', matieres: ['Mathématique'] },
+  ]},
+  'CM2-A': { titulaire: 'DOSSOU Sylvie', profs: [
+    { enseignant: 'HOUNGBO Kokou', matieres: ['Anglais'] },
+    { enseignant: 'DOSSOU Sylvie', matieres: ['Français','Mathématique'] },
+  ]},
+};
+
+function renderAffectations(){
+  const tbody = document.getElementById('affectationsTableBody');
+  tbody.innerHTML = Object.keys(affectations).map(classe => {
+    const a = affectations[classe];
+    const chips = a.profs.map(p => `<span class="format-chip">${p.enseignant} — ${p.matieres.join(', ')}</span>`).join(' ');
+    return `
+      <tr>
+        <td><b>${classe}</b></td>
+        <td><div class="format-chips">${chips}</div></td>
+        <td><span class="role-badge dir">${a.titulaire}</span></td>
+        <td><span class="row-actions" onclick="openAffectationPanel('${classe}')" style="cursor:pointer; font-size:12px; font-weight:600; color:var(--green);">Gérer</span></td>
+      </tr>`;
+  }).join('');
+}
+
+let currentAffectationClasse = null;
+function openAffectationPanel(classe){
+  currentAffectationClasse = classe;
+  document.getElementById('affectationTitle').textContent = `Affectation — ${classe}`;
+  document.getElementById('affMatieresCheck').innerHTML = matieres.map(m =>
+    `<label class="toggle-label" style="font-weight:500;"><input type="checkbox" class="affMatiereCheck" value="${m.nom}" style="width:15px;height:15px;accent-color:var(--green);"> ${m.nom}</label>`
+  ).join('');
+  renderAffectationDetail();
+  document.getElementById('affectationPanel').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeAffectationPanel(){
+  document.getElementById('affectationPanel').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+  renderAffectations();
+}
+function renderAffectationDetail(){
+  const a = affectations[currentAffectationClasse];
+  const list = document.getElementById('affectationList');
+  list.innerHTML = a.profs.map((p, i) => `
+    <div class="pending-item" style="background:var(--paper);">
+      <div><span class="pmail">${p.enseignant}</span><br><span class="prole">${p.matieres.join(', ')}</span></div>
+      <button class="premove" onclick="removeAffectationProf(${i})" title="Retirer de la classe">✕</button>
+    </div>
+  `).join('');
+  const titSelect = document.getElementById('affTitulaire');
+  titSelect.innerHTML = a.profs.map(p => `<option ${p.enseignant === a.titulaire ? 'selected' : ''}>${p.enseignant}</option>`).join('');
+}
+function addAffectation(){
+  const enseignant = document.getElementById('affEnseignant').value;
+  const mats = Array.from(document.querySelectorAll('.affMatiereCheck:checked')).map(c => c.value);
+  if(!mats.length){ alert('Sélectionnez au moins une matière.'); return; }
+  const a = affectations[currentAffectationClasse];
+  const existing = a.profs.find(p => p.enseignant === enseignant);
+  if(existing){ existing.matieres = [...new Set([...existing.matieres, ...mats])]; }
+  else { a.profs.push({ enseignant, matieres: mats }); }
+  document.querySelectorAll('.affMatiereCheck').forEach(c => c.checked = false);
+  renderAffectationDetail();
+}
+function removeAffectationProf(i){
+  const a = affectations[currentAffectationClasse];
+  const removed = a.profs[i];
+  if(removed.enseignant === a.titulaire){
+    alert("Impossible de retirer le titulaire actuel de la classe. Désignez d'abord un autre titulaire.");
+    return;
+  }
+  a.profs.splice(i,1);
+  renderAffectationDetail();
+}
+function setTitulaire(){
+  affectations[currentAffectationClasse].titulaire = document.getElementById('affTitulaire').value;
+  renderAffectationDetail();
+}
+
+function toggleSeuilParNiveau(){
+  document.getElementById('seuilParNiveauWrap').style.display =
+    document.getElementById('seuilParNiveau').checked ? 'block' : 'none';
+}
+// 🔌 BACKEND — Remplacer par PATCH /api/config/seuil-passage
+function saveSeuil(){
+  const toast = document.getElementById('toast');
+  toast.textContent = '✓ Seuil de passage enregistré';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+renderMatieres();
+renderEvaluations();
+renderAffectations();
+
 function openPanel(){
   document.getElementById('panel').classList.add('show');
   document.getElementById('overlay').classList.add('show');
@@ -1796,6 +2325,11 @@ function closeAllPanels(){
   closeElevePanel();
   closeDocTypePanel();
   closeFormFieldPanel();
+  closeAddTuteurPanel();
+  closeAddDocumentPanel();
+  closeMatierePanel();
+  closeEvaluationPanel();
+  closeAffectationPanel();
 }
 // 🔌 BACKEND — Remplacer par un appel PATCH /api/utilisateurs/{id} avec les
 // nouvelles valeurs, puis mettre à jour l'affichage seulement après

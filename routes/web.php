@@ -9,6 +9,7 @@ require __DIR__.'/comptes.php';
 require __DIR__.'/eleves.php';
 require __DIR__.'/tuteurs.php';
 require __DIR__.'/academique.php';
+require __DIR__.'/enseignant.php';
 
 Route::get('/', function () {
     return redirect()->route(auth()->check() ? 'dashboard' : 'login');

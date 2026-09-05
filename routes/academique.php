@@ -3,10 +3,12 @@
 use App\Http\Controllers\Academique\AffectationEnseignantController;
 use App\Http\Controllers\Academique\AnneeAcademiqueController;
 use App\Http\Controllers\Academique\ClasseController;
+use App\Http\Controllers\Academique\DecisionPassageController;
 use App\Http\Controllers\Academique\ExamenController;
 use App\Http\Controllers\Academique\MatiereController;
 use App\Http\Controllers\Academique\NiveauController;
 use App\Http\Controllers\Academique\NiveauMatiereController;
+use App\Http\Controllers\Academique\ParametreAcademiqueController;
 use Illuminate\Support\Facades\Route;
 
 // Setting up années académiques (créer une année, configurer son programme
@@ -18,6 +20,7 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
     ->name('academique.')
     ->group(function () {
         Route::get('niveaux-matieres', [NiveauController::class, 'index'])->name('niveaux-matieres.index');
+        Route::patch('parametres', [ParametreAcademiqueController::class, 'update'])->name('parametres.update');
         Route::post('niveaux', [NiveauController::class, 'store'])->name('niveaux.store');
         Route::patch('niveaux/{niveau}', [NiveauController::class, 'update'])->name('niveaux.update');
         Route::post('niveaux/{niveau}/monter', [NiveauController::class, 'monter'])->name('niveaux.monter');
@@ -31,6 +34,7 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::get('annees', [AnneeAcademiqueController::class, 'index'])->name('annees.index');
         Route::post('annees', [AnneeAcademiqueController::class, 'store'])->name('annees.store');
         Route::get('annees/{anneeAcademique}', [AnneeAcademiqueController::class, 'show'])->name('annees.show');
+        Route::patch('annees/{anneeAcademique}', [AnneeAcademiqueController::class, 'update'])->name('annees.update');
         Route::post('annees/{anneeAcademique}/demarrer', [AnneeAcademiqueController::class, 'demarrer'])->name('annees.demarrer');
 
         Route::post('annees/{anneeAcademique}/niveau-matieres', [NiveauMatiereController::class, 'store'])->name('annees.niveau-matieres.store');
@@ -43,7 +47,14 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
 
         Route::post('annees/{anneeAcademique}/affectations', [AffectationEnseignantController::class, 'store'])->name('annees.affectations.store');
         Route::delete('affectations/{affectationEnseignant}', [AffectationEnseignantController::class, 'destroy'])->name('affectations.destroy');
+        Route::patch('classes/{classe}/titulaire', [AffectationEnseignantController::class, 'designerTitulaire'])->name('classes.titulaire.update');
+        Route::delete('classes/{classe}/enseignants/{enseignant}', [AffectationEnseignantController::class, 'destroyEnseignant'])->name('classes.enseignants.destroy');
+
+        Route::get('annees/{anneeAcademique}/decisions', [DecisionPassageController::class, 'index'])->name('annees.decisions.index');
+        Route::patch('inscriptions/{inscription}/decision', [DecisionPassageController::class, 'update'])->name('inscriptions.decision.update');
 
         Route::get('examens', [ExamenController::class, 'index'])->name('examens.index');
         Route::post('examens', [ExamenController::class, 'store'])->name('examens.store');
+        Route::patch('examens/{examen}', [ExamenController::class, 'update'])->name('examens.update');
+        Route::delete('examens/{examen}', [ExamenController::class, 'destroy'])->name('examens.destroy');
     });

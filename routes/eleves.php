@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Eleves\BulletinGenerationController;
 use App\Http\Controllers\Eleves\ChampPersonnaliseController;
 use App\Http\Controllers\Eleves\DocumentController;
 use App\Http\Controllers\Eleves\EleveClasseController;
@@ -40,6 +41,18 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
 
         Route::get('export/excel', [EleveExportController::class, 'excel'])->name('export.excel');
         Route::get('export/pdf', [EleveExportController::class, 'pdf'])->name('export.pdf');
+
+        // Bulletins mensuels : suivi des signatures classe par classe et
+        // génération (immédiate, en file d'attente — voir
+        // App\Jobs\GenererBulletinsClasseJob et BulletinGenerationController).
+        Route::prefix('bulletins')->name('bulletins.')->group(function () {
+            Route::get('/', [BulletinGenerationController::class, 'index'])->name('index');
+            Route::post('demander', [BulletinGenerationController::class, 'demanderGeneration'])->name('demander');
+            Route::get('classes/{classe}/examens/{examen}/apercu/{inscription}', [BulletinGenerationController::class, 'apercu'])->name('apercu');
+            Route::get('classes/{classe}/examens/{examen}/apercu/{inscription}/telecharger', [BulletinGenerationController::class, 'telechargerIndividuel'])->name('apercu.telecharger');
+            Route::get('demandes/{demande}/statut', [BulletinGenerationController::class, 'statut'])->name('statut');
+            Route::get('demandes/{demande}/telecharger', [BulletinGenerationController::class, 'telecharger'])->name('telecharger');
+        });
 
         // Paramètres des dossiers (types de documents + champs du formulaire
         // apprenant) : réservé aux administrateurs.

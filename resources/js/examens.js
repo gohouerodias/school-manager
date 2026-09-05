@@ -10,6 +10,11 @@
 const SYSTEMES_INDISPONIBLES = ['secondaire'];
 
 export function initExamens() {
+    initNewExamenFields();
+    initExamenEdit();
+}
+
+function initNewExamenFields() {
     const systemeSelect = document.getElementById('new-examen-systeme');
     const primaireFields = document.getElementById('new-examen-primaire-fields');
     const secondaireHint = document.getElementById('new-examen-secondaire-hint');
@@ -36,4 +41,41 @@ export function initExamens() {
 
     systemeSelect.addEventListener('change', syncFields);
     syncFields();
+}
+
+/**
+ * "Modifier l'examen" panel — same data-edit-*-trigger pattern as
+ * academique-settings.js's initNiveauEdit(): the row's ✎ button carries the
+ * examen's current values as data attributes, this just copies them into
+ * the shared edit form when clicked.
+ */
+function initExamenEdit() {
+    const form = document.getElementById('edit-examen-form');
+    if (!form) {
+        return;
+    }
+
+    const systemeAnnee = document.getElementById('edit-examen-systeme-annee');
+    const dateInput = document.getElementById('edit-examen-date');
+    const dateLimiteInput = document.getElementById('edit-examen-date-limite');
+    const editUrlHidden = document.getElementById('edit-examen-edit-url');
+
+    document.querySelectorAll('[data-edit-examen-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            form.action = trigger.dataset.editUrl;
+            if (editUrlHidden) {
+                editUrlHidden.value = trigger.dataset.editUrl;
+            }
+
+            systemeAnnee.textContent = `${trigger.dataset.editSysteme} — ${trigger.dataset.editAnnee}`;
+
+            [dateInput, dateLimiteInput].forEach((input) => {
+                input.min = trigger.dataset.editMin ?? '';
+                input.max = trigger.dataset.editMax ?? '';
+            });
+
+            dateInput.value = trigger.dataset.editDateExamen ?? '';
+            dateLimiteInput.value = trigger.dataset.editDateLimite ?? '';
+        });
+    });
 }

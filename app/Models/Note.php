@@ -14,9 +14,10 @@ class Note extends Model
     protected $fillable = [
         'eleve_id',
         'classe_matiere_id',
-        'trimestre_id',
+        'examen_id',
         'enseignant_id',
         'valeur',
+        'commentaire',
         'type',
         'numero',
         'date_saisie',
@@ -48,11 +49,11 @@ class Note extends Model
     }
 
     /**
-     * @return BelongsTo<Trimestre, $this>
+     * @return BelongsTo<Examen, $this>
      */
-    public function trimestre(): BelongsTo
+    public function examen(): BelongsTo
     {
-        return $this->belongsTo(Trimestre::class);
+        return $this->belongsTo(Examen::class);
     }
 
     /**
@@ -63,8 +64,13 @@ class Note extends Model
         return $this->belongsTo(User::class, 'enseignant_id');
     }
 
+    /**
+     * A teacher can no longer create/edit this note once the examen's
+     * "délai de remplissage des notes" (Examen::date_limite_saisie) has
+     * passed — see Enseignant\EspaceEnseignantController.
+     */
     public function verifierModifiable(): bool
     {
-        return $this->trimestre?->statut === \App\Enums\StatutTrimestre::Ouvert;
+        return $this->examen !== null && now()->toDateString() <= $this->examen->date_limite_saisie->format('Y-m-d');
     }
 }

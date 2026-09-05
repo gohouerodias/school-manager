@@ -14,6 +14,29 @@
 
 <section class="config-section">
     <div class="config-section-head">
+        <h2>Paramètres académiques</h2>
+    </div>
+
+    <form method="POST" action="{{ route('academique.parametres.update') }}">
+        @csrf
+        @method('PATCH')
+
+        @error('seuil_passage')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="seuil-passage">Seuil de passage en classe supérieure (moyenne annuelle /20)</label>
+            <input type="number" id="seuil-passage" name="seuil_passage" step="0.01" min="0" max="20" value="{{ old('seuil_passage', $parametre?->seuil_passage ?? 10) }}" required style="max-width: 160px;">
+            <div class="hint">À partir de cette moyenne, le système propose automatiquement "Admis" lors des décisions de passage — la direction garde la main pour valider ou modifier chaque cas (voir Années académiques → Décisions de passage).</div>
+        </div>
+
+        <button type="submit" class="btn dark">Enregistrer</button>
+    </form>
+</section>
+
+<section class="config-section">
+    <div class="config-section-head">
         <h2>Niveaux</h2>
         <button type="button" class="btn primary" data-panel-open="new-niveau">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>

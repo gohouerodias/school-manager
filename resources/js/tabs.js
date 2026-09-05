@@ -25,4 +25,12 @@ export function initTabs() {
     buttons.forEach((btn) => {
         btn.addEventListener('click', () => activate(btn.dataset.tabBtn));
     });
+
+    // Deep-link support: a link ending in "?onglet=affectations" (see
+    // sidebar-nav.blade.php's "Affectation des enseignants" shortcut) opens
+    // straight onto that tab instead of always defaulting to the first one.
+    const ongletDemande = new URLSearchParams(window.location.search).get('onglet');
+    if (ongletDemande && Array.from(buttons).some((btn) => btn.dataset.tabBtn === ongletDemande)) {
+        activate(ongletDemande);
+    }
 }

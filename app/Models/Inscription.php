@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DecisionAnnuelle;
+use App\Enums\StatutBulletin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ class Inscription extends Model
         'date_inscription',
         'moyenne_annuelle',
         'decision',
+        'motif_decision',
     ];
 
     protected function casts(): array
@@ -52,15 +54,29 @@ class Inscription extends Model
         return $this->hasMany(Bulletin::class);
     }
 
+    /**
+     * Moyenne simple des bulletins mensuels déjà Validés (voir
+     * StatutBulletin) de l'année — un bulletin encore en Brouillon n'est pas
+     * définitif et ne doit pas peser dans la moyenne annuelle.
+     */
     public function calculerMoyenneAnnuelle(): float
     {
-        return (float) $this->bulletins()->avg('moyenne_generale');
+        return (float) $this->bulletins()->where('statut', StatutBulletin::Valide)->avg('moyenne_generale');
     }
 
+    /**
+     * Proposition automatique "Admis" / "Redouble" selon le seuil configuré
+     * (voir ParametreSysteme::$seuil_passage, Academique\
+     * ParametreAcademiqueController) — "Exclu" reste un choix manuel de la
+     * direction, jamais proposé automatiquement (voir Academique\
+     * DecisionPassageController).
+     */
     public function determinerPassage(): void
     {
+        $seuil = ParametreSysteme::query()->value('seuil_passage') ?? 10;
+
         $this->update([
-            'decision' => $this->moyenne_annuelle >= 10 ? DecisionAnnuelle::Admis : DecisionAnnuelle::Redouble,
+            'decision' => $this->moyenne_annuelle >= $seuil ? DecisionAnnuelle::Admis : DecisionAnnuelle::Redouble,
         ]);
     }
 }

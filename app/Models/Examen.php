@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Enums\SystemeScolaire;
 use App\Enums\TypeEvaluation;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Un examen "campagne" créé depuis la page de gestion des examens (voir
@@ -47,5 +49,36 @@ class Examen extends Model
     public function anneeAcademique(): BelongsTo
     {
         return $this->belongsTo(AnneeAcademique::class);
+    }
+
+    /**
+     * @return HasMany<DemandeGenerationBulletin, $this>
+     */
+    public function demandesGenerationBulletins(): HasMany
+    {
+        return $this->hasMany(DemandeGenerationBulletin::class);
+    }
+
+    /**
+     * Examens dont le système correspond au cycle du niveau de $classe (voir
+     * SystemeScolaire::cycles()), pour l'année académique de cette classe,
+     * les plus récents en premier — les seules "périodes" sélectionnables
+     * pour une classe donnée (feuille de saisie enseignant, écran Bulletins
+     * admin...). Centralisé ici pour éviter de dupliquer cette règle de
+     * correspondance cycle ↔ système à chaque écran qui en a besoin.
+     *
+     * @return Collection<int, Examen>
+     */
+    public static function pourClasse(Classe $classe): Collection
+    {
+        $systemesCompatibles = collect(SystemeScolaire::cases())
+            ->filter(fn (SystemeScolaire $s) => in_array($classe->niveau->cycle, $s->cycles(), true))
+            ->map(fn (SystemeScolaire $s) => $s->value);
+
+        return static::query()
+            ->where('annee_academique_id', $classe->annee_academique_id)
+            ->whereIn('systeme', $systemesCompatibles)
+            ->orderByDesc('date_examen')
+            ->get();
     }
 }

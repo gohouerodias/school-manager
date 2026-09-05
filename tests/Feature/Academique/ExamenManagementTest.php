@@ -3,7 +3,10 @@
 use App\Enums\SystemeScolaire;
 use App\Enums\TypeEvaluation;
 use App\Models\AnneeAcademique;
+use App\Models\Bulletin;
+use App\Models\CommentaireMatiere;
 use App\Models\Examen;
+use App\Models\Note;
 use App\Models\User;
 
 test('an administrateur can create an examen mensuel for the système primaire', function () {
@@ -125,4 +128,85 @@ test('creating a primaire examen is blocked when no année académique is active
 
     $response->assertSessionHasErrors('systeme');
     expect(Examen::query()->count())->toBe(0);
+});
+
+test('an administrateur can update an examen’s dates', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create([
+        'date_debut' => '2026-10-01',
+        'date_fin' => '2027-07-31',
+    ]);
+    $examen = Examen::factory()->create([
+        'annee_academique_id' => $anneeAcademique->id,
+        'date_examen' => '2026-11-15',
+        'date_limite_saisie' => '2026-11-22',
+    ]);
+
+    $response = $this->actingAs($admin)->patch(route('academique.examens.update', $examen), [
+        'date_examen' => '2026-12-01',
+        'date_limite_saisie' => '2026-12-08',
+    ]);
+
+    $response->assertRedirect();
+    expect($examen->fresh()->date_examen->format('Y-m-d'))->toBe('2026-12-01');
+    expect($examen->fresh()->date_limite_saisie->format('Y-m-d'))->toBe('2026-12-08');
+});
+
+test('updating an examen’s dates outside its année académique’s window is rejected', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create([
+        'date_debut' => '2026-10-01',
+        'date_fin' => '2027-07-31',
+    ]);
+    $examen = Examen::factory()->create([
+        'annee_academique_id' => $anneeAcademique->id,
+        'date_examen' => '2026-11-15',
+        'date_limite_saisie' => '2026-11-22',
+    ]);
+
+    $response = $this->actingAs($admin)->from('/')->patch(route('academique.examens.update', $examen), [
+        'date_examen' => '2027-09-01',
+        'date_limite_saisie' => '2027-09-08',
+    ]);
+
+    $response->assertSessionHasErrors('date_examen');
+    expect($examen->fresh()->date_examen->format('Y-m-d'))->toBe('2026-11-15');
+});
+
+test('a non-administrateur cannot update an examen', function () {
+    $agentScolarite = User::factory()->agentScolarite()->create();
+    $examen = Examen::factory()->create();
+
+    $response = $this->actingAs($agentScolarite)->patch(route('academique.examens.update', $examen), [
+        'date_examen' => '2026-12-01',
+        'date_limite_saisie' => '2026-12-08',
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('an administrateur can delete an examen, cascading to its notes, commentaires and bulletins', function () {
+    $admin = User::factory()->administrateur()->create();
+    $examen = Examen::factory()->create();
+    $note = Note::factory()->create(['examen_id' => $examen->id]);
+    $commentaire = CommentaireMatiere::factory()->create(['examen_id' => $examen->id]);
+    $bulletin = Bulletin::factory()->create(['examen_id' => $examen->id]);
+
+    $response = $this->actingAs($admin)->delete(route('academique.examens.destroy', $examen));
+
+    $response->assertRedirect();
+    $this->assertDatabaseMissing('examens', ['id' => $examen->id]);
+    $this->assertDatabaseMissing('notes', ['id' => $note->id]);
+    $this->assertDatabaseMissing('commentaires_matiere', ['id' => $commentaire->id]);
+    $this->assertDatabaseMissing('bulletins', ['id' => $bulletin->id]);
+});
+
+test('a non-administrateur cannot delete an examen', function () {
+    $agentScolarite = User::factory()->agentScolarite()->create();
+    $examen = Examen::factory()->create();
+
+    $response = $this->actingAs($agentScolarite)->delete(route('academique.examens.destroy', $examen));
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('examens', ['id' => $examen->id]);
 });

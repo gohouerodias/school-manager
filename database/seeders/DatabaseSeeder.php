@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\CycleNiveau;
-use App\Enums\StatutTrimestre;
+use App\Enums\SystemeScolaire;
 use App\Enums\TypeChampPersonnalise;
 use App\Enums\TypeEvaluation;
 use App\Models\AffectationEnseignant;
@@ -14,6 +14,7 @@ use App\Models\Classe;
 use App\Models\ClasseMatiere;
 use App\Models\DocumentNumerique;
 use App\Models\Eleve;
+use App\Models\Examen;
 use App\Models\ImportDonnees;
 use App\Models\Inscription;
 use App\Models\JournalAction;
@@ -24,7 +25,6 @@ use App\Models\ObservationAdministrative;
 use App\Models\ParametreSysteme;
 use App\Models\ParentTuteur;
 use App\Models\Rapport;
-use App\Models\Trimestre;
 use App\Models\TypeDocument;
 use App\Models\User;
 use App\Models\ValeurChampPersonnalise;
@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
 
         $niveaux = $this->seedNiveaux();
         $anneeAcademique = $this->seedAnneeAcademique();
-        $trimestres = $this->seedTrimestres($anneeAcademique);
+        $examen = $this->seedExamen($anneeAcademique);
         $typesDocuments = $this->seedTypesDocuments();
         $matieres = $this->seedMatieres();
         $champsPersonnalises = $this->seedChampsPersonnalises();
@@ -71,10 +71,13 @@ class DatabaseSeeder extends Seeder
         $this->seedClasseMatiere($classes, $matieres);
         $this->seedAffectations($classes, $matieres, $enseignants, $anneeAcademique);
 
-        $trimestreOuvert = $trimestres->first();
-
+        // L'examen mensuel (voir Academique\ExamenController) n'est pour
+        // l'instant disponible que pour le système primaire (Maternelle +
+        // Primaire, voir SystemeScolaire::estDisponible()) — les classes de
+        // collège n'ont donc pas encore de notes/bulletins de démo.
         foreach ($classes as $classe) {
             $eleves = Eleve::factory()->count(8)->create();
+            $classeEstPrimaire = in_array($classe->niveau->cycle, [CycleNiveau::Maternelle, CycleNiveau::Primaire], true);
 
             foreach ($eleves as $eleve) {
                 $this->attacherParents($eleve);
@@ -86,11 +89,15 @@ class DatabaseSeeder extends Seeder
                     'classe_id' => $classe->id,
                 ]);
 
-                $this->saisirNotes($eleve, $classe, $trimestreOuvert, $enseignants);
+                if (! $classeEstPrimaire) {
+                    continue;
+                }
+
+                $this->saisirNotes($eleve, $classe, $examen, $enseignants);
 
                 $bulletin = Bulletin::factory()->create([
                     'inscription_id' => $inscription->id,
-                    'trimestre_id' => $trimestreOuvert->id,
+                    'examen_id' => $examen->id,
                     'moyenne_generale' => null,
                     'date_generation' => null,
                 ]);
@@ -137,25 +144,15 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 
-    /**
-     * @return Collection<int, Trimestre>
-     */
-    private function seedTrimestres(AnneeAcademique $anneeAcademique): Collection
+    private function seedExamen(AnneeAcademique $anneeAcademique): Examen
     {
-        $definitions = [
-            ['nom' => 'Trimestre 1', 'ordre' => 1, 'debut' => '2025-10-01', 'fin' => '2025-12-20', 'statut' => StatutTrimestre::Ouvert],
-            ['nom' => 'Trimestre 2', 'ordre' => 2, 'debut' => '2026-01-05', 'fin' => '2026-03-27', 'statut' => StatutTrimestre::Ferme],
-            ['nom' => 'Trimestre 3', 'ordre' => 3, 'debut' => '2026-04-06', 'fin' => '2026-07-10', 'statut' => StatutTrimestre::Ferme],
-        ];
-
-        return collect($definitions)->map(fn (array $data) => Trimestre::create([
+        return Examen::create([
             'annee_academique_id' => $anneeAcademique->id,
-            'nom' => $data['nom'],
-            'ordre' => $data['ordre'],
-            'date_debut' => $data['debut'],
-            'date_fin' => $data['fin'],
-            'statut' => $data['statut'],
-        ]));
+            'systeme' => SystemeScolaire::Primaire,
+            'type' => TypeEvaluation::EvaluationMensuelle,
+            'date_examen' => '2025-11-15',
+            'date_limite_saisie' => '2025-11-25',
+        ]);
     }
 
     /**
@@ -330,21 +327,19 @@ class DatabaseSeeder extends Seeder
     /**
      * @param  Collection<int, User>  $enseignants
      */
-    private function saisirNotes(Eleve $eleve, Classe $classe, Trimestre $trimestre, Collection $enseignants): void
+    private function saisirNotes(Eleve $eleve, Classe $classe, Examen $examen, Collection $enseignants): void
     {
         $classeMatieres = ClasseMatiere::where('classe_id', $classe->id)->get();
 
         foreach ($classeMatieres as $classeMatiere) {
-            foreach (TypeEvaluation::cases() as $type) {
-                Note::factory()->create([
-                    'eleve_id' => $eleve->id,
-                    'classe_matiere_id' => $classeMatiere->id,
-                    'trimestre_id' => $trimestre->id,
-                    'enseignant_id' => $enseignants->random()->id,
-                    'type' => $type,
-                    'numero' => 1,
-                ]);
-            }
+            Note::factory()->create([
+                'eleve_id' => $eleve->id,
+                'classe_matiere_id' => $classeMatiere->id,
+                'examen_id' => $examen->id,
+                'enseignant_id' => $enseignants->random()->id,
+                'type' => TypeEvaluation::EvaluationMensuelle,
+                'numero' => 1,
+            ]);
         }
     }
 }

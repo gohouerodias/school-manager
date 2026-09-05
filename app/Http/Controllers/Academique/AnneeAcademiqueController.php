@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Academique;
 use App\Enums\ProfilUtilisateur;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAnneeAcademiqueRequest;
+use App\Http\Requests\UpdateAnneeAcademiqueRequest;
 use App\Models\AnneeAcademique;
 use App\Models\Matiere;
 use App\Models\Niveau;
@@ -38,6 +39,18 @@ class AnneeAcademiqueController extends Controller
         $anneeAcademique = AnneeAcademique::create($request->validated());
 
         return redirect()->route('academique.annees.show', $anneeAcademique)->with('toast', "Année académique « {$anneeAcademique->libelle} » créée. Configurez son programme, ses classes et ses affectations avant de la démarrer.");
+    }
+
+    /**
+     * Seules les dates de début/fin se modifient — voir
+     * UpdateAnneeAcademiqueRequest, qui refuse toute nouvelle fenêtre qui
+     * exclurait un examen déjà créé pour cette année.
+     */
+    public function update(UpdateAnneeAcademiqueRequest $request, AnneeAcademique $anneeAcademique): RedirectResponse
+    {
+        $anneeAcademique->update($request->validated());
+
+        return back()->with('toast', "Dates de « {$anneeAcademique->libelle} » mises à jour.");
     }
 
     public function show(AnneeAcademique $anneeAcademique): View

@@ -3,6 +3,7 @@
 use App\Models\Classe;
 use App\Models\Matiere;
 use App\Models\Niveau;
+use App\Models\ParametreSysteme;
 use App\Models\User;
 
 test('an administrateur can create a niveau, appended in last position', function () {
@@ -127,4 +128,34 @@ test('updating a niveau changes its fields (its ordre is untouched)', function (
 
     $response->assertRedirect();
     $this->assertDatabaseHas('niveaux', ['id' => $niveau->id, 'ordre' => 21, 'premiere_scolarisation' => true]);
+});
+
+test('an administrateur can update the seuil de passage', function () {
+    $admin = User::factory()->administrateur()->create();
+    ParametreSysteme::factory()->create(['seuil_passage' => 10]);
+
+    $response = $this->actingAs($admin)->patch(route('academique.parametres.update'), ['seuil_passage' => 12]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('parametres_systeme', ['seuil_passage' => 12]);
+});
+
+test('the seuil de passage must be between 0 and 20', function () {
+    $admin = User::factory()->administrateur()->create();
+    ParametreSysteme::factory()->create(['seuil_passage' => 10]);
+
+    $response = $this->actingAs($admin)->from('/')->patch(route('academique.parametres.update'), ['seuil_passage' => 25]);
+
+    $response->assertSessionHasErrors('seuil_passage');
+    $this->assertDatabaseHas('parametres_systeme', ['seuil_passage' => 10]);
+});
+
+test('a non-administrateur cannot update the seuil de passage', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    ParametreSysteme::factory()->create(['seuil_passage' => 10]);
+
+    $response = $this->actingAs($agent)->patch(route('academique.parametres.update'), ['seuil_passage' => 12]);
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('parametres_systeme', ['seuil_passage' => 10]);
 });

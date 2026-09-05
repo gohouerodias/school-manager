@@ -4,7 +4,7 @@
  * wiring for its three tabs (programme / classes / affectations).
  */
 export function initAnneeAcademiqueShow() {
-    initAffectationMatiereFilter();
+    initGererAffectationPanel();
     initNiveauMatierePendingList();
     initNiveauMatiereEdit();
     initClasseLettreFilter();
@@ -12,55 +12,100 @@ export function initAnneeAcademiqueShow() {
 }
 
 /**
- * "Affecter un enseignant" panel: the "Matière" select starts with every
- * matière listed, but only those actually in the chosen classe's programme
- * (see Classe::matieres(), the `classe_matiere` pivot — itself inherited
- * from the niveau's programme, see Academique\ClasseController) should be
- * pickable. Each classe <option> carries its matière ids in
- * `data-matiere-ids` (comma-separated), set server-side; this just shows/
- * hides + disables the matière <option>s to match whenever the classe
- * changes.
+ * "Gérer" l'affectation d'une classe — a single shared panel (see
+ * resources/views/academique/annees/show.blade.php's "Affectation des
+ * enseignants" table, adapted from files/gestion-comptes_1.html), repopulated
+ * from the clicked row's `data-*` attributes each time it opens: the
+ * enseignants already affected (each removable in one action, all their
+ * matières at once — see Academique\AffectationEnseignantController::
+ * destroyEnseignant()), a form to affect a new enseignant to one or several
+ * matières at once (US A.3), and — Collège only — who's titulaire, restricted
+ * to enseignants already affected to this classe (US A.4). Maternelle/
+ * Primaire classes hide the matière checkboxes and titulaire section
+ * entirely: one teacher owns the whole classe (see StoreAffectationEnseignant
+ * Request::classeEstEnModeEntiere()).
  */
-function initAffectationMatiereFilter() {
-    const classeSelect = document.getElementById('new-affectation-classe');
-    const matiereSelect = document.getElementById('new-affectation-matiere');
+function initGererAffectationPanel() {
+    const list = document.getElementById('gerer-affectation-list');
 
-    if (!classeSelect || !matiereSelect) {
+    if (!list) {
         return;
     }
 
-    const matiereOptions = Array.from(matiereSelect.options).filter((option) => option.value !== '');
-    const placeholder = matiereSelect.options[0];
+    const matieresCheckWrap = document.getElementById('gerer-affectation-matieres-check');
+    const matieresField = document.getElementById('gerer-affectation-matieres-field');
+    const classeEntiereHint = document.getElementById('gerer-affectation-classe-entiere-hint');
+    const classeIdInput = document.getElementById('gerer-affectation-classe-id');
+    const titulaireForm = document.getElementById('gerer-affectation-titulaire-form');
+    const titulaireSelect = document.getElementById('gerer-affectation-titulaire-select');
+    const titulaireSection = document.getElementById('gerer-affectation-titulaire-section');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const matieresMap = JSON.parse(document.getElementById('gerer-affectation-matieres-map')?.textContent || '{}');
+    const oldMatiereIds = JSON.parse(document.getElementById('gerer-affectation-old-matiere-ids')?.textContent || '[]');
 
-    function syncMatieres() {
-        const selected = classeSelect.options[classeSelect.selectedIndex];
-        const matiereIds = (selected?.dataset.matiereIds ?? '').split(',').filter(Boolean);
+    function populate(trigger) {
+        const classeId = trigger.dataset.classeId;
+        const classeNom = trigger.dataset.classeNom ?? '';
+        const estClasseEntiere = trigger.dataset.classeEntiere === '1';
+        const matiereIds = (trigger.dataset.matiereIds ?? '').split(',').filter(Boolean);
+        const enseignants = JSON.parse(trigger.dataset.enseignants || '[]');
 
-        if (!classeSelect.value) {
-            placeholder.textContent = "— Sélectionnez d'abord une classe —";
-            matiereOptions.forEach((option) => {
-                option.hidden = true;
-                option.disabled = true;
-            });
-            matiereSelect.value = '';
+        document.querySelector('[data-panel="gerer-affectation"] .panel-head h2').textContent = `Affectation — ${classeNom}`;
+        classeIdInput.value = classeId;
+
+        list.innerHTML = enseignants.length
+            ? enseignants.map((e) => `
+                <div class="pending-item" style="background:var(--paper);">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="avatar avatar-ens">${initiales(e.nom)}</div>
+                        <div>
+                            <span class="pmail">${escapeHTML(e.nom)}${e.estTitulaire ? ' · Titulaire' : ''}</span><br>
+                            <span class="prole">${escapeHTML(e.matieres)}</span>
+                        </div>
+                    </div>
+                    <form method="POST" action="${e.destroyUrl}" data-confirm-submit data-confirm-danger="1" data-confirm-label="Retirer" data-confirm-title="Retirer cet enseignant" data-confirm-message="Retirer ${escapeHTML(e.nom)} de « ${escapeHTML(classeNom)} » ?" style="display:inline;">
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="premove" title="Retirer de la classe">✕</button>
+                    </form>
+                </div>`).join('')
+            : '<p class="hint">Aucun enseignant affecté pour l’instant.</p>';
+
+        if (estClasseEntiere) {
+            if (matieresField) matieresField.style.display = 'none';
+            if (classeEntiereHint) classeEntiereHint.style.display = 'block';
+            titulaireSection.style.display = 'none';
             return;
         }
 
-        placeholder.textContent = matiereIds.length ? '— Sélectionner —' : 'Aucune matière au programme de cette classe';
+        if (matieresField) matieresField.style.display = 'block';
+        if (classeEntiereHint) classeEntiereHint.style.display = 'none';
 
-        matiereOptions.forEach((option) => {
-            const inProgramme = matiereIds.includes(option.value);
-            option.hidden = !inProgramme;
-            option.disabled = !inProgramme;
-        });
+        matieresCheckWrap.innerHTML = matiereIds.map((id) => `
+            <label>
+                <input type="checkbox" name="matiere_ids[]" value="${id}" ${oldMatiereIds.includes(String(id)) ? 'checked' : ''}>
+                ${escapeHTML(matieresMap[id] ?? '')}
+            </label>`).join('');
 
-        if (matiereSelect.value && !matiereIds.includes(matiereSelect.value)) {
-            matiereSelect.value = '';
-        }
+        titulaireSection.style.display = enseignants.length ? 'block' : 'none';
+        titulaireForm.action = trigger.dataset.titulaireUrl;
+        titulaireSelect.innerHTML = enseignants.map((e) => `<option value="${e.id}" ${e.estTitulaire ? 'selected' : ''}>${escapeHTML(e.nom)}</option>`).join('');
     }
 
-    classeSelect.addEventListener('change', syncMatieres);
-    syncMatieres();
+    document.querySelectorAll('[data-gerer-affectation-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => populate(trigger));
+    });
+
+    // A validation error on the "add" sub-form redirects back with the panel
+    // reopened (see the "reopen-panel" meta tag, panel-error-reopen.js) but
+    // empty — re-populate it for the classe that was actually being edited.
+    const reopenPanelId = document.querySelector('meta[name="reopen-panel"]')?.content;
+    if (reopenPanelId === 'gerer-affectation' && classeIdInput.value) {
+        const trigger = document.querySelector(`[data-gerer-affectation-trigger][data-classe-id="${classeIdInput.value}"]`);
+        if (trigger) {
+            populate(trigger);
+        }
+    }
 }
 
 /**
@@ -281,4 +326,19 @@ function escapeHTML(value) {
     const div = document.createElement('div');
     div.textContent = value ?? '';
     return div.innerHTML;
+}
+
+/**
+ * Same two-letter initials rule as the <x-avatar> Blade component, for the
+ * enseignant avatars rendered client-side in the "Gérer" affectation panel
+ * (see initGererAffectationPanel()).
+ */
+function initiales(nom) {
+    return (nom ?? '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase())
+        .slice(0, 2)
+        .join('');
 }

@@ -64,6 +64,14 @@ class AnneeAcademique extends Model
     }
 
     /**
+     * @return HasMany<Examen, $this>
+     */
+    public function examens(): HasMany
+    {
+        return $this->hasMany(Examen::class);
+    }
+
+    /**
      * Makes this the one active année académique, deactivating any other —
      * only one année can be "active" at a time (enforced here, not at the DB
      * level; see the `annees_academiques` migration). Called by

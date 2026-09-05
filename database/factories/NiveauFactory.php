@@ -34,4 +34,30 @@ class NiveauFactory extends Factory
             'premiere_scolarisation' => true,
         ]);
     }
+
+    /**
+     * Explicit collège niveau — the "one teacher per matière" affectation
+     * model (see StoreAffectationEnseignantRequest::classeEstEnModeEntiere()).
+     */
+    public function college(): static
+    {
+        return $this->state(fn () => [
+            'libelle' => fake()->randomElement(['6e', '5e', '4e', '3e']),
+            'cycle' => CycleNiveau::College,
+            'premiere_scolarisation' => false,
+        ]);
+    }
+
+    /**
+     * Explicit primaire niveau — the "one teacher for the whole classe"
+     * affectation model (see StoreAffectationEnseignantRequest::classeEstEnModeEntiere()).
+     */
+    public function primaire(): static
+    {
+        return $this->state(fn () => [
+            'libelle' => fake()->randomElement(['CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']),
+            'cycle' => CycleNiveau::Primaire,
+            'premiere_scolarisation' => false,
+        ]);
+    }
 }

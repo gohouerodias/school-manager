@@ -9,6 +9,7 @@
 >
     <x-slot:actions>
         <a href="{{ route('academique.annees.index') }}" class="btn ghost">← Années académiques</a>
+        <a href="{{ route('academique.annees.decisions.index', $anneeAcademique) }}" class="btn ghost">Décisions de passage</a>
         @if ($anneeAcademique->est_active)
             <span class="doc-status-badge complet">Année active</span>
         @else
@@ -181,42 +182,89 @@
 <div data-tab-panel="affectations" style="display:none;">
     <section class="config-section">
         <div class="config-section-head">
-            <h2>Affectations enseignants</h2>
-            <button type="button" class="btn primary" data-panel-open="new-affectation">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                Affecter un enseignant
-            </button>
+            <div>
+                <h2>Affectation des enseignants</h2>
+                <p>Pour chaque classe : quels enseignants, pour quelles matières, et qui est le titulaire (seul habilité à valider le bulletin mensuel).</p>
+            </div>
         </div>
 
         <x-data-table id="affectations-table">
             <x-slot:head>
-                <th>Enseignant</th>
                 <th>Classe</th>
-                <th>Matière</th>
-                <th>Professeur principal</th>
+                <th>Enseignants affectés</th>
+                <th>Titulaire</th>
                 <th></th>
             </x-slot:head>
 
-            @forelse ($anneeAcademique->affectations as $affectation)
+            @forelse ($anneeAcademique->classes as $classe)
+                @php
+                    $estClasseEntiere = in_array($classe->niveau->cycle, [\App\Enums\CycleNiveau::Maternelle, \App\Enums\CycleNiveau::Primaire], true);
+                    $affectationsClasse = $anneeAcademique->affectations->where('classe_id', $classe->id);
+                    $parEnseignant = $affectationsClasse->groupBy('enseignant_id');
+                    $titulaireAffectation = $affectationsClasse->firstWhere('est_professeur_principal', true);
+                    $enseignantsPayload = $parEnseignant->map(fn ($groupe) => [
+                        'id' => $groupe->first()->enseignant_id,
+                        'nom' => $groupe->first()->enseignant->name,
+                        'matieres' => $estClasseEntiere ? 'Toutes les matières' : $groupe->pluck('matiere.nom')->implode(', '),
+                        'estTitulaire' => (bool) $groupe->first()->est_professeur_principal,
+                        'destroyUrl' => route('academique.classes.enseignants.destroy', [$classe, $groupe->first()->enseignant_id]),
+                    ])->values();
+                @endphp
                 <tr>
-                    <td>{{ $affectation->enseignant->name }}</td>
-                    <td>{{ $affectation->classe->nom }}</td>
-                    <td>{{ $affectation->matiere->nom }}</td>
-                    <td>{{ $affectation->est_professeur_principal ? 'Oui' : '—' }}</td>
+                    <td><b>{{ $classe->nom }}</b></td>
                     <td>
-                        <form method="POST" action="{{ route('academique.affectations.destroy', $affectation) }}"
-                              data-confirm-submit data-confirm-danger="1" data-confirm-label="Retirer"
-                              data-confirm-title="Retirer cette affectation"
-                              data-confirm-message="Retirer {{ $affectation->enseignant->name }} de « {{ $affectation->classe->nom }} » ({{ $affectation->matiere->nom }}) ?">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="row-delete" title="Retirer">🗑</button>
-                        </form>
+                        <div class="format-chips">
+                            @forelse ($parEnseignant as $groupeEnseignant)
+                                @php $estTitulaireDeCeGroupe = (bool) $groupeEnseignant->first()->est_professeur_principal; @endphp
+                                <div @class(['format-chip', 'is-titulaire' => $estTitulaireDeCeGroupe])>
+                                    <x-avatar :name="$groupeEnseignant->first()->enseignant->name" :profil="\App\Enums\ProfilUtilisateur::Enseignant" />
+                                    <div class="format-chip-text">
+                                        <span class="format-chip-name">
+                                            {{ $groupeEnseignant->first()->enseignant->name }}
+                                            @if ($estTitulaireDeCeGroupe)
+                                                <svg class="format-chip-crown" viewBox="0 0 24 24" fill="currentColor" stroke="none" title="Titulaire"><path d="M12 2 2 8.5l1.7 9.5h16.6L22 8.5 12 2Zm0 15.5a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8Z"/></svg>
+                                            @endif
+                                        </span>
+                                        <span class="format-chip-matieres">{{ $estClasseEntiere ? 'Toutes les matières' : $groupeEnseignant->pluck('matiere.nom')->implode(', ') }}</span>
+                                    </div>
+                                </div>
+                            @empty
+                                <span class="table-empty-state" style="padding:0;">Aucun enseignant affecté.</span>
+                            @endforelse
+                        </div>
+                    </td>
+                    <td>
+                        @if ($titulaireAffectation)
+                            <span class="titulaire-pill">
+                                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2 2 8.5l1.7 9.5h16.6L22 8.5 12 2Zm0 15.5a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8Z"/></svg>
+                                {{ $titulaireAffectation->enseignant->name }}
+                            </span>
+                        @else
+                            <span class="titulaire-pill-empty">—</span>
+                        @endif
+                    </td>
+                    <td>
+                        <button
+                            type="button"
+                            class="row-action-btn"
+                            title="Gérer l'affectation de cette classe"
+                            data-panel-open="gerer-affectation"
+                            data-gerer-affectation-trigger
+                            data-classe-id="{{ $classe->id }}"
+                            data-classe-nom="{{ $classe->nom }}"
+                            data-classe-entiere="{{ $estClasseEntiere ? '1' : '0' }}"
+                            data-titulaire-url="{{ route('academique.classes.titulaire.update', $classe) }}"
+                            data-matiere-ids="{{ $classe->matieres->pluck('id')->implode(',') }}"
+                            data-enseignants="{{ $enseignantsPayload->toJson() }}"
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Gérer
+                        </button>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="table-empty-state">Aucune affectation pour cette année pour l'instant.</td>
+                    <td colspan="4" class="table-empty-state">Aucune classe pour cette année pour l'instant.</td>
                 </tr>
             @endforelse
         </x-data-table>
@@ -390,69 +438,79 @@
     </x-slot:footer>
 </x-slide-panel>
 
-{{-- Affecter un enseignant --}}
-<x-slide-panel id="new-affectation" title="Affecter un enseignant">
-    <form method="POST" action="{{ route('academique.annees.affectations.store', $anneeAcademique) }}" id="new-affectation-form">
-        @csrf
-        <input type="hidden" name="_panel" value="new-affectation">
+{{-- Gérer l'affectation d'une classe : un seul panneau partagé, repeuplé par
+     JS depuis les data-attributes du bouton « Gérer » de la ligne cliquée
+     (voir initGererAffectationPanel() dans annee-academique-show.js) —
+     inspiré de la section « Affectation des enseignants » de
+     files/gestion-comptes_1.html. Liste les enseignants déjà affectés (avec
+     un retrait immédiat par enseignant, toutes ses matières à la fois),
+     permet d'en ajouter un nouveau avec une ou plusieurs matières en une
+     seule action (US A.3), et de désigner le titulaire parmi les enseignants
+     déjà affectés (US A.4). --}}
+<x-slide-panel id="gerer-affectation" title="Affectation">
+    <div class="pending-list-title">Enseignants affectés à cette classe</div>
+    <div id="gerer-affectation-list" style="margin-bottom:22px;"></div>
 
-        @error('enseignant_id')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('classe_id')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('matiere_id')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
+    <div id="gerer-affectation-add-section">
+        <div class="pending-list-title">Ajouter un enseignant à cette classe</div>
+        <form method="POST" action="{{ route('academique.annees.affectations.store', $anneeAcademique) }}" id="gerer-affectation-add-form">
+            @csrf
+            <input type="hidden" name="_panel" value="gerer-affectation">
+            <input type="hidden" name="classe_id" id="gerer-affectation-classe-id" value="{{ old('classe_id') }}">
 
-        <div class="field">
-            <label for="new-affectation-enseignant">Enseignant</label>
-            <select class="role-select" id="new-affectation-enseignant" name="enseignant_id" required>
-                <option value="">— Sélectionner —</option>
-                @foreach ($enseignants as $enseignant)
-                    <option value="{{ $enseignant->id }}" @selected((string) old('enseignant_id') === (string) $enseignant->id)>{{ $enseignant->name }}</option>
-                @endforeach
-            </select>
-        </div>
+            @error('classe_id')
+                <div class="alert-error">{{ $message }}</div>
+            @enderror
+            @error('enseignant_id')
+                <div class="alert-error">{{ $message }}</div>
+            @enderror
+            @error('matiere_ids')
+                <div class="alert-error">{{ $message }}</div>
+            @enderror
 
-        <div class="field">
-            <label for="new-affectation-classe">Classe</label>
-            <select class="role-select" id="new-affectation-classe" name="classe_id" required>
-                <option value="">— Sélectionner —</option>
-                @foreach ($anneeAcademique->classes as $classe)
-                    <option
-                        value="{{ $classe->id }}"
-                        data-matiere-ids="{{ $classe->matieres->pluck('id')->implode(',') }}"
-                        @selected((string) old('classe_id') === (string) $classe->id)
-                    >{{ $classe->nom }}</option>
-                @endforeach
-            </select>
-        </div>
+            <div class="field">
+                <label for="gerer-affectation-enseignant">Enseignant</label>
+                <select class="role-select" id="gerer-affectation-enseignant" name="enseignant_id" required>
+                    <option value="">— Sélectionner —</option>
+                    @foreach ($enseignants as $enseignant)
+                        <option value="{{ $enseignant->id }}" @selected((string) old('enseignant_id') === (string) $enseignant->id)>{{ $enseignant->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-        <div class="field">
-            <label for="new-affectation-matiere">Matière</label>
-            <select class="role-select" id="new-affectation-matiere" name="matiere_id" required>
-                <option value="">— Sélectionnez d'abord une classe —</option>
-                @foreach ($matieres as $matiere)
-                    <option value="{{ $matiere->id }}" @selected((string) old('matiere_id') === (string) $matiere->id)>{{ $matiere->nom }}</option>
-                @endforeach
-            </select>
-            <div class="hint">La liste se limite aux matières du programme de la classe choisie.</div>
-        </div>
+            <div class="field" id="gerer-affectation-matieres-field">
+                <label>Matière(s) enseignée(s) dans cette classe</label>
+                <div id="gerer-affectation-matieres-check" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;"></div>
+                <div class="hint">L'enseignant sera affecté à chaque matière cochée en une seule fois.</div>
+            </div>
 
-        <div class="field field-inline">
-            <label class="toggle-switch">
-                <input type="checkbox" name="est_professeur_principal" value="1" @checked(old('est_professeur_principal'))>
-                <span class="toggle-slider"></span>
-            </label>
-            <span>Professeur principal de cette classe</span>
-        </div>
-    </form>
+            <div id="gerer-affectation-classe-entiere-hint" class="hint" style="display:none;">
+                Maternelle/Primaire : cet enseignant sera affecté à <b>toutes les matières</b> de cette classe et
+                deviendra automatiquement son titulaire. L'enseignant déjà en place, s'il y en a un, sera retiré.
+            </div>
+
+            <button type="submit" class="btn add-pending">+ Ajouter à la classe</button>
+        </form>
+    </div>
+
+    <div id="gerer-affectation-titulaire-section" style="margin-top:26px; display:none;">
+        <div class="pending-list-title">Titulaire de la classe</div>
+        <form method="POST" id="gerer-affectation-titulaire-form">
+            @csrf
+            @method('PATCH')
+            <div class="field">
+                <select class="role-select" name="enseignant_id" id="gerer-affectation-titulaire-select"></select>
+                <div class="hint">Seuls les enseignants déjà affectés à cette classe peuvent être désignés titulaire.</div>
+            </div>
+            <button type="submit" class="btn ghost">Désigner titulaire</button>
+        </form>
+    </div>
+
+    <script type="application/json" id="gerer-affectation-matieres-map">{!! $matieres->pluck('nom', 'id')->toJson() !!}</script>
+    <script type="application/json" id="gerer-affectation-old-matiere-ids">{!! json_encode(array_map('strval', (array) old('matiere_ids', []))) !!}</script>
 
     <x-slot:footer>
-        <button type="button" class="btn ghost" data-panel-close="new-affectation">Annuler</button>
-        <button type="submit" form="new-affectation-form" class="btn dark">Affecter</button>
+        <button type="button" class="btn ghost" data-panel-close="gerer-affectation">Fermer</button>
     </x-slot:footer>
 </x-slide-panel>
 

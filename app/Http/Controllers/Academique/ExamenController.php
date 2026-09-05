@@ -6,6 +6,7 @@ use App\Enums\SystemeScolaire;
 use App\Enums\TypeEvaluation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreExamenRequest;
+use App\Http\Requests\UpdateExamenRequest;
 use App\Models\AnneeAcademique;
 use App\Models\Examen;
 use Illuminate\Http\RedirectResponse;
@@ -56,5 +57,27 @@ class ExamenController extends Controller
         $dateLimite = Carbon::parse($examen->date_limite_saisie)->format('d/m/Y');
 
         return back()->with('toast', "Examen mensuel du système {$systeme->label()} créé — les enseignants ont jusqu'au {$dateLimite} pour saisir les notes.");
+    }
+
+    public function update(UpdateExamenRequest $request, Examen $examen): RedirectResponse
+    {
+        $examen->update([
+            'date_examen' => $request->validated('date_examen'),
+            'date_limite_saisie' => $request->validated('date_limite_saisie'),
+        ]);
+
+        return back()->with('toast', 'Examen mis à jour.');
+    }
+
+    /**
+     * Cascades to every Note/CommentaireMatiere/Bulletin already tied to
+     * this examen (see the `examens` foreign keys' cascadeOnDelete()) — the
+     * view's confirmation dialog warns about this explicitly.
+     */
+    public function destroy(Examen $examen): RedirectResponse
+    {
+        $examen->delete();
+
+        return back()->with('toast', 'Examen supprimé.');
     }
 }

@@ -5,8 +5,8 @@ namespace Database\Factories;
 use App\Enums\TypeEvaluation;
 use App\Models\ClasseMatiere;
 use App\Models\Eleve;
+use App\Models\Examen;
 use App\Models\Note;
-use App\Models\Trimestre;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,7 +22,7 @@ class NoteFactory extends Factory
         return [
             'eleve_id' => Eleve::factory(),
             'classe_matiere_id' => ClasseMatiere::factory(),
-            'trimestre_id' => Trimestre::factory(),
+            'examen_id' => Examen::factory(),
             'enseignant_id' => User::factory()->enseignant(),
             'valeur' => fake()->randomFloat(2, 4, 20),
             'type' => fake()->randomElement(TypeEvaluation::cases()),

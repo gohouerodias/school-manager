@@ -5,6 +5,17 @@
     $dossiersOpen = request()->routeIs('eleves.*') || request()->routeIs('tuteurs.*');
     $academiqueOpen = request()->routeIs('academique.*');
 
+    // Shortcut straight to the "Affectations enseignants" tab (see
+    // annee-academique-show.js's initTabs() ?onglet= deep-link support) of
+    // whichever année académique is relevant right now — the active one, or
+    // else the most recent — so admins don't have to open "Années
+    // académiques" then pick a year just to manage affectations.
+    $anneeAffectations = $isAdmin
+        ? \App\Models\AnneeAcademique::query()->where('est_active', true)->first()
+            ?? \App\Models\AnneeAcademique::query()->orderByDesc('date_debut')->first()
+        : null;
+    $affectationsActive = request()->routeIs('academique.annees.show') && request()->query('onglet') === 'affectations';
+
     // Each entry mirrors a zone of the app (see the class/use-case diagrams).
     // "Gestion de compte", "Dossier élève et documents" and "Académique"
     // have real routes; the rest are the app's future feature areas and
@@ -65,6 +76,7 @@
                     <div class="nav-submenu" data-nav-submenu @if ($dossiersOpen) style="display:block;" @endif>
                         <a href="{{ route('eleves.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.index')])>Liste des apprenants</a>
                         <a href="{{ route('tuteurs.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('tuteurs.*')])>Liste des tuteurs</a>
+                        <a href="{{ route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.bulletins.*')])>Bulletins</a>
                         @if ($isAdmin)
                             <a href="{{ route('eleves.parametres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.parametres.*')])>Paramètres des dossiers</a>
                         @endif
@@ -92,9 +104,14 @@
                     </button>
 
                     <div class="nav-submenu" data-nav-submenu @if ($academiqueOpen) style="display:block;" @endif>
-                        <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*')])>Années académiques</a>
+                        <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*') && ! $affectationsActive])>Années académiques</a>
                         <a href="{{ route('academique.niveaux-matieres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.niveaux-matieres.*')])>Niveaux &amp; matières</a>
                         <a href="{{ route('academique.examens.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.examens.*')])>Examens</a>
+                        @if ($anneeAffectations)
+                            <a href="{{ route('academique.annees.show', $anneeAffectations) }}?onglet=affectations" @class(['nav-subitem', 'active' => $affectationsActive])>Affectation des enseignants</a>
+                        @else
+                            <span class="nav-subitem disabled" title="Créez d'abord une année académique">Affectation des enseignants</span>
+                        @endif
                     </div>
                 </div>
             @else

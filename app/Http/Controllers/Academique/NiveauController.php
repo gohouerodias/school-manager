@@ -7,6 +7,7 @@ use App\Http\Requests\StoreNiveauRequest;
 use App\Http\Requests\UpdateNiveauRequest;
 use App\Models\Matiere;
 use App\Models\Niveau;
+use App\Models\ParametreSysteme;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -29,6 +30,7 @@ class NiveauController extends Controller
         return view('academique.niveaux-matieres', [
             'niveaux' => Niveau::query()->orderBy('ordre')->get(),
             'matieres' => Matiere::query()->orderBy('nom')->get(),
+            'parametre' => ParametreSysteme::query()->first(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
                 'Académique' => null,

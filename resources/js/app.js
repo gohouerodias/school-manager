@@ -27,6 +27,10 @@ import { initEleveStatutAssign } from './eleve-statut-assign';
 import { initTuteurList } from './tuteur-list';
 import { initEleveWizard } from './eleve-wizard';
 import { initExamens } from './examens';
+import { initDecisionPassage } from './decision-passage';
+import { initAnneeEdit } from './annees';
+import { initBulletinsGeneration } from './bulletins';
+import { initBulletinApercu } from './bulletin-apercu';
 
 document.addEventListener('DOMContentLoaded', () => {
     initPageLoader();
@@ -57,4 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTuteurList();
     initEleveWizard();
     initExamens();
+    initDecisionPassage();
+    initAnneeEdit();
+    initBulletinsGeneration();
+    initBulletinApercu();
 });

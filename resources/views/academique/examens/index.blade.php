@@ -27,6 +27,7 @@
         <th>Année académique</th>
         <th>Date de l'examen</th>
         <th>Date limite de saisie</th>
+        <th></th>
     </x-slot:head>
 
     @forelse ($examens as $examen)
@@ -36,10 +37,36 @@
             <td>{{ $examen->anneeAcademique->libelle }}</td>
             <td>{{ $examen->date_examen->format('d/m/Y') }}</td>
             <td>{{ $examen->date_limite_saisie->format('d/m/Y') }}</td>
+            <td>
+                <div class="row-actions-group">
+                    <button
+                        type="button"
+                        class="row-edit"
+                        title="Modifier"
+                        data-panel-open="edit-examen"
+                        data-edit-examen-trigger
+                        data-edit-url="{{ route('academique.examens.update', $examen) }}"
+                        data-edit-systeme="{{ $examen->systeme->label() }}"
+                        data-edit-annee="{{ $examen->anneeAcademique->libelle }}"
+                        data-edit-date-examen="{{ $examen->date_examen->format('Y-m-d') }}"
+                        data-edit-date-limite="{{ $examen->date_limite_saisie->format('Y-m-d') }}"
+                        data-edit-min="{{ $examen->anneeAcademique->date_debut->format('Y-m-d') }}"
+                        data-edit-max="{{ $examen->anneeAcademique->date_fin->format('Y-m-d') }}"
+                    >✎</button>
+                    <form method="POST" action="{{ route('academique.examens.destroy', $examen) }}"
+                          data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                          data-confirm-title="Supprimer cet examen"
+                          data-confirm-message="Supprimer cet examen supprimera aussi toutes les notes, commentaires et bulletins déjà saisis pour cet examen. Continuer ?">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="row-delete" title="Supprimer">🗑</button>
+                    </form>
+                </div>
+            </td>
         </tr>
     @empty
         <tr>
-            <td colspan="5" class="table-empty-state">Aucun examen créé pour l'instant.</td>
+            <td colspan="6" class="table-empty-state">Aucun examen créé pour l'instant.</td>
         </tr>
     @endforelse
 </x-data-table>
@@ -104,6 +131,45 @@
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="new-examen">Annuler</button>
         <button type="submit" form="new-examen-form" class="btn dark">Créer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier un examen : seules les dates se modifient, le système reste
+     fixe une fois l'examen créé (voir UpdateExamenRequest). --}}
+<x-slide-panel id="edit-examen" title="Modifier l'examen">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-examen-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-examen">
+        <input type="hidden" name="_edit_url" id="edit-examen-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('date_examen')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('date_limite_saisie')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label>Système / Année académique</label>
+            <div class="field-static" id="edit-examen-systeme-annee">—</div>
+        </div>
+
+        <div class="field">
+            <label for="edit-examen-date">Date de l'examen</label>
+            <input type="date" id="edit-examen-date" name="date_examen" value="{{ old('date_examen') }}" required>
+        </div>
+
+        <div class="field">
+            <label for="edit-examen-date-limite">Date limite de saisie des notes</label>
+            <input type="date" id="edit-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}" required>
+            <div class="hint">Délai laissé aux enseignants pour saisir les notes de cet examen.</div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-examen">Annuler</button>
+        <button type="submit" form="edit-examen-form" class="btn dark">Enregistrer</button>
     </x-slot:footer>
 </x-slide-panel>
 

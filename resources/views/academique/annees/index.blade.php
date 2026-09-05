@@ -38,7 +38,20 @@
                 @endif
             </td>
             <td>
-                <a href="{{ route('academique.annees.show', $annee) }}" class="btn ghost">Configurer →</a>
+                <div class="row-actions-group">
+                    <button
+                        type="button"
+                        class="row-edit"
+                        title="Modifier les dates"
+                        data-panel-open="edit-annee"
+                        data-edit-annee-trigger
+                        data-edit-url="{{ route('academique.annees.update', $annee) }}"
+                        data-edit-libelle="{{ $annee->libelle }}"
+                        data-edit-date-debut="{{ $annee->date_debut->format('Y-m-d') }}"
+                        data-edit-date-fin="{{ $annee->date_fin->format('Y-m-d') }}"
+                    >✎</button>
+                    <a href="{{ route('academique.annees.show', $annee) }}" class="btn ghost">Configurer →</a>
+                </div>
             </td>
         </tr>
     @empty
@@ -89,6 +102,48 @@
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="new-annee">Annuler</button>
         <button type="submit" form="new-annee-form" class="btn dark">Créer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier les dates d'une année académique : le libellé reste fixe une
+     fois l'année créée (voir UpdateAnneeAcademiqueRequest). --}}
+<x-slide-panel id="edit-annee" title="Modifier les dates">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-annee-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-annee">
+        <input type="hidden" name="_edit_url" id="edit-annee-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('date_debut')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('date_fin')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label>Année académique</label>
+            <div class="field-static" id="edit-annee-libelle">—</div>
+        </div>
+
+        <div class="field">
+            <label for="edit-annee-date-debut">Date de début</label>
+            <input type="date" id="edit-annee-date-debut" name="date_debut" value="{{ old('date_debut') }}" required>
+        </div>
+
+        <div class="field">
+            <label for="edit-annee-date-fin">Date de fin</label>
+            <input type="date" id="edit-annee-date-fin" name="date_fin" value="{{ old('date_fin') }}" required>
+        </div>
+
+        <div class="hint">
+            Les nouvelles dates doivent continuer à englober tous les examens déjà créés pour cette année.
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-annee">Annuler</button>
+        <button type="submit" form="edit-annee-form" class="btn dark">Enregistrer</button>
     </x-slot:footer>
 </x-slide-panel>
 

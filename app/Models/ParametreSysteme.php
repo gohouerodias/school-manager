@@ -13,5 +13,13 @@ class ParametreSysteme extends Model
 
     protected $fillable = [
         'duree_conservation_donnees',
+        'seuil_passage',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'seuil_passage' => 'float',
+        ];
+    }
 }
