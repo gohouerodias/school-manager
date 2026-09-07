@@ -93,9 +93,18 @@
                         // seule matière ne la voit d'ailleurs jamais (voir plus haut) et
                         // le titulaire ne peut valider/signer que si elle est complète
                         // (voir EspaceEnseignantController::validerBulletin()).
+                        //
+                        // Pondérée par le coefficient de chaque matière (déjà affiché
+                        // dans l'en-tête de colonne ci-dessus), exactement comme
+                        // App\Models\Bulletin::calculerMoyenne() — utilisé par l'écran
+                        // admin des bulletins (voir BulletinGenerationService) — pour que
+                        // titulaire et admin voient toujours la même valeur.
                         $valeurs = collect($student['notes'])->filter(fn ($v) => $v !== null);
                         $notesCompletes = $matieres->isNotEmpty() && $valeurs->count() === $matieres->count();
-                        $moyenne = $notesCompletes ? round($valeurs->avg(), 2) : null;
+                        $totalCoefficients = (float) $matieres->sum(fn ($m) => $m->pivot->coefficient);
+                        $moyenne = ($notesCompletes && $totalCoefficients > 0)
+                            ? round($matieres->sum(fn ($m) => ($student['notes'][$m->id] ?? 0) * $m->pivot->coefficient) / $totalCoefficients, 2)
+                            : null;
                         $aUnCommentaire = ! empty($student['subjectComments']) || ! empty($student['bulletin']['appreciation'] ?? null) || ! empty($student['bulletin']['resultat'] ?? null);
                     @endphp
                     <tr data-student-id="{{ $student['eleveId'] }}" data-search="{{ \Illuminate\Support\Str::lower($student['nom'].' '.$student['prenom']) }}">
@@ -224,7 +233,7 @@
         'examenId' => $examenActif?->id,
         'isTitulaire' => $isTitulaire,
         'titulaireNom' => $titulaire?->name,
-        'matieres' => $matieres->map(fn ($m) => ['id' => $m->id, 'nom' => $m->nom])->values(),
+        'matieres' => $matieres->map(fn ($m) => ['id' => $m->id, 'nom' => $m->nom, 'coefficient' => (float) $m->pivot->coefficient])->values(),
         'matiereIdsEditables' => $matiereIdsEditables->values(),
         'students' => $students,
         'saisieFermee' => $saisieFermee,

@@ -162,6 +162,65 @@ test('requesting generation while one is already in progress does not dispatch a
     Queue::assertNotPushed(GenererBulletinsClasseJob::class);
 });
 
+test('an EnAttente demande stuck for more than 2 minutes without a worker no longer blocks a new generation', function () {
+    Queue::fake();
+
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();
+    completerLesNotesPour($classe, $examen, $inscriptions);
+
+    $demande = DemandeGenerationBulletin::factory()->create([
+        'classe_id' => $classe->id,
+        'examen_id' => $examen->id,
+        'demande_par_id' => $admin->id,
+        'statut' => StatutGenerationBulletin::EnAttente,
+        'demande_at' => now()->subMinutes(5),
+    ]);
+
+    expect($demande->estCoinceeSansWorker())->toBeTrue();
+    expect($demande->bloqueUneNouvelleGeneration())->toBeFalse();
+
+    // L'écran ne doit plus afficher le bouton comme désactivé, et doit
+    // signaler le blocage plutôt que de rester silencieusement sur le spinner.
+    $indexResponse = $this->actingAs($admin)->get(route('eleves.bulletins.index', ['classe_id' => $classe->id, 'examen_id' => $examen->id]));
+    $indexResponse->assertSee('semble bloquée depuis plus de 2 minutes', false);
+    expect($indexResponse->getContent())->not->toMatch('/id="generate-bulletins-btn"[^>]*disabled/');
+
+    $response = $this->actingAs($admin)->post(route('eleves.bulletins.demander'), [
+        'classe_id' => $classe->id,
+        'examen_id' => $examen->id,
+    ]);
+
+    $response->assertRedirect();
+    Queue::assertPushed(GenererBulletinsClasseJob::class);
+});
+
+test('a genuinely fresh EnAttente/EnCours demande still blocks a new generation', function () {
+    Queue::fake();
+
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen] = setupClasseAvecBulletins();
+
+    $demande = DemandeGenerationBulletin::factory()->enCours()->create([
+        'classe_id' => $classe->id,
+        'examen_id' => $examen->id,
+        'demande_par_id' => $admin->id,
+        'demande_at' => now(),
+    ]);
+
+    expect($demande->estCoinceeSansWorker())->toBeFalse();
+    expect($demande->bloqueUneNouvelleGeneration())->toBeTrue();
+
+    $response = $this->actingAs($admin)->post(route('eleves.bulletins.demander'), [
+        'classe_id' => $classe->id,
+        'examen_id' => $examen->id,
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('toast', fn (string $toast) => str_contains($toast, 'déjà en cours'));
+    Queue::assertNotPushed(GenererBulletinsClasseJob::class);
+});
+
 test('the paper preview shows the apprenant and the matière', function () {
     $admin = User::factory()->administrateur()->create();
     ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();

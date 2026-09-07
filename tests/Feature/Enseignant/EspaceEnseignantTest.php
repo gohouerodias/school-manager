@@ -614,7 +614,7 @@ test('a subject-only teacher never sees the "Moyenne" column', function () {
     $response->assertDontSee('>Moyenne<', false);
 });
 
-test('the titulaire’s moyenne column shows "—" until every matière is noted, then the real average', function () {
+test('the titulaire’s moyenne column shows "—" until every matière is noted, then the coefficient-weighted average', function () {
     ['classe' => $classe, 'francais' => $francais, 'maths' => $maths, 'eleve' => $eleve, 'examen' => $examen, 'titulaire' => $titulaire, 'profMaths' => $profMaths] = creerContexteTitulaireMultiMatiere();
     $cmFrancais = ClasseMatiere::where('classe_id', $classe->id)->where('matiere_id', $francais->id)->first();
     $cmMaths = ClasseMatiere::where('classe_id', $classe->id)->where('matiere_id', $maths->id)->first();
@@ -627,9 +627,14 @@ test('the titulaire’s moyenne column shows "—" until every matière is noted
 
     Note::create(['eleve_id' => $eleve->id, 'classe_matiere_id' => $cmMaths->id, 'examen_id' => $examen->id, 'enseignant_id' => $profMaths->id, 'valeur' => 9, 'type' => TypeEvaluation::EvaluationMensuelle, 'numero' => 1, 'date_saisie' => now()->toDateString()]);
 
+    // Français (coef 3) = 15, Maths (coef 4) = 9 → (15*3 + 9*4) / (3+4) = 11.57,
+    // pas la simple moyenne (15+9)/2 = 12.00 — même formule pondérée que
+    // App\Models\Bulletin::calculerMoyenne(), utilisée côté admin/bulletins,
+    // pour que titulaire et admin voient toujours la même valeur.
     $response = $this->actingAs($titulaire)->get(route('enseignant.classes.show', ['classe' => $classe, 'examen_id' => $examen->id]));
     $response->assertOk();
-    $response->assertSee('12.00');
+    $response->assertDontSee('12.00');
+    $response->assertSee('11.57');
 });
 
 test('the titulaire cannot validate a bulletin until every matière has been noted', function () {

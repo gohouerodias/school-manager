@@ -171,6 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * @if($isTitulaire) du blade) qu'une fois toutes les matières du
      * programme notées, jamais sur un sous-ensemble partiel — même règle
      * que EspaceEnseignantController::validerBulletin() côté serveur.
+     *
+     * Pondérée par le coefficient de chaque matière (config.matieres[].coefficient),
+     * exactement comme App\Models\Bulletin::calculerMoyenne() et le calcul
+     * initial du blade (voir saisie-notes.blade.php) — pour que la mise à
+     * jour instantanée à la saisie affiche la même valeur que celle qui
+     * apparaîtra après rechargement, et que celle vue côté admin.
      */
     function updateMoyenne(row, student) {
         const cell = row.querySelector('[data-role="moyenne"]');
@@ -178,10 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const values = Object.values(student.notes).filter((v) => v !== null && v !== undefined);
         const complet = config.matieres.length > 0 && values.length === config.matieres.length;
-        cell.textContent = complet
-            ? (values.reduce((a, b) => a + Number(b), 0) / values.length).toFixed(2)
-            : '—';
-        cell.title = complet ? '' : "En attente — toutes les matières n'ont pas encore été notées";
+
+        if (!complet) {
+            cell.textContent = '—';
+            cell.title = "En attente — toutes les matières n'ont pas encore été notées";
+            return;
+        }
+
+        const totalCoefficients = config.matieres.reduce((sum, m) => sum + Number(m.coefficient), 0);
+        const somme = config.matieres.reduce((sum, m) => sum + Number(student.notes[m.id] ?? 0) * Number(m.coefficient), 0);
+        cell.textContent = totalCoefficients > 0 ? (somme / totalCoefficients).toFixed(2) : '0.00';
+        cell.title = '';
     }
 
     function initSearch() {
