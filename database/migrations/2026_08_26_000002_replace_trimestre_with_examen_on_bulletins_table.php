@@ -38,7 +38,7 @@ return new class extends Migration
             }
         });
 
-        if (! $this->hasIndexOn('bulletins', 'examen_id')) {
+        if (! $this->hasCompositeIndex('bulletins', 'inscription_id', 'examen_id')) {
             Schema::table('bulletins', function (Blueprint $table) {
                 $table->unique(['inscription_id', 'examen_id']);
             });
@@ -63,7 +63,7 @@ return new class extends Migration
             });
         }
 
-        if (! $this->hasIndexOn('bulletins', 'trimestre_id')) {
+        if (! $this->hasCompositeIndex('bulletins', 'inscription_id', 'trimestre_id')) {
             Schema::table('bulletins', function (Blueprint $table) {
                 $table->unique(['inscription_id', 'trimestre_id']);
             });
@@ -155,11 +155,30 @@ return new class extends Migration
     }
 
     /**
-     * MySQL only (see dropForeignKeysOn()) — on other drivers this always
-     * reports "no index yet" so the unique key is (re)created unconditionally,
-     * which is correct for a normal (non-partially-applied) migration run.
+     * Vrai s'il existe déjà un index (quel que soit son nom) couvrant à la
+     * fois $firstColumn (en tête) et $secondColumn — utilisé pour ne pas
+     * recréer l'unique (inscription_id, examen_id) si une exécution
+     * précédente de cette migration l'a déjà posé (voir dropColumn/hasColumn
+     * ailleurs dans cette classe, même logique de reprise après échec
+     * partiel).
+     *
+     * Vérifier seulement "un index touche $secondColumn" ne suffit pas :
+     * `$table->foreignId('examen_id')->constrained()` crée automatiquement
+     * un index mono-colonne sur `examen_id` pour sa propre clé étrangère —
+     * un tel index existe donc dès la création de la colonne, avant même que
+     * l'unique composite ne soit posé, et un simple hasIndexOn('examen_id')
+     * renvoyait vrai à tort, sautant la création de l'unique composite.
+     * Résultat : dropIndexesOn(trimestre_id) supprimait ensuite le seul
+     * index où inscription_id est en tête, cassant sa propre clé étrangère
+     * (voir le docblock de la classe) — MySQL refusait alors avec "Cannot
+     * drop index ... needed in a foreign key constraint".
+     *
+     * MySQL only (voir dropForeignKeysOn()) — sur les autres drivers, on
+     * répond toujours "pas encore d'index", donc l'unique composite est
+     * (re)créé sans condition, ce qui est correct pour une exécution normale
+     * (non partiellement appliquée) de la migration.
      */
-    private function hasIndexOn(string $table, string $column): bool
+    private function hasCompositeIndex(string $table, string $firstColumn, string $secondColumn): bool
     {
         $connection = Schema::getConnection();
 
@@ -169,12 +188,24 @@ return new class extends Migration
 
         $database = $connection->getDatabaseName();
 
-        $indexes = $connection->select(
-            'SELECT DISTINCT INDEX_NAME FROM information_schema.STATISTICS
-             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?',
-            [$database, $table, $column]
+        $indexNames = $connection->select(
+            'SELECT INDEX_NAME FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? AND SEQ_IN_INDEX = 1',
+            [$database, $table, $firstColumn]
         );
 
-        return count($indexes) > 0;
+        foreach ($indexNames as $indexName) {
+            $coversSecondColumn = $connection->select(
+                'SELECT 1 FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ? AND COLUMN_NAME = ?',
+                [$database, $table, $indexName->INDEX_NAME, $secondColumn]
+            );
+
+            if (count($coversSecondColumn) > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 };
