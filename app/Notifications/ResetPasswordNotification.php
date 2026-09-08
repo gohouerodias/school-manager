@@ -36,6 +36,7 @@ class ResetPasswordNotification extends Notification
             ->line("Vous recevez cet e-mail car une demande de réinitialisation de mot de passe a été effectuée pour votre compte.")
             ->action('Réinitialiser mon mot de passe', $url)
             ->line('Ce lien expirera dans 60 minutes.')
-            ->line("Si vous n'êtes pas à l'origine de cette demande, aucune action n'est requise.");
+            ->line("Si vous n'êtes pas à l'origine de cette demande, aucune action n'est requise.")
+            ->salutation('Cordialement,<br>L\'équipe du CSC Madre Trinidad');
     }
 }
