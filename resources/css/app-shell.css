@@ -914,3 +914,87 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 .bulletin-manual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
 .bulletin-page-wrap { padding: 24px; background: var(--paper); }
 .bulletin-page-wrap .bulletin-sheet { box-shadow: 0 24px 60px rgba(18, 40, 32, .12); border: 1px solid var(--line); }
+
+/* ============================================================
+   Responsive / mobile
+   ============================================================
+   Below 880px the left rail (<x-sidebar-nav>) switches from an
+   always-visible column to an off-canvas drawer: hidden by default,
+   opened with .mobile-open (see resources/js/sidebar.js), and dismissed
+   via the backdrop below or Escape. Any wide table gets a horizontal
+   scroller (<x-data-table>'s .table-scroll) instead of squeezing its
+   columns unreadably thin. */
+
+/* Topbar burger that opens the drawer — hidden on desktop, where the
+   sidebar's own rail-burger (collapse/expand) is used instead. */
+.mobile-nav-toggle {
+    display: none; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--paper-raised); color: var(--ink); cursor: pointer; flex-shrink: 0;
+    align-items: center; justify-content: center; margin-right: 2px; padding: 0;
+}
+.mobile-nav-toggle svg { width: 18px; height: 18px; }
+.mobile-nav-toggle:hover { background: var(--green-tint); border-color: var(--green); }
+
+.sidebar-backdrop {
+    position: fixed; inset: 0; background: rgba(18, 52, 30, .35); z-index: 190;
+    opacity: 0; pointer-events: none; transition: opacity .25s ease;
+}
+.sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+
+/* Horizontal scroller wrapping every <x-data-table>'s <table>, so a wide
+   table scrolls within its card on a narrow screen instead of crushing
+   its columns (data-card keeps overflow:hidden for its rounded corners,
+   so the scroll region has to live one level in). */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 880px) {
+    .mobile-nav-toggle { display: flex; }
+
+    .shell { display: block; }
+    .sidebar {
+        position: fixed; top: 0; left: 0; height: 100vh; width: 250px; z-index: 200;
+        transform: translateX(-100%); transition: transform .25s ease;
+    }
+    .sidebar.mobile-open { transform: translateX(0); }
+    /* Desktop's icon-only "collapsed" rail doesn't apply here — a mobile
+       drawer is either fully open or fully hidden, never squeezed. */
+    .sidebar.collapsed { width: 250px; }
+    .sidebar.collapsed .sidebar-header { padding: 16px 14px; justify-content: flex-start; }
+    .sidebar.collapsed .sidebar-logo, .sidebar.collapsed .sidebar-wordmark { display: block; }
+    .sidebar.collapsed .nav-item { justify-content: flex-start; padding: 11px 13px; }
+    .sidebar.collapsed .nav-label { display: inline; }
+
+    .main { width: 100%; }
+    .app-shell-inner { padding: 18px 16px 60px; }
+
+    .app-shell-topbar { flex-wrap: wrap; gap: 10px; }
+    .brand .name { font-size: 13px; }
+    .brand .name small { font-size: 9px; }
+
+    .content-head { flex-direction: column; align-items: stretch; gap: 12px; }
+    .content-head-actions { flex-wrap: wrap; }
+
+    .toolbar { flex-wrap: wrap; }
+    .toolbar .search { flex-basis: 100%; }
+
+    .table-scroll table { min-width: 640px; }
+
+    .panel { width: 100%; }
+    .fiche-modal { width: 94vw; }
+    .fiche-grid { grid-template-columns: 1fr; }
+    .bulletin-grid2, .bulletin-manual-grid { grid-template-columns: 1fr; }
+
+    .wizard-panel { padding: 20px 16px; }
+
+    .profile-menu { width: min(290px, calc(100vw - 32px)); }
+    .guide-menu { width: min(280px, calc(100vw - 32px)); }
+
+    .pagination { flex-wrap: wrap; gap: 10px; }
+    .pagination-links { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+    .content-head h1 { font-size: 20px; }
+    thead th, tbody td { padding: 12px 14px; }
+    .guide-wrap { display: none; }
+}

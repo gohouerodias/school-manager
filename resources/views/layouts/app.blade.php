@@ -22,12 +22,16 @@
 </div>
 <div class="shell">
     <x-sidebar-nav />
+    <div class="sidebar-backdrop" data-sidebar-backdrop></div>
 
     <div class="main">
         <div class="app-shell-inner">
 
             <div class="app-shell-topbar">
                 <div class="brand">
+                    <button type="button" class="mobile-nav-toggle" data-sidebar-open aria-label="Ouvrir le menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
                     <img src="{{ asset('logo-cscmt.jpg') }}" alt="Complexe Scolaire Catholique Madre Trinidad" class="logo-slot">
                     <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad — Registre numérique</small></div>
                     <x-guide-menu />
