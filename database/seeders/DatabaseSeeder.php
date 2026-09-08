@@ -17,11 +17,10 @@ use Illuminate\Database\Seeder;
  * enseignants) depuis l'écran "Gestion des comptes" de l'application.
  *
  * Ne crée aucune donnée fictive (pas d'élèves, notes ou bulletins générés
- * aléatoirement) — c'est l'unique seeder de ce projet, à lancer via
- * `php artisan db:seed --class=ProductionSeeder --force` (ou simplement
- * `php artisan db:seed --force`, ce seeder étant aussi le seeder par défaut).
+ * aléatoirement) — c'est l'unique seeder de ce projet, lancé simplement via
+ * `php artisan db:seed --force` (c'est le seeder par défaut de Laravel).
  */
-class ProductionSeeder extends Seeder
+class DatabaseSeeder extends Seeder
 {
     use SeedsReferenceData;
 

@@ -8,10 +8,10 @@ use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\TypeDocument;
 use App\Models\User;
-use Database\Seeders\ProductionSeeder;
+use Database\Seeders\DatabaseSeeder;
 
 test('seeds only reference data, no user accounts and no fake demo data', function () {
-    $this->seed(ProductionSeeder::class);
+    $this->seed(DatabaseSeeder::class);
 
     expect(Niveau::count())->toBe(12)
         ->and(AnneeAcademique::count())->toBe(1)

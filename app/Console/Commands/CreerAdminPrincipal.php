@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 /**
  * Crée le tout premier compte (profil Administrateur) d'une instance en
- * production, démarrée avec `ProductionSeeder` (qui ne crée volontairement
+ * production, démarrée avec `DatabaseSeeder` (qui ne crée volontairement
  * aucun utilisateur — voir son docblock). Une fois connecté avec ce compte,
  * tous les autres comptes (agent de scolarité, direction, enseignants)
  * s'invitent depuis l'écran "Gestion des comptes"
@@ -37,7 +37,7 @@ class CreerAdminPrincipal extends Command
     /**
      * @var string
      */
-    protected $description = "Crée le compte administrateur principal d'une instance fraîchement démarrée (voir ProductionSeeder)";
+    protected $description = "Crée le compte administrateur principal d'une instance fraîchement démarrée (voir DatabaseSeeder)";
 
     public function handle(): int
     {

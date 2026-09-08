@@ -16,7 +16,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Données de référence/structurelles nécessaires au démarrage d'une
- * instance réelle — utilisées par `ProductionSeeder` (voir son docblock).
+ * instance réelle — utilisées par `DatabaseSeeder` (voir son docblock).
  */
 trait SeedsReferenceData
 {
