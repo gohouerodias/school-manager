@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Connexion') — CSCMT</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('logo-cscmt.jpg') }}">
     @include('partials.page-loader')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

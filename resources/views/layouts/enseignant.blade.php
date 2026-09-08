@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Espace enseignant') — CSCMT</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('logo-cscmt.jpg') }}">
     @vite(['resources/css/enseignant.css', 'resources/js/enseignant.js'])
 </head>
 <body>

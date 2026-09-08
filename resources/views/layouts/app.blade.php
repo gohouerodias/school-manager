@@ -11,6 +11,7 @@
          .show) are actually visible to the user. --}}
     <meta name="reopen-panel" content="{{ old('_panel') }}">
     <title>@yield('title', 'Tableau de bord') — CSCMT</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('logo-cscmt.jpg') }}">
     @include('partials.page-loader')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
