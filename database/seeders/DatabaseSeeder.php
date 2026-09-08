@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\CycleNiveau;
-use App\Enums\SystemeScolaire;
 use App\Enums\TypeChampPersonnalise;
 use App\Enums\TypeEvaluation;
 use App\Models\AffectationEnseignant;
@@ -29,11 +28,14 @@ use App\Models\TypeDocument;
 use App\Models\User;
 use App\Models\ValeurChampPersonnalise;
 use App\Support\BeninData;
+use Database\Seeders\Concerns\SeedsReferenceData;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
 class DatabaseSeeder extends Seeder
 {
+    use SeedsReferenceData;
+
     /**
      * Seed a realistic (but reduced-scale) dataset for CSC Madre Trinidad.
      *
@@ -41,6 +43,9 @@ class DatabaseSeeder extends Seeder
      * this seeder creates a representative subset (~10 classes, ~80
      * students) so the app is usable and demoable without generating
      * an unreasonably large local dataset.
+     *
+     * For a real production launch (no fake students/teachers/notes), use
+     * `ProductionSeeder` instead — see its docblock.
      */
     public function run(): void
     {
@@ -53,18 +58,7 @@ class DatabaseSeeder extends Seeder
         $matieres = $this->seedMatieres();
         $champsPersonnalises = $this->seedChampsPersonnalises();
 
-        $admin = User::factory()->administrateur()->create([
-            'name' => 'Admin CSC',
-            'email' => 'admin@cscmadretrinidad.bj',
-        ]);
-        $agentScolarite = User::factory()->agentScolarite()->create([
-            'name' => 'Agent Scolarité',
-            'email' => 'scolarite@cscmadretrinidad.bj',
-        ]);
-        User::factory()->direction()->create([
-            'name' => 'Direction CSC',
-            'email' => 'direction@cscmadretrinidad.bj',
-        ]);
+        ['admin' => $admin, 'agentScolarite' => $agentScolarite] = $this->seedComptesAdministratifs();
         $enseignants = User::factory()->enseignant()->count(12)->create();
 
         $classes = $this->seedClasses($niveaux, $anneeAcademique);
@@ -109,117 +103,6 @@ class DatabaseSeeder extends Seeder
         JournalAction::factory()->count(50)->create();
         Rapport::factory()->count(5)->create(['genere_par' => $admin->id]);
         ImportDonnees::factory()->count(2)->create(['importe_par' => $admin->id]);
-    }
-
-    /**
-     * @return Collection<int, Niveau>
-     */
-    private function seedNiveaux(): Collection
-    {
-        $definitions = [
-            ['libelle' => 'Maternelle 1', 'ordre' => 1, 'cycle' => CycleNiveau::Maternelle, 'premiere_scolarisation' => true],
-            ['libelle' => 'Maternelle 2', 'ordre' => 2, 'cycle' => CycleNiveau::Maternelle, 'premiere_scolarisation' => true],
-            ['libelle' => 'CI', 'ordre' => 3, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CP', 'ordre' => 4, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CE1', 'ordre' => 5, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CE2', 'ordre' => 6, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CM1', 'ordre' => 7, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => 'CM2', 'ordre' => 8, 'cycle' => CycleNiveau::Primaire],
-            ['libelle' => '6e', 'ordre' => 9, 'cycle' => CycleNiveau::College],
-            ['libelle' => '5e', 'ordre' => 10, 'cycle' => CycleNiveau::College],
-            ['libelle' => '4e', 'ordre' => 11, 'cycle' => CycleNiveau::College],
-            ['libelle' => '3e', 'ordre' => 12, 'cycle' => CycleNiveau::College],
-        ];
-
-        return collect($definitions)->map(fn (array $data) => Niveau::create($data));
-    }
-
-    private function seedAnneeAcademique(): AnneeAcademique
-    {
-        return AnneeAcademique::create([
-            'libelle' => '2025-2026',
-            'est_active' => true,
-            'date_debut' => '2025-10-01',
-            'date_fin' => '2026-07-31',
-        ]);
-    }
-
-    private function seedExamen(AnneeAcademique $anneeAcademique): Examen
-    {
-        return Examen::create([
-            'annee_academique_id' => $anneeAcademique->id,
-            'systeme' => SystemeScolaire::Primaire,
-            'type' => TypeEvaluation::EvaluationMensuelle,
-            'date_examen' => '2025-11-15',
-            'date_limite_saisie' => '2025-11-25',
-        ]);
-    }
-
-    /**
-     * @return Collection<int, TypeDocument>
-     */
-    private function seedTypesDocuments(): Collection
-    {
-        $definitions = [
-            ['libelle' => 'Photo d\'identité', 'formats' => ['JPG', 'PNG'], 'obligatoire' => true, 'protege' => true],
-            ['libelle' => 'Acte de naissance', 'formats' => ['PDF', 'JPG'], 'obligatoire' => true, 'protege' => false],
-            ['libelle' => 'CIP', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
-            ['libelle' => 'NPI', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
-            ['libelle' => 'Certificat médical', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
-            // Shown by the fiche élève wizard's "Documents" step only when
-            // the classe désirée isn't Maternelle 1/2 (Niveau::premiere_scolarisation).
-            ['libelle' => "Bulletin de l'école précédente", 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false, 'requis_si_transfert' => true],
-            ['libelle' => 'Certificat de scolarité antérieure', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false, 'requis_si_transfert' => true],
-        ];
-
-        return collect($definitions)->map(fn (array $data) => TypeDocument::create([
-            'libelle' => $data['libelle'],
-            'description' => null,
-            'formats_acceptes' => $data['formats'],
-            'obligatoire' => $data['obligatoire'],
-            'protege' => $data['protege'],
-            'requis_si_transfert' => $data['requis_si_transfert'] ?? false,
-        ]));
-    }
-
-    /**
-     * Default configurable fields for the fiche apprenant, beyond the fixed
-     * Nom/Prénom/Sexe/Date de naissance columns.
-     *
-     * @return Collection<int, ChampPersonnalise>
-     */
-    private function seedChampsPersonnalises(): Collection
-    {
-        $definitions = [
-            ['libelle' => 'Lieu de naissance', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
-            ['libelle' => 'Nationalité', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
-            ['libelle' => 'Adresse', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
-            ['libelle' => 'Groupe sanguin', 'type' => TypeChampPersonnalise::ListeDeroulante, 'options' => ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], 'obligatoire' => false],
-            ['libelle' => 'Quartier', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => true],
-            ['libelle' => 'Allergies', 'type' => TypeChampPersonnalise::Texte, 'options' => null, 'obligatoire' => false],
-            ['libelle' => 'Situation de handicap', 'type' => TypeChampPersonnalise::ListeDeroulante, 'options' => ['Aucune', 'Motrice', 'Visuelle', 'Auditive', 'Autre'], 'obligatoire' => false],
-        ];
-
-        return collect($definitions)->values()->map(fn (array $data, int $index) => ChampPersonnalise::create([
-            'libelle' => $data['libelle'],
-            'type' => $data['type'],
-            'options' => $data['options'],
-            'obligatoire' => $data['obligatoire'],
-            'ordre' => $index + 1,
-        ]));
-    }
-
-    /**
-     * @return Collection<int, Matiere>
-     */
-    private function seedMatieres(): Collection
-    {
-        $noms = [
-            'Français', 'Mathématiques', 'Sciences de la Vie et de la Terre', 'Histoire-Géographie',
-            'Anglais', 'Éducation Civique et Morale', 'Éducation Physique et Sportive', 'Informatique',
-        ];
-
-        return collect($noms)->map(fn (string $nom) => Matiere::create(['nom' => $nom]));
     }
 
     /**
