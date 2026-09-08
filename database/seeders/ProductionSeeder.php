@@ -9,19 +9,17 @@ use Illuminate\Database\Seeder;
 /**
  * Démarre une instance réelle (pas de démo) avec uniquement les données de
  * référence dont l'application a besoin pour fonctionner : niveaux, année
- * académique, examen, types de documents, matières, champs personnalisés,
- * et les 3 comptes administratifs nominatifs de l'école.
+ * académique, examen, types de documents, matières, champs personnalisés.
  *
- * Contrairement à `DatabaseSeeder`, ne crée aucune donnée fictive (pas
- * d'enseignants, élèves, notes ou bulletins générés aléatoirement) — à
- * lancer via `php artisan db:seed --class=ProductionSeeder --force` pour un
- * vrai lancement en production (voir DatabaseSeeder pour le jeu de données
- * de démo complet, utile en local).
+ * Ne crée aucun compte utilisateur — le compte administrateur principal se
+ * crée séparément via `php artisan admin:creer-principal`, puis sert à
+ * inviter tous les autres comptes (agent de scolarité, direction,
+ * enseignants) depuis l'écran "Gestion des comptes" de l'application.
  *
- * Les 3 comptes créés doivent changer leur mot de passe à la première
- * connexion (`doit_changer_mot_de_passe`) — communiquer le mot de passe
- * initial ("password") à l'école par un canal séparé, puis leur demander de
- * le changer immédiatement.
+ * Ne crée aucune donnée fictive (pas d'élèves, notes ou bulletins générés
+ * aléatoirement) — c'est l'unique seeder de ce projet, à lancer via
+ * `php artisan db:seed --class=ProductionSeeder --force` (ou simplement
+ * `php artisan db:seed --force`, ce seeder étant aussi le seeder par défaut).
  */
 class ProductionSeeder extends Seeder
 {
@@ -37,11 +35,5 @@ class ProductionSeeder extends Seeder
         $this->seedTypesDocuments();
         $this->seedMatieres();
         $this->seedChampsPersonnalises();
-
-        $comptes = $this->seedComptesAdministratifs();
-
-        foreach ($comptes as $compte) {
-            $compte->forceFill(['doit_changer_mot_de_passe' => true])->save();
-        }
     }
 }

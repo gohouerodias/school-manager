@@ -12,14 +12,11 @@ use App\Models\Examen;
 use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\TypeDocument;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Données de référence/structurelles communes à `DatabaseSeeder` (jeu de
- * démo complet) et `ProductionSeeder` (démarrage réel, sans données
- * fictives) — extraites ici pour éviter de dupliquer ces définitions entre
- * les deux seeders.
+ * Données de référence/structurelles nécessaires au démarrage d'une
+ * instance réelle — utilisées par `ProductionSeeder` (voir son docblock).
  */
 trait SeedsReferenceData
 {
@@ -132,30 +129,5 @@ trait SeedsReferenceData
         ];
 
         return collect($noms)->map(fn (string $nom) => Matiere::create(['nom' => $nom]));
-    }
-
-    /**
-     * Les 3 comptes administratifs nominatifs de l'école (pas des comptes
-     * de démo) — utilisés aussi bien par `DatabaseSeeder` que
-     * `ProductionSeeder`.
-     *
-     * @return array{admin: User, agentScolarite: User, direction: User}
-     */
-    public function seedComptesAdministratifs(): array
-    {
-        $admin = User::factory()->administrateur()->create([
-            'name' => 'Admin CSC',
-            'email' => 'admin@cscmadretrinidad.bj',
-        ]);
-        $agentScolarite = User::factory()->agentScolarite()->create([
-            'name' => 'Agent Scolarité',
-            'email' => 'scolarite@cscmadretrinidad.bj',
-        ]);
-        $direction = User::factory()->direction()->create([
-            'name' => 'Direction CSC',
-            'email' => 'direction@cscmadretrinidad.bj',
-        ]);
-
-        return compact('admin', 'agentScolarite', 'direction');
     }
 }
