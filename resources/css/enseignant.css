@@ -197,6 +197,11 @@ th.col-comment-h{min-width:60px;}
 textarea.locked{background:var(--paper);pointer-events:none;opacity:.7;}
 
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green-deep);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s ease;z-index:60;}
+
+.observation-annuelle-input{width:100%;min-height:64px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:'Inter',sans-serif;font-size:12.5px;resize:vertical;}
+.observation-annuelle-input:disabled{background:var(--paper);opacity:.7;}
+.observation-annuelle-status{display:block;font-size:11px;color:var(--green-deep);margin-top:4px;min-height:14px;}
+.observation-annuelle-status.error{color:var(--red);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* Feuille de saisie : une note modifiée/ajoutée marque sa case (dot doré) et
@@ -214,3 +219,28 @@ td.note-cell.dirty input{background:var(--gold-tint);}
 }
 .save-bar.show{transform:translateX(-50%) translateY(0);}
 .save-bar #saveBarCount{font-size:12.5px;font-weight:600;color:var(--ink);padding-left:4px;white-space:nowrap;}
+
+/* Grille d'évaluation de la maternelle (resources/views/enseignant/
+   saisie-domaines.blade.php) : une pastille TS/S/PS (texte, plus de
+   symbole/emoji — le titulaire n'a pas à retenir un code visuel) par
+   domaine plutôt qu'une note chiffrée — voir App\Enums\NiveauQualitatif.
+   Ovale plutôt que cercle parfait pour laisser de la place à "TS"/"PS". */
+td.domaine-cell{padding:8px 6px;}
+.qual-pills{display:flex;gap:4px;justify-content:center;}
+.qual-pill{
+  min-width:30px;height:26px;padding:0 7px;border-radius:13px;border:1.5px solid var(--line);background:var(--paper-raised);
+  cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--ink-muted);display:flex;align-items:center;justify-content:center;
+  transition:border-color .15s ease, background .15s ease, color .15s ease;
+}
+.qual-pill:hover:not(:disabled){border-color:var(--green);color:var(--ink);}
+.qual-pill:disabled{cursor:not-allowed;opacity:.5;}
+.qual-pill.selected[data-valeur="ts"]{background:var(--green-tint);border-color:var(--green);color:var(--green-deep);}
+.qual-pill.selected[data-valeur="s"]{background:var(--blue-tint);border-color:var(--blue);color:var(--blue);}
+.qual-pill.selected[data-valeur="ps"]{background:var(--gold-tint);border-color:var(--gold);color:#8A6717;}
+td.domaine-cell.dirty{position:relative;}
+td.domaine-cell.dirty:after{content:'';position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--gold);}
+
+.qual-pill-legend{
+  display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;border-radius:9px;
+  border:1.5px solid currentColor;font-size:10px;font-weight:700;margin-right:4px;
+}

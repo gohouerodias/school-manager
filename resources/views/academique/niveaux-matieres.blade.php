@@ -148,6 +148,55 @@
     </x-data-table>
 </section>
 
+<section class="config-section">
+    <div class="config-section-head">
+        <h2>Domaines d'évaluation (maternelle)</h2>
+        <button type="button" class="btn primary" data-panel-open="new-domaine">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter un domaine
+        </button>
+    </div>
+    <div class="config-section-note">Liste de référence utilisée par la grille d'évaluation mensuelle de la maternelle (qualitative : TS/S/PS), à la place des matières notées.</div>
+
+    <x-data-table id="domaines-table">
+        <x-slot:head>
+            <th>Nom</th>
+            <th></th>
+        </x-slot:head>
+
+        @forelse ($domaines as $domaine)
+            <tr>
+                <td><b>{{ $domaine->nom }}</b></td>
+                <td>
+                    <div class="row-actions-group">
+                        <button
+                            type="button"
+                            class="row-edit"
+                            title="Modifier"
+                            data-panel-open="edit-domaine"
+                            data-edit-domaine-trigger
+                            data-edit-url="{{ route('academique.domaines.update', $domaine) }}"
+                            data-edit-nom="{{ $domaine->nom }}"
+                        >✎</button>
+                        <form method="POST" action="{{ route('academique.domaines.destroy', $domaine) }}"
+                              data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                              data-confirm-title="Supprimer ce domaine"
+                              data-confirm-message="Supprimer le domaine « {{ $domaine->nom }} » ?">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="row-delete" title="Supprimer">🗑</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="2" class="table-empty-state">Aucun domaine d'évaluation pour l'instant.</td>
+            </tr>
+        @endforelse
+    </x-data-table>
+</section>
+
 {{-- Ajouter un niveau --}}
 <x-slide-panel id="new-niveau" title="Ajouter un niveau">
     <form method="POST" action="{{ route('academique.niveaux.store') }}" id="new-niveau-form">
@@ -272,6 +321,52 @@
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="edit-matiere">Annuler</button>
         <button type="submit" form="edit-matiere-form" class="btn dark">Enregistrer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Ajouter un domaine d'évaluation --}}
+<x-slide-panel id="new-domaine" title="Ajouter un domaine d'évaluation">
+    <form method="POST" action="{{ route('academique.domaines.store') }}" id="new-domaine-form">
+        @csrf
+        <input type="hidden" name="_panel" value="new-domaine">
+
+        @error('nom')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="new-domaine-nom">Nom du domaine</label>
+            <input type="text" id="new-domaine-nom" name="nom" placeholder="Ex : Pré-lecture" value="{{ old('nom') }}" required>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="new-domaine">Annuler</button>
+        <button type="submit" form="new-domaine-form" class="btn dark">Ajouter</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier un domaine d'évaluation --}}
+<x-slide-panel id="edit-domaine" title="Modifier le domaine">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-domaine-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-domaine">
+        <input type="hidden" name="_edit_url" id="edit-domaine-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('nom')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="edit-domaine-nom">Nom du domaine</label>
+            <input type="text" id="edit-domaine-nom" name="nom" value="{{ old('nom') }}" required>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-domaine">Annuler</button>
+        <button type="submit" form="edit-domaine-form" class="btn dark">Enregistrer</button>
     </x-slot:footer>
 </x-slide-panel>
 

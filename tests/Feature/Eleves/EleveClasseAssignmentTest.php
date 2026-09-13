@@ -25,7 +25,7 @@ test('assigning a classe to an élève with no current inscription creates one f
     $response = $this->actingAs($admin)->patch(route('eleves.classe.update', $eleve), ['classe_id' => $classe->id]);
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classe->id]);
+    $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classe->id, 'statut' => 'normal']);
     expect($eleve->inscriptions()->count())->toBe(1);
 });
 

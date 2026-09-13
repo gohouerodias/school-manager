@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Eleves\BulletinAnnuelGenerationController;
 use App\Http\Controllers\Eleves\BulletinGenerationController;
 use App\Http\Controllers\Eleves\ChampPersonnaliseController;
 use App\Http\Controllers\Eleves\DocumentController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Eleves\EleveClasseController;
 use App\Http\Controllers\Eleves\EleveController;
 use App\Http\Controllers\Eleves\EleveExportController;
 use App\Http\Controllers\Eleves\EleveWizardController;
+use App\Http\Controllers\Eleves\InscriptionStatutController;
 use App\Http\Controllers\Eleves\ParametresDossiersController;
 use App\Http\Controllers\Eleves\TuteurController;
 use App\Http\Controllers\Eleves\TypeDocumentController;
@@ -31,6 +33,7 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::patch('{eleve}/classe', [EleveClasseController::class, 'update'])->name('classe.update');
         Route::patch('{eleve}/desarchiver', [EleveController::class, 'desarchiver'])->name('desarchiver');
         Route::get('{eleve}/fiche', [EleveController::class, 'fiche'])->name('fiche');
+        Route::patch('{eleve}/inscriptions/{inscription}/statut', [InscriptionStatutController::class, 'update'])->name('inscriptions.statut.update');
         Route::post('{eleve}/tuteurs', [TuteurController::class, 'store'])->name('tuteurs.store');
         Route::patch('{eleve}/tuteurs/{parentTuteur}', [TuteurController::class, 'update'])->name('tuteurs.update');
         Route::delete('{eleve}/tuteurs/{parentTuteur}', [TuteurController::class, 'destroy'])->name('tuteurs.destroy');
@@ -52,6 +55,19 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
             Route::get('classes/{classe}/examens/{examen}/apercu/{inscription}/telecharger', [BulletinGenerationController::class, 'telechargerIndividuel'])->name('apercu.telecharger');
             Route::get('demandes/{demande}/statut', [BulletinGenerationController::class, 'statut'])->name('statut');
             Route::get('demandes/{demande}/telecharger', [BulletinGenerationController::class, 'telecharger'])->name('telecharger');
+
+            // Bulletin annuel : même écran (index() ci-dessus calcule aussi
+            // $payloadAnnuel/$demandeAnnuel), génération en arrière-plan
+            // distincte — voir App\Jobs\GenererBulletinsAnnuelsClasseJob et
+            // BulletinAnnuelGenerationController.
+            Route::prefix('annuel')->name('annuel.')->group(function () {
+                Route::post('demander', [BulletinAnnuelGenerationController::class, 'demanderGeneration'])->name('demander');
+                Route::post('recalculer', [BulletinAnnuelGenerationController::class, 'recalculer'])->name('recalculer');
+                Route::get('classes/{classe}/apercu/{inscription}', [BulletinAnnuelGenerationController::class, 'apercu'])->name('apercu');
+                Route::get('classes/{classe}/apercu/{inscription}/telecharger', [BulletinAnnuelGenerationController::class, 'telechargerIndividuel'])->name('apercu.telecharger');
+                Route::get('demandes/{demande}/statut', [BulletinAnnuelGenerationController::class, 'statut'])->name('statut');
+                Route::get('demandes/{demande}/telecharger', [BulletinAnnuelGenerationController::class, 'telecharger'])->name('telecharger');
+            });
         });
 
         // Paramètres des dossiers (types de documents + champs du formulaire

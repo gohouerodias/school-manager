@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\DecisionAnnuelle;
+use App\Enums\StatutInscription;
 use App\Models\AnneeAcademique;
 use App\Models\Classe;
 use App\Models\Eleve;
@@ -18,8 +19,11 @@ use Illuminate\Support\Str;
  * doesn't have to manually reassign every élève's classe by hand.
  *
  * Rules:
- * - decision = Admis    -> next niveau (Niveau::ordre + 1) in the new année.
- * - decision = Redouble -> same niveau, in the new année (redo the year).
+ * - decision = Admis    -> next niveau (Niveau::ordre + 1) in the new année ;
+ *   the new Inscription's statut (see App\Enums\StatutInscription) is set to
+ *   Normal.
+ * - decision = Redouble -> same niveau, in the new année (redo the year) ;
+ *   the new Inscription's statut is set to Redoublant.
  * - decision = Exclu, or no decision recorded at all -> left untouched; no
  *   Inscription is created for them and they don't appear in the report —
  *   only élèves who *should* have been promoted but couldn't be resolved
@@ -105,6 +109,12 @@ class PromotionAnnuelleService
                 'eleve_id' => $eleve->id,
                 'classe_id' => $classeCible->id,
                 'date_inscription' => now()->toDateString(),
+                // Bascule automatique du statut d'année (voir
+                // App\Enums\StatutInscription) : admis -> Normal (poursuite
+                // du cursus), redouble -> Redoublant. La direction peut
+                // toujours corriger manuellement depuis la frise du parcours
+                // scolaire si ce n'est pas le bon cas de figure.
+                'statut' => $estAdmis ? StatutInscription::Normal : StatutInscription::Redoublant,
             ]);
 
             if ($estAdmis) {

@@ -9,6 +9,40 @@ use App\Models\Examen;
 use App\Models\Note;
 use App\Models\User;
 
+test('the examens index lists examens from every année académique, active or past', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneePassee = AnneeAcademique::factory()->create(['libelle' => '2025-2026', 'est_active' => false]);
+    $anneeActive = AnneeAcademique::factory()->create(['libelle' => '2026-2027', 'est_active' => true]);
+    $examenPasse = Examen::factory()->create(['annee_academique_id' => $anneePassee->id]);
+    $examenActif = Examen::factory()->create(['annee_academique_id' => $anneeActive->id]);
+
+    $response = $this->actingAs($admin)->get(route('academique.examens.index'));
+
+    $response->assertOk();
+    $response->assertSee($anneePassee->libelle);
+    $response->assertSee($anneeActive->libelle);
+    $response->assertViewHas('examens', function ($examens) use ($examenPasse, $examenActif) {
+        return $examens->pluck('id')->contains($examenPasse->id)
+            && $examens->pluck('id')->contains($examenActif->id);
+    });
+});
+
+test('the examens index can be filtered by année académique', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneePassee = AnneeAcademique::factory()->create(['libelle' => '2025-2026', 'est_active' => false]);
+    $anneeActive = AnneeAcademique::factory()->create(['libelle' => '2026-2027', 'est_active' => true]);
+    $examenPasse = Examen::factory()->create(['annee_academique_id' => $anneePassee->id]);
+    $examenActif = Examen::factory()->create(['annee_academique_id' => $anneeActive->id]);
+
+    $response = $this->actingAs($admin)->get(route('academique.examens.index', ['annee_academique_id' => $anneePassee->id]));
+
+    $response->assertOk();
+    $response->assertViewHas('examens', function ($examens) use ($examenPasse, $examenActif) {
+        return $examens->pluck('id')->contains($examenPasse->id)
+            && ! $examens->pluck('id')->contains($examenActif->id);
+    });
+});
+
 test('an administrateur can create an examen mensuel for the système primaire', function () {
     $admin = User::factory()->administrateur()->create();
     $anneeActive = AnneeAcademique::factory()->create([
@@ -209,4 +243,43 @@ test('a non-administrateur cannot delete an examen', function () {
 
     $response->assertForbidden();
     $this->assertDatabaseHas('examens', ['id' => $examen->id]);
+});
+
+test('the année académique fiche shows its own examens under an Examens tab, with a "Créer" button when it is active', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create(['est_active' => true]);
+    $examen = Examen::factory()->create(['annee_academique_id' => $anneeAcademique->id]);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    $response->assertSee('data-tab-btn="examens"', false);
+    $response->assertSee($examen->date_examen->format('d/m/Y'));
+    $response->assertSee('Créer un examen');
+    $response->assertSee('data-panel-open="new-examen"', false);
+});
+
+test('the année académique fiche hides the "Créer un examen" button when the année is not active, but still lists its examens', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create(['est_active' => false]);
+    $examen = Examen::factory()->create(['annee_academique_id' => $anneeAcademique->id]);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    $response->assertSee($examen->date_examen->format('d/m/Y'));
+    $response->assertDontSee('data-panel-open="new-examen"', false);
+    $response->assertSee("n'est pas active", false);
+});
+
+test('the année académique fiche never shows another année’s examens under its own Examens tab', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $autreAnnee = AnneeAcademique::factory()->create();
+    Examen::factory()->create(['annee_academique_id' => $autreAnnee->id, 'date_examen' => '2030-05-15']);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    $response->assertDontSee('15/05/2030');
 });

@@ -20,6 +20,10 @@
     <div class="alert-error">Aucune année académique active pour l'instant — démarrez une année depuis « Années académiques » avant de créer un examen.</div>
 @endunless
 
+<form method="GET" action="{{ route('academique.examens.index') }}" class="toolbar">
+    <x-filter-select name="annee_academique_id" :selected="$anneeFilter" placeholder="Toutes les années" :options="$annees->pluck('libelle', 'id')" />
+</form>
+
 <x-data-table id="examens-table">
     <x-slot:head>
         <th>Système</th>

@@ -36,6 +36,22 @@ class AffectationEnseignantController extends Controller
                 ->where('annee_academique_id', $anneeAcademique->id)
                 ->delete();
 
+            // Maternelle n'a pas de matières (voir DomaineEvaluation) : une
+            // seule ligne d'affectation, sans matiere_id, suffit à couvrir
+            // toute la classe (tous ses domaines) pour son unique
+            // enseignant — pas de boucle par matière comme pour le primaire.
+            if ($classe->niveau->cycle === CycleNiveau::Maternelle) {
+                AffectationEnseignant::create([
+                    'enseignant_id' => $enseignant->id,
+                    'classe_id' => $classe->id,
+                    'matiere_id' => null,
+                    'annee_academique_id' => $anneeAcademique->id,
+                    'est_professeur_principal' => true,
+                ]);
+
+                return back()->with('toast', "{$enseignant->name} est maintenant l'enseignant de « {$classe->nom} ».");
+            }
+
             foreach ($classe->matieres as $matiere) {
                 AffectationEnseignant::create([
                     'enseignant_id' => $enseignant->id,

@@ -25,8 +25,12 @@ export function initDecisionPassage() {
             }
 
             eleveLabel.textContent = trigger.dataset.editEleve ?? '—';
-            propositionLabel.textContent = `${trigger.dataset.editMoyenne ?? '—'}/20 — ${trigger.dataset.editProposition === 'admis' ? 'Admis(e)' : 'Redouble'}`;
-            decisionSelect.value = trigger.dataset.editDecision || trigger.dataset.editProposition || '';
+            const moyenne = trigger.dataset.editMoyenne ?? '—';
+            const proposition = trigger.dataset.editProposition;
+            propositionLabel.textContent = proposition
+                ? `${moyenne}/20 — ${proposition === 'admis' ? 'Admis(e)' : 'Redouble'}`
+                : `${moyenne}/20 — pas encore calculable (aucun bulletin mensuel validé)`;
+            decisionSelect.value = trigger.dataset.editDecision || proposition || '';
             motifTextarea.value = trigger.dataset.editMotif ?? '';
         });
     });

@@ -52,6 +52,18 @@ class UpdateDecisionPassageRequest extends FormRequest
             }
 
             $moyenne = $inscription->calculerMoyenneAnnuelle();
+
+            // Sans moyenne annuelle calculable (aucun bulletin mensuel encore
+            // Validé), il n'y a pas de proposition automatique à comparer :
+            // n'importe quelle décision manuelle exige alors un motif.
+            if ($moyenne === null) {
+                if (! $this->filled('motif')) {
+                    $validator->errors()->add('motif', 'Un motif est obligatoire : la moyenne annuelle de cet apprenant n’est pas encore calculable (aucun bulletin mensuel validé).');
+                }
+
+                return;
+            }
+
             $seuil = ParametreSysteme::query()->value('seuil_passage') ?? 10;
             $proposition = $moyenne >= $seuil ? DecisionAnnuelle::Admis->value : DecisionAnnuelle::Redouble->value;
 

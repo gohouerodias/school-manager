@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\CycleNiveau;
 use App\Enums\StatutEleve;
+use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\ChampPersonnalise;
 use App\Models\Classe;
 use App\Models\Eleve;
 use App\Models\Inscription;
+use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\User;
 
@@ -424,6 +427,50 @@ test('the fiche endpoint returns identité, parcours and documents data', functi
         'parcours',
         'documents',
     ]);
+});
+
+test('the fiche endpoint exposes the frise du parcours scolaire: statut, titulaire and moyenne per année', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create(['est_active' => true]);
+    $niveau = Niveau::factory()->create(['cycle' => CycleNiveau::Primaire]);
+    $classe = Classe::factory()->create(['niveau_id' => $niveau->id, 'annee_academique_id' => $anneeAcademique->id, 'nom' => 'CM1 A']);
+    $titulaire = User::factory()->enseignant()->create(['name' => 'M. Houngbo']);
+    $matiere = Matiere::factory()->create();
+    AffectationEnseignant::create([
+        'enseignant_id' => $titulaire->id, 'classe_id' => $classe->id, 'matiere_id' => $matiere->id,
+        'annee_academique_id' => $anneeAcademique->id, 'est_professeur_principal' => true,
+    ]);
+    $eleve = Eleve::factory()->create();
+    $inscription = Inscription::factory()->create([
+        'eleve_id' => $eleve->id, 'classe_id' => $classe->id, 'moyenne_annuelle' => 13.2,
+    ]);
+
+    $response = $this->actingAs($admin)->getJson(route('eleves.fiche', $eleve));
+
+    $response->assertOk();
+    $response->assertJsonPath('parcours.0.inscription_id', $inscription->id);
+    $response->assertJsonPath('parcours.0.annee', $anneeAcademique->libelle);
+    $response->assertJsonPath('parcours.0.annee_active', true);
+    $response->assertJsonPath('parcours.0.classe', 'CM1 A');
+    $response->assertJsonPath('parcours.0.titulaire', 'M. Houngbo');
+    $response->assertJsonPath('parcours.0.moyenne_annuelle', 13.2);
+    $response->assertJsonPath('parcours.0.statut', 'normal');
+    $response->assertJsonPath('parcours.0.statut_notable', false);
+    $response->assertJsonPath('parcours.0.statut_update_url', route('eleves.inscriptions.statut.update', ['eleve' => $eleve, 'inscription' => $inscription]));
+});
+
+test('the fiche endpoint never exposes a moyenne annuelle for a maternelle année, even if one is stored', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->create(['cycle' => CycleNiveau::Maternelle]);
+    $classe = Classe::factory()->create(['niveau_id' => $niveau->id, 'annee_academique_id' => $anneeAcademique->id]);
+    $eleve = Eleve::factory()->create();
+    Inscription::factory()->create(['eleve_id' => $eleve->id, 'classe_id' => $classe->id, 'moyenne_annuelle' => 15]);
+
+    $response = $this->actingAs($admin)->getJson(route('eleves.fiche', $eleve));
+
+    $response->assertOk();
+    $response->assertJsonPath('parcours.0.moyenne_annuelle', null);
 });
 
 test('the fiche endpoint exposes a "CSC-{id}" identifiant virtuel, always present even without an official matricule', function () {

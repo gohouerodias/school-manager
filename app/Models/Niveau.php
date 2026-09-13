@@ -72,4 +72,28 @@ class Niveau extends Model
     {
         return $this->matieres()->wherePivot('annee_academique_id', $anneeAcademique->id)->get();
     }
+
+    /**
+     * Domaines d'évaluation de maternelle — équivalent de matieres(), sans
+     * coefficient (voir NiveauDomaine).
+     *
+     * @return BelongsToMany<DomaineEvaluation, $this>
+     */
+    public function domaines(): BelongsToMany
+    {
+        return $this->belongsToMany(DomaineEvaluation::class, 'niveau_domaine')
+            ->using(NiveauDomaine::class)
+            ->withPivot(['annee_academique_id'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Équivalent de matieresPour(), pour les domaines d'évaluation.
+     *
+     * @return Collection<int, DomaineEvaluation>
+     */
+    public function domainesPour(AnneeAcademique $anneeAcademique): Collection
+    {
+        return $this->domaines()->wherePivot('annee_academique_id', $anneeAcademique->id)->get();
+    }
 }

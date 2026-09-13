@@ -152,7 +152,7 @@
         <div id="fiche-parents-list"></div>
     </div>
     <div class="fiche-tab-content" data-fiche-content="parcours" style="display:none;">
-        <div id="fiche-parcours-list"></div>
+        <div id="fiche-parcours-list" class="frise"></div>
     </div>
     <div class="fiche-tab-content" data-fiche-content="documents" style="display:none;">
         <div class="fiche-actions-row">
@@ -275,6 +275,40 @@
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="edit-tuteur">Annuler</button>
         <button type="submit" form="edit-tuteur-form" class="btn dark">Enregistrer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier le statut d'une année du parcours scolaire (depuis la frise) --}}
+<x-slide-panel id="edit-statut-parcours" title="Modifier le statut de cette année">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-statut-parcours-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-statut-parcours">
+        <input type="hidden" name="_edit_url" id="edit-statut-parcours-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('statut')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label>Année</label>
+            <div class="field-static" id="edit-statut-parcours-annee">—</div>
+        </div>
+
+        <div class="field">
+            <label for="edit-statut-parcours-statut">Statut de cette année</label>
+            <select class="role-select" id="edit-statut-parcours-statut" name="statut" required>
+                @foreach (\App\Enums\StatutInscription::cases() as $statut)
+                    <option value="{{ $statut->value }}" @selected(old('statut') === $statut->value)>{{ $statut->label() }}</option>
+                @endforeach
+            </select>
+            <div class="hint">« Normal » et « Redoublant » sont normalement fixés automatiquement au démarrage de l'année suivante — ne les corrigez ici que pour une erreur avérée.</div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-statut-parcours">Annuler</button>
+        <button type="submit" form="edit-statut-parcours-form" class="btn dark">Enregistrer</button>
     </x-slot:footer>
 </x-slide-panel>
 

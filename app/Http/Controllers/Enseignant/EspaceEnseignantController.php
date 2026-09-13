@@ -8,15 +8,20 @@ use App\Exports\NotesClasseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBulletinMensuelRequest;
 use App\Http\Requests\StoreCommentaireMatiereRequest;
+use App\Http\Requests\StoreDomainesBatchRequest;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\StoreNotesBatchRequest;
+use App\Http\Requests\StoreObservationAnnuelleRequest;
 use App\Http\Requests\ValiderBulletinRequest;
 use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Bulletin;
 use App\Models\Classe;
+use App\Models\ClasseDomaine;
 use App\Models\ClasseMatiere;
 use App\Models\CommentaireMatiere;
+use App\Models\DomaineEvaluation;
+use App\Models\EvaluationDomaine;
 use App\Models\Examen;
 use App\Models\Inscription;
 use App\Models\Note;
@@ -59,19 +64,28 @@ class EspaceEnseignantController extends Controller
                 ->with(['niveau', 'inscriptions'])
                 ->get()
                 ->map(function (Classe $classe) use ($user, $anneeActive) {
-                    $matieres = $classe->matieresPourEnseignant($user, $anneeActive);
+                    $estMaternelle = $classe->estMaternelle();
+                    $matieres = $estMaternelle ? collect() : $classe->matieresPourEnseignant($user, $anneeActive);
                     $titulaire = $classe->titulairePour($anneeActive);
                     $examen = $this->examensPour($classe, $anneeActive)->first();
 
-                    $classeMatiereIds = ClasseMatiere::query()
-                        ->where('classe_id', $classe->id)
-                        ->whereIn('matiere_id', $matieres->pluck('id'))
-                        ->pluck('id');
+                    if ($estMaternelle) {
+                        $domaineIds = ClasseDomaine::query()->where('classe_id', $classe->id)->pluck('id');
+                        $totalCellules = $classe->inscriptions->count() * $domaineIds->count();
+                        $remplies = $examen
+                            ? EvaluationDomaine::query()->whereIn('classe_domaine_id', $domaineIds)->where('examen_id', $examen->id)->count()
+                            : 0;
+                    } else {
+                        $classeMatiereIds = ClasseMatiere::query()
+                            ->where('classe_id', $classe->id)
+                            ->whereIn('matiere_id', $matieres->pluck('id'))
+                            ->pluck('id');
 
-                    $totalCellules = $classe->inscriptions->count() * $matieres->count();
-                    $remplies = $examen
-                        ? Note::query()->whereIn('classe_matiere_id', $classeMatiereIds)->where('examen_id', $examen->id)->count()
-                        : 0;
+                        $totalCellules = $classe->inscriptions->count() * $matieres->count();
+                        $remplies = $examen
+                            ? Note::query()->whereIn('classe_matiere_id', $classeMatiereIds)->where('examen_id', $examen->id)->count()
+                            : 0;
+                    }
 
                     return [
                         'classe' => $classe,
@@ -99,6 +113,10 @@ class EspaceEnseignantController extends Controller
 
         abort_unless($anneeActive && $classe->annee_academique_id === $anneeActive->id, 404);
         $this->assureAffectation($classe, $user, null, $anneeActive);
+
+        if ($classe->estMaternelle()) {
+            return $this->showMaternelle($request, $classe, $anneeActive);
+        }
 
         $matieresEnseignant = $classe->matieresPourEnseignant($user, $anneeActive);
         $titulaire = $classe->titulairePour($anneeActive);
@@ -130,7 +148,121 @@ class EspaceEnseignantController extends Controller
             'examenActif' => $examenActif,
             'students' => $studentsPayload,
             'saisieFermee' => $this->saisieEstFermee($examenActif),
+            'observationsAnnuelles' => $this->observationsAnnuellesPayload($classe),
         ]);
+    }
+
+    /**
+     * Grille d'évaluation qualitative de la maternelle (voir
+     * App\Enums\NiveauQualitatif) — équivalent maternelle de show(), branché
+     * depuis celui-ci. Une classe de maternelle n'a qu'un seul enseignant
+     * (voir Academique\AffectationEnseignantController), toujours titulaire,
+     * qui voit et modifie donc tous les domaines de la classe (pas de
+     * découpage par matière/affectation comme au primaire/collège).
+     */
+    private function showMaternelle(Request $request, Classe $classe, AnneeAcademique $anneeActive): View
+    {
+        $user = $request->user();
+        $titulaire = $classe->titulairePour($anneeActive);
+        $isTitulaire = $titulaire?->is($user) ?? false;
+
+        $domaines = $classe->domaines()->orderBy('nom')->get();
+
+        $examens = $this->examensPour($classe, $anneeActive);
+        $examenId = (int) $request->query('examen_id', (string) $examens->first()?->id);
+        $examenActif = $examens->firstWhere('id', $examenId) ?? $examens->first();
+
+        $studentsPayload = $this->studentsPayloadPourDomaines($classe, $domaines, $examenActif);
+
+        return view('enseignant.saisie-domaines', [
+            'classe' => $classe,
+            'domaines' => $domaines,
+            'titulaire' => $titulaire,
+            'isTitulaire' => $isTitulaire,
+            'examens' => $examens,
+            'examenActif' => $examenActif,
+            'students' => $studentsPayload,
+            'saisieFermee' => $this->saisieEstFermee($examenActif),
+            'observationsAnnuelles' => $this->observationsAnnuellesPayload($classe),
+        ]);
+    }
+
+    /**
+     * Équivalent maternelle de studentsPayloadPour() : les évaluations
+     * qualitatives (valeur + observation) de chaque domaine, à la place des
+     * notes chiffrées par matière.
+     *
+     * @param  Collection<int, DomaineEvaluation>  $domaines
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function studentsPayloadPourDomaines(Classe $classe, Collection $domaines, ?Examen $examenActif): \Illuminate\Support\Collection
+    {
+        $classeDomaines = ClasseDomaine::query()
+            ->where('classe_id', $classe->id)
+            ->whereIn('domaine_evaluation_id', $domaines->pluck('id'))
+            ->get()
+            ->keyBy('domaine_evaluation_id');
+
+        $inscriptions = $classe->inscriptions()->with('eleve')->get()
+            ->sortBy(fn (Inscription $i) => $i->eleve->nom.$i->eleve->prenom)
+            ->values();
+
+        $evaluations = collect();
+        $bulletins = collect();
+
+        if ($examenActif) {
+            $classeDomaineIds = $classeDomaines->pluck('id');
+
+            $evaluations = EvaluationDomaine::query()
+                ->whereIn('classe_domaine_id', $classeDomaineIds)
+                ->where('examen_id', $examenActif->id)
+                ->get()
+                ->groupBy(fn (EvaluationDomaine $e) => "{$e->eleve_id}-{$e->classe_domaine_id}");
+
+            $bulletins = Bulletin::query()
+                ->whereIn('inscription_id', $inscriptions->pluck('id'))
+                ->where('examen_id', $examenActif->id)
+                ->get()
+                ->keyBy('inscription_id');
+        }
+
+        return $inscriptions->map(function (Inscription $inscription) use ($domaines, $classeDomaines, $evaluations, $bulletins) {
+            $eleve = $inscription->eleve;
+            $valeurs = [];
+            $observations = [];
+
+            foreach ($domaines as $domaine) {
+                $classeDomaine = $classeDomaines->get($domaine->id);
+                $cle = "{$eleve->id}-{$classeDomaine?->id}";
+                $evaluation = $evaluations->get($cle)?->first();
+
+                $valeurs[$domaine->id] = $evaluation?->valeur?->value;
+                $observations[$domaine->id] = $evaluation?->observation;
+            }
+
+            $bulletin = $bulletins->get($inscription->id);
+
+            return [
+                'inscriptionId' => $inscription->id,
+                'eleveId' => $eleve->id,
+                'nom' => $eleve->nom,
+                'prenom' => $eleve->prenom,
+                'matricule' => $eleve->matricule,
+                'valeurs' => $valeurs,
+                'observations' => $observations,
+                'bulletin' => $bulletin ? [
+                    'resultat' => $bulletin->resultat_global?->value,
+                    'appreciation' => $bulletin->appreciation,
+                    'assiduite' => $bulletin->assiduite,
+                    'conduite' => $bulletin->conduite,
+                    'defautsMajeurs' => $bulletin->defauts_majeurs,
+                    'qualites' => $bulletin->qualites,
+                    'decisionPedagogique' => $bulletin->decision_pedagogique,
+                    'statut' => $bulletin->statut->value,
+                    'valideParNom' => $bulletin->valide_par_id ? $bulletin->valideParUtilisateur?->name : null,
+                ] : null,
+            ];
+        });
     }
 
     /**
@@ -374,6 +506,76 @@ class EspaceEnseignantController extends Controller
         return response()->json(['ok' => true, 'enregistrees' => $enregistrees]);
     }
 
+    /**
+     * Équivalent maternelle de saveNotesBatch() : enregistre en un seul
+     * appel toutes les évaluations de domaine (valeur qualitative +
+     * observation) modifiées depuis la dernière sauvegarde. Un enseignant de
+     * maternelle est toujours titulaire de sa classe unique (voir
+     * Academique\AffectationEnseignantController), donc affecté = autorisé à
+     * modifier tous ses domaines — pas de découpage par matière à vérifier
+     * ici, contrairement à saveNotesBatch().
+     */
+    public function saveDomainesBatch(StoreDomainesBatchRequest $request, Classe $classe): JsonResponse
+    {
+        $user = $request->user();
+        $anneeActive = AnneeAcademique::query()->where('est_active', true)->first();
+        abort_unless($anneeActive && $classe->annee_academique_id === $anneeActive->id, 404);
+        $this->assureAffectation($classe, $user, null, $anneeActive);
+
+        $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
+
+        if ($this->saisieEstFermee($examen)) {
+            return response()->json(['message' => 'Le délai de saisie des évaluations pour cet examen est dépassé.'], 422);
+        }
+
+        $classeDomainesParDomaine = ClasseDomaine::query()
+            ->where('classe_id', $classe->id)
+            ->get()
+            ->keyBy('domaine_evaluation_id');
+
+        $enregistrees = 0;
+
+        foreach ($request->validated('evaluations') as $entree) {
+            $classeDomaine = $classeDomainesParDomaine->get((int) $entree['domaine_evaluation_id']);
+
+            if (! $classeDomaine) {
+                continue;
+            }
+
+            $eleveId = (int) $entree['eleve_id'];
+            $inscription = Inscription::query()->where('classe_id', $classe->id)->where('eleve_id', $eleveId)->first();
+
+            if (! $inscription || $this->bulletinEstValide($inscription, $examen)) {
+                continue;
+            }
+
+            $valeur = $entree['valeur'] ?? null;
+            $observation = $entree['observation'] ?? null;
+
+            if ($valeur === null && ! $observation) {
+                EvaluationDomaine::query()
+                    ->where('eleve_id', $eleveId)
+                    ->where('classe_domaine_id', $classeDomaine->id)
+                    ->where('examen_id', $examen->id)
+                    ->delete();
+            } else {
+                EvaluationDomaine::query()->updateOrCreate(
+                    ['eleve_id' => $eleveId, 'classe_domaine_id' => $classeDomaine->id, 'examen_id' => $examen->id],
+                    [
+                        'enseignant_id' => $user->id,
+                        'valeur' => $valeur,
+                        'observation' => $observation,
+                        'date_saisie' => now()->toDateString(),
+                    ]
+                );
+            }
+
+            $enregistrees++;
+        }
+
+        return response()->json(['ok' => true, 'enregistrees' => $enregistrees]);
+    }
+
     public function saveCommentaireMatiere(StoreCommentaireMatiereRequest $request, Classe $classe): JsonResponse
     {
         $user = $request->user();
@@ -448,6 +650,31 @@ class EspaceEnseignantController extends Controller
     }
 
     /**
+     * Observation annuelle du titulaire pour le bulletin de fin d'année
+     * (voir Inscription::observation_annuelle et eleves/bulletins/
+     * _papier_annuel.blade.php) — indépendante de tout examen mensuel, et
+     * délibérément sans verrou (contrairement au commentaire mensuel/US C.2) :
+     * il n'existe pas de "validation" du bulletin annuel dans l'app, donc
+     * rien ne la fige jamais. Réservée au titulaire, comme saveBulletin().
+     */
+    public function saveObservationAnnuelle(StoreObservationAnnuelleRequest $request, Classe $classe): JsonResponse
+    {
+        $user = $request->user();
+        $anneeActive = AnneeAcademique::query()->where('est_active', true)->first();
+        abort_unless($anneeActive && $classe->annee_academique_id === $anneeActive->id, 404);
+
+        $titulaire = $classe->titulairePour($anneeActive);
+        abort_unless($titulaire && $titulaire->is($user), 403, "Seul le titulaire de la classe peut modifier l'observation annuelle.");
+
+        $eleveId = (int) $request->validated('eleve_id');
+        $inscription = Inscription::query()->where('classe_id', $classe->id)->where('eleve_id', $eleveId)->firstOrFail();
+
+        $inscription->update(['observation_annuelle' => $request->validated('observation')]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * "Valider et signer le bulletin" (US C.2) — verrouille les notes et
      * commentaires de la période pour tous les enseignants jusqu'à une
      * éventuelle dévalidation. Réservé au titulaire ; nécessite qu'un
@@ -476,7 +703,19 @@ class EspaceEnseignantController extends Controller
             return response()->json(['message' => "Impossible de valider : toutes les matières du programme n'ont pas encore été notées pour cet apprenant ce mois-ci."], 422);
         }
 
+        // moyenne_generale doit être calculée ICI, pas seulement lors d'une
+        // éventuelle génération groupée ultérieure (voir
+        // BulletinGenerationService::genererPourClasse()) : sinon un bulletin
+        // resterait Validé avec moyenne_generale=null tant que l'admin n'a
+        // pas lancé "Générer les bulletins" pour ce mois — ce qui cassait
+        // silencieusement Inscription::calculerMoyenneAnnuelle() (moyenne des
+        // bulletins.moyenne_generale déjà Validés) et donc toute la moyenne
+        // annuelle / les Décisions de passage, alors même que le bulletin
+        // était bien signé. notesCompletesPour() vient d'être vérifié
+        // ci-dessus, donc calculerMoyenne() ne peut pas retomber sur son cas
+        // "aucune note" (totalCoef à 0).
         $bulletin->update([
+            'moyenne_generale' => $bulletin->calculerMoyenne(),
             'statut' => StatutBulletin::Valide,
             'valide_par_id' => $user->id,
             'valide_at' => now(),
@@ -545,6 +784,10 @@ class EspaceEnseignantController extends Controller
      */
     private function notesCompletesPour(Classe $classe, int $eleveId, Examen $examen): bool
     {
+        if ($classe->estMaternelle()) {
+            return $classe->domainesCompletesPour($eleveId, $examen);
+        }
+
         $classeMatiereIds = ClasseMatiere::query()->where('classe_id', $classe->id)->pluck('id');
 
         if ($classeMatiereIds->isEmpty()) {
@@ -590,5 +833,29 @@ class EspaceEnseignantController extends Controller
     private function examensPour(Classe $classe, AnneeAcademique $anneeActive): Collection
     {
         return Examen::pourClasse($classe);
+    }
+
+    /**
+     * Alimente l'onglet "Bulletin annuel" de l'espace enseignant (voir
+     * saveObservationAnnuelle() ci-dessus) — un apprenant, une observation,
+     * indépendamment de tout examen mensuel : contrairement à
+     * studentsPayloadPour()/studentsPayloadPourDomaines(), ne dépend donc pas
+     * de $examenActif, et sert donc à l'identique pour le primaire/collège
+     * (show()) comme pour la maternelle (showMaternelle()).
+     *
+     * @return \Illuminate\Support\Collection<int, array{eleveId: int, nom: string, prenom: string, matricule: string, observation: ?string}>
+     */
+    private function observationsAnnuellesPayload(Classe $classe): \Illuminate\Support\Collection
+    {
+        return $classe->inscriptions()->with('eleve')->get()
+            ->sortBy(fn (Inscription $i) => $i->eleve->nom.$i->eleve->prenom)
+            ->map(fn (Inscription $i) => [
+                'eleveId' => $i->eleve_id,
+                'nom' => $i->eleve->nom,
+                'prenom' => $i->eleve->prenom,
+                'matricule' => $i->eleve->matricule,
+                'observation' => $i->observation_annuelle,
+            ])
+            ->values();
     }
 }

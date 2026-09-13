@@ -51,6 +51,7 @@ export function initEleveTuteurDocument() {
     }
 
     initEditTuteurPanel();
+    initEditStatutParcoursPanel();
 
     if (fichePanel && documentForm) {
         const documentActionHidden = document.getElementById('add-document-action');
@@ -147,6 +148,47 @@ function initEditTuteurPanel() {
 
         document.querySelector('[data-panel="edit-tuteur"]')?.classList.add('show');
         document.querySelector('[data-panel-overlay="edit-tuteur"]')?.classList.add('show');
+    });
+}
+
+/**
+ * "Modifier le statut" panel, opened from a pencil button on a frise item
+ * (see eleve-fiche.js's editStatutTriggerHTML()). Unlike the tuteur/document
+ * panels above, no URL template is needed: each frise item already carries
+ * its own ready-to-use `data-edit-url` (the backend returns one
+ * `statut_update_url` per Inscription — see Eleves\EleveController::fiche()).
+ */
+function initEditStatutParcoursPanel() {
+    const parcoursList = document.getElementById('fiche-parcours-list');
+    const form = document.getElementById('edit-statut-parcours-form');
+    if (!parcoursList || !form) {
+        return;
+    }
+
+    const editUrlHidden = document.getElementById('edit-statut-parcours-edit-url');
+    const anneeLabel = document.getElementById('edit-statut-parcours-annee');
+    const statutSelect = document.getElementById('edit-statut-parcours-statut');
+
+    parcoursList.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-edit-statut-trigger]');
+        if (!trigger) {
+            return;
+        }
+
+        form.action = trigger.dataset.editUrl;
+        if (editUrlHidden) {
+            editUrlHidden.value = trigger.dataset.editUrl;
+        }
+        if (anneeLabel) {
+            anneeLabel.textContent = trigger.dataset.editAnnee ?? '—';
+        }
+        if (statutSelect) {
+            statutSelect.value = trigger.dataset.editStatut ?? 'normal';
+            refreshDropdownSelect(statutSelect);
+        }
+
+        document.querySelector('[data-panel="edit-statut-parcours"]')?.classList.add('show');
+        document.querySelector('[data-panel-overlay="edit-statut-parcours"]')?.classList.add('show');
     });
 }
 

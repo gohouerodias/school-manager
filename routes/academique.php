@@ -4,9 +4,11 @@ use App\Http\Controllers\Academique\AffectationEnseignantController;
 use App\Http\Controllers\Academique\AnneeAcademiqueController;
 use App\Http\Controllers\Academique\ClasseController;
 use App\Http\Controllers\Academique\DecisionPassageController;
+use App\Http\Controllers\Academique\DomaineEvaluationController;
 use App\Http\Controllers\Academique\ExamenController;
 use App\Http\Controllers\Academique\MatiereController;
 use App\Http\Controllers\Academique\NiveauController;
+use App\Http\Controllers\Academique\NiveauDomaineController;
 use App\Http\Controllers\Academique\NiveauMatiereController;
 use App\Http\Controllers\Academique\ParametreAcademiqueController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +33,10 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::patch('matieres/{matiere}', [MatiereController::class, 'update'])->name('matieres.update');
         Route::delete('matieres/{matiere}', [MatiereController::class, 'destroy'])->name('matieres.destroy');
 
+        Route::post('domaines', [DomaineEvaluationController::class, 'store'])->name('domaines.store');
+        Route::patch('domaines/{domaineEvaluation}', [DomaineEvaluationController::class, 'update'])->name('domaines.update');
+        Route::delete('domaines/{domaineEvaluation}', [DomaineEvaluationController::class, 'destroy'])->name('domaines.destroy');
+
         Route::get('annees', [AnneeAcademiqueController::class, 'index'])->name('annees.index');
         Route::post('annees', [AnneeAcademiqueController::class, 'store'])->name('annees.store');
         Route::get('annees/{anneeAcademique}', [AnneeAcademiqueController::class, 'show'])->name('annees.show');
@@ -40,6 +46,9 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::post('annees/{anneeAcademique}/niveau-matieres', [NiveauMatiereController::class, 'store'])->name('annees.niveau-matieres.store');
         Route::patch('niveau-matieres/{niveauMatiere}', [NiveauMatiereController::class, 'update'])->name('niveau-matieres.update');
         Route::delete('niveau-matieres/{niveauMatiere}', [NiveauMatiereController::class, 'destroy'])->name('niveau-matieres.destroy');
+
+        Route::post('annees/{anneeAcademique}/niveau-domaines', [NiveauDomaineController::class, 'store'])->name('annees.niveau-domaines.store');
+        Route::delete('niveau-domaines/{niveauDomaine}', [NiveauDomaineController::class, 'destroy'])->name('niveau-domaines.destroy');
 
         Route::post('annees/{anneeAcademique}/classes', [ClasseController::class, 'store'])->name('annees.classes.store');
         Route::patch('classes/{classe}', [ClasseController::class, 'update'])->name('classes.update');
@@ -51,6 +60,7 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::delete('classes/{classe}/enseignants/{enseignant}', [AffectationEnseignantController::class, 'destroyEnseignant'])->name('classes.enseignants.destroy');
 
         Route::get('annees/{anneeAcademique}/decisions', [DecisionPassageController::class, 'index'])->name('annees.decisions.index');
+        Route::post('annees/{anneeAcademique}/decisions/recalculer', [DecisionPassageController::class, 'recalculer'])->name('annees.decisions.recalculer');
         Route::patch('inscriptions/{inscription}/decision', [DecisionPassageController::class, 'update'])->name('inscriptions.decision.update');
 
         Route::get('examens', [ExamenController::class, 'index'])->name('examens.index');

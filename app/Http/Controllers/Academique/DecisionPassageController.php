@@ -9,6 +9,7 @@ use App\Models\AnneeAcademique;
 use App\Models\Inscription;
 use App\Models\JournalAction;
 use App\Models\ParametreSysteme;
+use App\Services\BulletinGenerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -38,7 +39,9 @@ class DecisionPassageController extends Controller
                 return [
                     'inscription' => $inscription,
                     'moyenne' => $moyenne,
-                    'proposition' => $moyenne >= $seuil ? DecisionAnnuelle::Admis : DecisionAnnuelle::Redouble,
+                    'proposition' => $moyenne !== null
+                        ? ($moyenne >= $seuil ? DecisionAnnuelle::Admis : DecisionAnnuelle::Redouble)
+                        : null,
                 ];
             })
             ->values();
@@ -73,15 +76,32 @@ class DecisionPassageController extends Controller
             'action' => 'decision_passage',
             'date_heure' => now(),
             'details' => sprintf(
-                'Décision de passage de %s : %s → %s (moyenne annuelle %.2f/20)%s',
+                'Décision de passage de %s : %s → %s (moyenne annuelle %s)%s',
                 $inscription->eleve->nomComplet(),
                 $decisionPrecedente?->label() ?? 'aucune',
                 $inscription->decision->label(),
-                $moyenne,
+                $moyenne !== null ? number_format($moyenne, 2).'/20' : 'non calculable',
                 $request->validated('motif') ? ' — motif : '.$request->validated('motif') : ''
             ),
         ]);
 
         return back()->with('toast', "Décision enregistrée pour {$inscription->eleve->nomComplet()}.");
+    }
+
+    /**
+     * Recalcule et persiste, pour chaque inscription de cette année académique
+     * (hors maternelle — pas de moyenne chiffrée), la moyenne annuelle
+     * générale (inscriptions.moyenne_annuelle) et la moyenne annuelle de
+     * chacune de ses matières (voir MoyenneAnnuelleMatiere) — jusqu'ici,
+     * moyenne_annuelle ne se renseignait qu'un apprenant à la fois, en
+     * enregistrant sa décision de passage : rien ne le mettait à jour en
+     * masse, d'où des moyennes vides/à zéro tant qu'aucune décision n'avait
+     * été prise pour chacun.
+     */
+    public function recalculer(AnneeAcademique $anneeAcademique, BulletinGenerationService $service): RedirectResponse
+    {
+        $count = $service->recalculerMoyennesAnnuellesPourAnnee($anneeAcademique);
+
+        return back()->with('toast', "Moyennes annuelles recalculées pour {$count} apprenant(s).");
     }
 }

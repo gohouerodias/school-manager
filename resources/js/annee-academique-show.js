@@ -1,3 +1,5 @@
+import { refreshDropdownSelect } from './dropdown-select';
+
 /**
  * Année académique setup page (resources/views/academique/annees/show.blade.php):
  * every bit of client-side cascading/filtering + pending-list/edit-panel
@@ -39,6 +41,7 @@ function initGererAffectationPanel() {
     const titulaireForm = document.getElementById('gerer-affectation-titulaire-form');
     const titulaireSelect = document.getElementById('gerer-affectation-titulaire-select');
     const titulaireSection = document.getElementById('gerer-affectation-titulaire-section');
+    const titulaireEntiereNote = document.getElementById('gerer-affectation-titulaire-entiere-note');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
     const matieresMap = JSON.parse(document.getElementById('gerer-affectation-matieres-map')?.textContent || '{}');
     const oldMatiereIds = JSON.parse(document.getElementById('gerer-affectation-old-matiere-ids')?.textContent || '[]');
@@ -74,7 +77,13 @@ function initGererAffectationPanel() {
         if (estClasseEntiere) {
             if (matieresField) matieresField.style.display = 'none';
             if (classeEntiereHint) classeEntiereHint.style.display = 'block';
-            titulaireSection.style.display = 'none';
+            // Un seul enseignant possible pour toute la classe : pas de
+            // titulaire à choisir parmi plusieurs, mais on explique pourquoi
+            // ce menu n'apparaît pas plutôt que de faire disparaître toute
+            // la section « Titulaire de la classe » sans explication.
+            titulaireSection.style.display = 'block';
+            titulaireEntiereNote.style.display = 'block';
+            titulaireForm.style.display = 'none';
             return;
         }
 
@@ -88,8 +97,17 @@ function initGererAffectationPanel() {
             </label>`).join('');
 
         titulaireSection.style.display = enseignants.length ? 'block' : 'none';
+        titulaireEntiereNote.style.display = 'none';
+        titulaireForm.style.display = 'block';
         titulaireForm.action = trigger.dataset.titulaireUrl;
         titulaireSelect.innerHTML = enseignants.map((e) => `<option value="${e.id}" ${e.estTitulaire ? 'selected' : ''}>${escapeHTML(e.nom)}</option>`).join('');
+        // titulaireSelect is a .role-select enhanced by dropdown-select.js:
+        // its floating option menu was built once (empty) at page load and
+        // never re-reads the native <select>'s options on its own — without
+        // this call the custom dropdown stays permanently empty even though
+        // the underlying <select> now has the classe's enseignants (see
+        // dropdown-select.js's refreshDropdownSelect()).
+        refreshDropdownSelect(titulaireSelect);
     }
 
     document.querySelectorAll('[data-gerer-affectation-trigger]').forEach((trigger) => {

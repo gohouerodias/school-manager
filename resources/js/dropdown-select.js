@@ -72,17 +72,26 @@ export function enhanceDropdownSelectsIn(container = document) {
 
 /**
  * Re-syncs a single enhanced select's trigger label + selected-option
- * highlighting with its current `.value`. Setting `select.value = ...`
- * from JS (e.g. prefilling an edit panel from a clicked row's data-*
- * attributes) does not fire a `change` event on its own, so callers that
- * do this for a select.role-select/.filter-select should call this right
- * after — see eleve-edit.js / eleve-tuteur-document.js.
+ * highlighting with its current `.value`, and rebuilds its floating option
+ * list from the select's current `<option>`s. Setting `select.value = ...`
+ * (or replacing its `.innerHTML` altogether, e.g. repopulating the
+ * "Titulaire" select each time the "Gérer l'affectation" panel opens — see
+ * annee-academique-show.js) doesn't fire a `change` event on its own and
+ * doesn't touch the enhanced widget's own menu (built once at enhance time
+ * and kept in `<body>`, decoupled from the native select — see
+ * enhanceSelect()), so callers that mutate a select.role-select/.filter-select
+ * this way should call this right after — see eleve-edit.js /
+ * eleve-tuteur-document.js / annee-academique-show.js.
  */
 export function refreshDropdownSelect(select) {
     const wrap = select?.closest('.dropdown-select');
-    if (wrap) {
-        syncTrigger(wrap);
+    if (!wrap) {
+        return;
     }
+    if (wrap.__menu) {
+        buildOptions(select, wrap.__menu);
+    }
+    syncTrigger(wrap);
 }
 
 function enhanceSelect(select) {

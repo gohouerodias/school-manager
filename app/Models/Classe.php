@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CycleNiveau;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +45,31 @@ class Classe extends Model
             ->using(ClasseMatiere::class)
             ->withPivot('coefficient')
             ->withTimestamps();
+    }
+
+    /**
+     * Domaines d'évaluation actifs pour cette classe (maternelle uniquement)
+     * — équivalent de matieres(), sans coefficient. Voir ClasseDomaine et
+     * ClasseController::synchroniserDomainesDepuisNiveau().
+     *
+     * @return BelongsToMany<DomaineEvaluation, $this>
+     */
+    public function domaines(): BelongsToMany
+    {
+        return $this->belongsToMany(DomaineEvaluation::class, 'classe_domaine')
+            ->using(ClasseDomaine::class)
+            ->withTimestamps();
+    }
+
+    /**
+     * Vrai si cette classe relève du cycle Maternelle (voir CycleNiveau) —
+     * pilote le choix entre la feuille de saisie numérique (matières/notes)
+     * et la grille qualitative (domaines/évaluations) côté espace
+     * enseignant, ainsi que le gabarit de bulletin utilisé.
+     */
+    public function estMaternelle(): bool
+    {
+        return $this->niveau->cycle === CycleNiveau::Maternelle;
     }
 
     /**
@@ -125,5 +151,32 @@ class Classe extends Model
             ->count();
 
         return $notesRenseignees === $classeMatiereIds->count();
+    }
+
+    /**
+     * Équivalent maternelle de notesCompletesPour() : vrai si $eleveId a une
+     * EvaluationDomaine pour chacun des domaines d'évaluation de cette
+     * classe pour cet examen.
+     */
+    public function domainesCompletesPour(int $eleveId, Examen $examen): bool
+    {
+        $classeDomaineIds = ClasseDomaine::query()->where('classe_id', $this->id)->pluck('id');
+
+        if ($classeDomaineIds->isEmpty()) {
+            return false;
+        }
+
+        // whereNotNull('valeur') : une évaluation qui ne porte qu'une
+        // observation (sans appréciation TS/S/PS — voir saveDomainesBatch(),
+        // qui accepte cette combinaison puisque l'observation seule est
+        // facultative) ne compte pas comme "renseignée".
+        $evaluationsRenseignees = EvaluationDomaine::query()
+            ->where('eleve_id', $eleveId)
+            ->where('examen_id', $examen->id)
+            ->whereIn('classe_domaine_id', $classeDomaineIds)
+            ->whereNotNull('valeur')
+            ->count();
+
+        return $evaluationsRenseignees === $classeDomaineIds->count();
     }
 }

@@ -8,6 +8,13 @@
     :subtitle="'Moyenne annuelle = moyenne des bulletins mensuels déjà validés. Seuil de passage actuel : '.number_format($seuil, 2).'/20 (voir Niveaux & matières → Paramètres académiques).'"
 >
     <x-slot:actions>
+        <form method="POST" action="{{ route('academique.annees.decisions.recalculer', $anneeAcademique) }}"
+              data-confirm-submit data-confirm-label="Calculer"
+              data-confirm-title="Calculer les moyennes annuelles"
+              data-confirm-message="Recalcule et enregistre la moyenne annuelle générale et par matière de chaque apprenant de cette année, à partir des bulletins mensuels déjà validés. Continuer ?">
+            @csrf
+            <button type="submit" class="btn ghost">🔄 Calculer les moyennes annuelles</button>
+        </form>
         <a href="{{ route('academique.annees.show', $anneeAcademique) }}" class="btn ghost">← {{ $anneeAcademique->libelle }}</a>
     </x-slot:actions>
 </x-page-header>
@@ -34,8 +41,14 @@
         <tr data-row data-search="{{ \Illuminate\Support\Str::lower($inscription->eleve->nomComplet().' '.$inscription->classe->nom) }}">
             <td><b>{{ $inscription->eleve->nomComplet() }}</b></td>
             <td>{{ $inscription->classe->nom }}</td>
-            <td>{{ number_format($ligne['moyenne'], 2) }}/20</td>
-            <td><span class="chip">{{ $ligne['proposition']->label() }}</span></td>
+            <td>{{ $ligne['moyenne'] !== null ? number_format($ligne['moyenne'], 2).'/20' : '—' }}</td>
+            <td>
+                @if ($ligne['proposition'])
+                    <span class="chip">{{ $ligne['proposition']->label() }}</span>
+                @else
+                    <span class="chip" title="Aucun bulletin mensuel validé pour l'instant">Pas encore calculable</span>
+                @endif
+            </td>
             <td>
                 @if ($inscription->decision)
                     <span class="chip {{ $inscription->decision->value === 'exclu' ? 'chip-danger' : '' }}">{{ $inscription->decision->label() }}</span>
@@ -55,8 +68,8 @@
                     data-edit-decision-trigger
                     data-edit-url="{{ route('academique.inscriptions.decision.update', $inscription) }}"
                     data-edit-eleve="{{ $inscription->eleve->nomComplet() }}"
-                    data-edit-moyenne="{{ number_format($ligne['moyenne'], 2) }}"
-                    data-edit-proposition="{{ $ligne['proposition']->value }}"
+                    data-edit-moyenne="{{ $ligne['moyenne'] !== null ? number_format($ligne['moyenne'], 2) : '—' }}"
+                    data-edit-proposition="{{ $ligne['proposition']?->value }}"
                     data-edit-decision="{{ $inscription->decision?->value }}"
                     data-edit-motif="{{ $inscription->motif_decision }}"
                 >✎</button>

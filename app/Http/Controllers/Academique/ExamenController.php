@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateExamenRequest;
 use App\Models\AnneeAcademique;
 use App\Models\Examen;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -23,10 +24,26 @@ use Illuminate\View\View;
  */
 class ExamenController extends Controller
 {
-    public function index(): View
+    /**
+     * Tous les examens, toutes années académiques confondues (voir leur
+     * colonne « Année académique »), filtrables via le paramètre GET
+     * facultatif `annee_academique_id` — sinon une année passée resterait
+     * introuvable dès qu'une autre année devient active.
+     */
+    public function index(Request $request): View
     {
+        $anneeFilter = (string) $request->input('annee_academique_id', '');
+
+        $query = Examen::query()->with('anneeAcademique')->latest('date_examen');
+
+        if ($anneeFilter !== '') {
+            $query->where('annee_academique_id', $anneeFilter);
+        }
+
         return view('academique.examens.index', [
-            'examens' => Examen::query()->with('anneeAcademique')->latest('date_examen')->get(),
+            'examens' => $query->get(),
+            'annees' => AnneeAcademique::query()->orderByDesc('date_debut')->get(),
+            'anneeFilter' => $anneeFilter,
             'anneeActive' => AnneeAcademique::query()->where('est_active', true)->first(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),

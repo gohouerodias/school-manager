@@ -5,7 +5,17 @@
  * autosave (note cells, subject comments, monthly bulletin) via real fetch()
  * calls to Enseignant\EspaceEnseignantController, replacing the mockup's
  * in-memory fake data.
+ *
+ * Imported here (rather than added as its own Vite entry) so the maternelle
+ * grid (resources/views/enseignant/saisie-domaines.blade.php) and the
+ * "Bulletin annuel — Observations" tab (resources/views/enseignant/partials/
+ * observations-annuelles.blade.php, included by both) ride the same bundle
+ * as the rest of the espace enseignant — each no-ops on any page missing its
+ * own guard element/table.
  */
+import './saisie-domaines';
+import './observations-annuelles';
+
 document.addEventListener('DOMContentLoaded', () => {
     const dataEl = document.getElementById('espace-enseignant-data');
     if (!dataEl) {

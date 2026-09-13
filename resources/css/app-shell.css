@@ -503,27 +503,42 @@ button.classe-badge:hover { filter: brightness(0.95); }
 .row-action-btn:hover { background: var(--green-tint); color: var(--green-deep); border-color: var(--green); }
 .row-action-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-/* Affectations enseignants: one rich chip per enseignant (avatar + nom +
-   matières) instead of a flat text pill — the titulaire's chip gets a gold
-   accent and a small crown next to their name, matching the "Titulaire"
-   column's pill. */
-.format-chips { display: flex; flex-direction: column; gap: 8px; }
-.format-chip {
-    display: flex; align-items: center; gap: 10px; padding: 5px 14px 5px 5px;
-    border-radius: 999px; background: var(--paper); border: 1px solid var(--line); width: fit-content;
-}
-.format-chip.is-titulaire { background: var(--gold-tint); border-color: #EAD9AF; }
-.format-chip-text { display: flex; flex-direction: column; line-height: 1.3; }
-.format-chip-name { font-size: 12.5px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 5px; }
-.format-chip-matieres { font-size: 11px; color: var(--ink-muted); }
-.format-chip-crown { width: 12px; height: 12px; color: #C8952E; flex-shrink: 0; }
-
 .titulaire-pill {
     display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
     color: #8A6717; background: var(--gold-tint); padding: 5px 12px 5px 8px; border-radius: 20px;
 }
 .titulaire-pill svg { width: 12px; height: 12px; color: #C8952E; }
 .titulaire-pill-empty { font-size: 12.5px; color: var(--ink-muted); }
+
+/* Affectations enseignants: one card per classe (voir academique/annees/
+   show.blade.php) plutôt qu'un tableau à plat — chaque matière (ou domaine
+   pour la maternelle) du programme apparaît en badge, vert si un enseignant
+   la couvre déjà, doré/tireté sinon, pour repérer d'un coup d'oeil ce qui
+   reste à affecter. */
+.affectation-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.affectation-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.affectation-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.affectation-card-head h3 { font-family: 'Fraunces', serif; font-size: 15.5px; font-weight: 600; color: var(--green-deep); margin: 0; }
+.affectation-card-niveau { font-size: 11.5px; color: var(--ink-muted); }
+
+.affectation-card-titulaire { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink); margin-bottom: 12px; }
+.affectation-card-titulaire i { color: var(--ink-muted); font-style: normal; }
+.affectation-card-empty { font-size: 12.5px; color: var(--ink-muted); }
+
+.affectation-card-progress { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+.affectation-card-progress .is-complete { color: var(--green); }
+
+.affectation-card-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.matiere-badge {
+    display: flex; flex-direction: column; gap: 1px; padding: 5px 10px; border-radius: 8px;
+    font-size: 11.5px; border: 1px solid var(--line); background: var(--paper);
+}
+.matiere-badge b { font-weight: 600; color: var(--ink); }
+.matiere-badge i { font-style: normal; color: var(--ink-muted); font-size: 10.5px; }
+.matiere-badge.is-assigned { background: var(--green-tint); border-color: var(--green); }
+.matiere-badge.is-assigned b { color: var(--green-deep); }
+.matiere-badge.is-empty { background: var(--gold-tint); border-color: #EAD9AF; border-style: dashed; }
+.matiere-badge.is-empty i { color: #8A6717; }
 
 /* "Photo d'identité" (or any other protected type de document) in the
    types-documents table — see TypeDocumentController's protege guard. */
@@ -629,11 +644,11 @@ button.classe-badge:hover { filter: brightness(0.95); }
 .fiche-field { display: flex; flex-direction: column; gap: 3px; }
 .fiche-field .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); font-weight: 600; }
 .fiche-field .fvalue { font-size: 13.5px; color: var(--ink); }
-.fiche-parent, .fiche-parcours-item {
+.fiche-parent {
     padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
 }
-.fiche-parent { display: flex; align-items: center; gap: 10px; }
-.fiche-parent span, .fiche-parcours-item span { color: var(--ink-muted); font-size: 12px; }
+.fiche-parent span { color: var(--ink-muted); font-size: 12px; }
 .fiche-parent-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .fiche-parent-actions .fiche-item-delete-form { margin: 0; }
 .fiche-doc-item {
@@ -667,8 +682,44 @@ button.classe-badge:hover { filter: brightness(0.95); }
    edit-eleve is no longer in this list: the fiche's "Modifier" button now
    links straight to the fiche élève wizard's "modifier" page instead of
    opening a nested panel — see eleve-fiche.js's populateEditEleveTrigger(). */
-#panel-add-tuteur, #panel-edit-tuteur, #panel-add-document { z-index: 95; }
-[data-panel-overlay="add-tuteur"], [data-panel-overlay="edit-tuteur"], [data-panel-overlay="add-document"] { z-index: 90; }
+#panel-add-tuteur, #panel-edit-tuteur, #panel-add-document, #panel-edit-statut-parcours { z-index: 95; }
+[data-panel-overlay="add-tuteur"], [data-panel-overlay="edit-tuteur"], [data-panel-overlay="add-document"], [data-panel-overlay="edit-statut-parcours"] { z-index: 90; }
+
+/* Frise chronologique du "Parcours scolaire" (onglet de la fiche apprenant,
+   #fiche-parcours-list) — voir eleve-fiche.js's friseItemHTML(). Une ligne
+   verticale continue (::before sur .frise) relie les pastilles (.frise-marker)
+   de chaque année ; l'année active se distingue par une pastille dorée et un
+   liseré vert sur la carte plutôt qu'une couleur radicalement différente,
+   pour rester dans la même palette que le reste de l'app. */
+.frise { position: relative; padding-left: 22px; }
+.frise::before {
+    content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--line);
+}
+.frise-item { position: relative; margin-bottom: 16px; }
+.frise-item:last-child { margin-bottom: 0; }
+.frise-marker {
+    position: absolute; left: -22px; top: 4px; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--paper-raised); border: 2px solid var(--ink-muted);
+}
+.frise-item.active .frise-marker { border-color: var(--gold); background: var(--gold); }
+.frise-content {
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px;
+}
+.frise-item.active .frise-content { border-color: var(--green); background: var(--green-tint); }
+.frise-header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--ink); }
+.frise-meta { margin-top: 6px; font-size: 12px; color: var(--ink-muted); }
+.frise-edit-btn { width: 24px; height: 24px; margin-left: auto; flex-shrink: 0; }
+
+.frise-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-flex;
+    align-items: center; gap: 3px; white-space: nowrap;
+}
+.frise-badge.badge-active { background: var(--gold-tint); color: #8A6717; }
+.frise-badge.badge-decision-admis { background: var(--green-tint); color: var(--green-deep); }
+.frise-badge.badge-decision-redouble, .frise-badge.badge-decision-exclu { background: var(--red-tint); color: var(--red); }
+.frise-badge.badge-statut-redoublant { background: var(--gold-tint); color: #8A6717; }
+.frise-badge.badge-statut-transfert_entrant, .frise-badge.badge-statut-transfert_sortant { background: var(--blue-tint); color: var(--blue); }
+.frise-badge.badge-statut-abandon { background: var(--red-tint); color: var(--red); }
 
 /* Generic confirmation dialog (<x-confirm-modal>, confirm-modal.js): a much
    smaller centered dialog variant of .panel, same idea as .fiche-modal.
@@ -901,16 +952,31 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 .bulletin-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 .bulletin-table th, .bulletin-table td { border: 1px solid var(--line); padding: 7px 10px; font-size: 14.5px; text-align: left; }
 .bulletin-table th { background: var(--paper); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .02em; color: var(--ink-muted); }
-.bulletin-table td.num { text-align: center; font-family: 'JetBrains Mono', monospace; }
+.bulletin-table td.num, .bulletin-table th.num { text-align: center; font-family: 'JetBrains Mono', monospace; }
 .bulletin-table tr.total-row td { font-weight: 700; background: #FAF7EE; }
+.bulletin-table-domaines th.num { font-family: 'Inter', sans-serif; }
+.bulletin-table-domaines td.check-cell { font-weight: 700; font-size: 16px; color: var(--green-deep); }
+.bulletin-legende { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 4px; }
+.bulletin-nb { font-size: 12px; color: var(--ink-muted); font-style: italic; margin: 0 0 16px; }
 .bulletin-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 26px; margin-bottom: 16px; font-size: 14.5px; }
+.bulletin-grid2.bulletin-grid2-single { grid-template-columns: 1fr; }
 .bulletin-grid2 .row { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--line); padding: 3px 0; }
 .bulletin-grid2 .row b { color: var(--ink); }
 .bulletin-comment-box { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; background: var(--paper); }
 .bulletin-comment-box .label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--gold); margin-bottom: 6px; }
 .bulletin-symbol-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14.5px; font-weight: 700; color: var(--green-deep); }
 .bulletin-symbol-row .circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-.bulletin-manual-zone { border: 1.5px dashed var(--line); border-radius: 8px; padding: 14px; text-align: center; font-size: 13px; color: var(--ink-muted); font-style: italic; background: var(--paper); }
+/* "Symboles interprétant les résultats de l'apprenant" (maternelle) : les 3
+   symboles sont toujours listés, celui qui correspond au résultat_global
+   enregistré est mis en évidence (cercle plein + couleur) façon "encerclé au
+   stylo" sur le modèle papier — voir _papier.blade.php. */
+.bulletin-symboles-legende { margin-top: 8px; font-size: 13.5px; }
+.bulletin-symboles-legende .titre { font-size: 12px; color: var(--ink-muted); margin-bottom: 6px; }
+.bulletin-symboles-legende .symbole-row { display: flex; align-items: center; gap: 10px; padding: 2px 0; color: var(--ink-muted); }
+.bulletin-symboles-legende .symbole-row .circle { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.bulletin-symboles-legende .symbole-row.is-actuel { color: var(--green-deep); font-weight: 700; }
+.bulletin-symboles-legende .symbole-row.is-actuel .circle { border-color: var(--green-deep); border-width: 3px; color: var(--green-deep); }
+.bulletin-manual-zone { border: 1.5px dashed var(--line); border-radius: 8px; padding: 14px; min-height: 110px; display: flex; flex-direction: column; justify-content: center; text-align: center; font-size: 13px; color: var(--ink-muted); font-style: italic; background: var(--paper); }
 .bulletin-manual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
 .bulletin-page-wrap { padding: 24px; background: var(--paper); }
 .bulletin-page-wrap .bulletin-sheet { box-shadow: 0 24px 60px rgba(18, 40, 32, .12); border: 1px solid var(--line); }

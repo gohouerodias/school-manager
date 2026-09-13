@@ -42,13 +42,14 @@
                     <button
                         type="button"
                         class="row-edit"
-                        title="Modifier les dates"
+                        title="Modifier les paramètres"
                         data-panel-open="edit-annee"
                         data-edit-annee-trigger
                         data-edit-url="{{ route('academique.annees.update', $annee) }}"
                         data-edit-libelle="{{ $annee->libelle }}"
                         data-edit-date-debut="{{ $annee->date_debut->format('Y-m-d') }}"
                         data-edit-date-fin="{{ $annee->date_fin->format('Y-m-d') }}"
+                        data-edit-nombre-evaluations-prevues="{{ $annee->nombre_evaluations_prevues }}"
                     >✎</button>
                     <a href="{{ route('academique.annees.show', $annee) }}" class="btn ghost">Configurer →</a>
                 </div>
@@ -76,6 +77,9 @@
         @error('date_fin')
             <div class="alert-error">{{ $message }}</div>
         @enderror
+        @error('nombre_evaluations_prevues')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
 
         <div class="field">
             <label for="new-annee-libelle">Libellé</label>
@@ -92,10 +96,24 @@
             <input type="date" id="new-annee-date-fin" name="date_fin" value="{{ old('date_fin') }}" required>
         </div>
 
+        <div class="field">
+            <label for="new-annee-nombre-evaluations-prevues">Nombre d'évaluations prévues dans l'année</label>
+            <input type="number" id="new-annee-nombre-evaluations-prevues" name="nombre_evaluations_prevues" min="1" max="20" value="{{ old('nombre_evaluations_prevues', 1) }}" required>
+            <div class="hint">Une fois ce nombre d'évaluations mensuelles créées pour l'année (Académique → Examens), le bulletin annuel de chaque classe peut être généré depuis l'écran Bulletins.</div>
+        </div>
+
+        <div class="field field-inline">
+            <label class="toggle-switch">
+                <input type="checkbox" id="new-annee-promouvoir-automatiquement" name="promouvoir_automatiquement" value="1" @checked(old('promouvoir_automatiquement', true))>
+                <span class="toggle-slider"></span>
+            </label>
+            <span>Promouvoir automatiquement les élèves admis vers la classe supérieure au démarrage de cette année</span>
+        </div>
         <div class="hint">
             La nouvelle année est créée « en préparation » : ajoutez son programme, ses classes et ses affectations
-            avant de la démarrer depuis sa fiche — démarrer une année promeut automatiquement les élèves de l'année
-            active vers celle-ci.
+            avant de la démarrer depuis sa fiche. Si l'option ci-dessus reste cochée, démarrer cette année inscrira
+            automatiquement les élèves admis de l'année active dans la classe supérieure (et réinscrira les
+            redoublants) ; décochez-la pour gérer ces inscriptions vous-même.
         </div>
     </form>
 
@@ -105,9 +123,10 @@
     </x-slot:footer>
 </x-slide-panel>
 
-{{-- Modifier les dates d'une année académique : le libellé reste fixe une
-     fois l'année créée (voir UpdateAnneeAcademiqueRequest). --}}
-<x-slide-panel id="edit-annee" title="Modifier les dates">
+{{-- Modifier une année académique : le libellé reste fixe une fois l'année
+     créée (voir UpdateAnneeAcademiqueRequest) — seules les dates et le
+     nombre d'évaluations prévues se modifient ici. --}}
+<x-slide-panel id="edit-annee" title="Modifier les paramètres">
     <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-annee-form">
         @csrf
         @method('PATCH')
@@ -118,6 +137,9 @@
             <div class="alert-error">{{ $message }}</div>
         @enderror
         @error('date_fin')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('nombre_evaluations_prevues')
             <div class="alert-error">{{ $message }}</div>
         @enderror
 
@@ -134,6 +156,12 @@
         <div class="field">
             <label for="edit-annee-date-fin">Date de fin</label>
             <input type="date" id="edit-annee-date-fin" name="date_fin" value="{{ old('date_fin') }}" required>
+        </div>
+
+        <div class="field">
+            <label for="edit-annee-nombre-evaluations-prevues">Nombre d'évaluations prévues dans l'année</label>
+            <input type="number" id="edit-annee-nombre-evaluations-prevues" name="nombre_evaluations_prevues" min="1" max="20" value="{{ old('nombre_evaluations_prevues') }}" required>
+            <div class="hint">Une fois ce nombre d'évaluations mensuelles créées pour l'année, le bulletin annuel de chaque classe peut être généré.</div>
         </div>
 
         <div class="hint">

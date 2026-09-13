@@ -17,6 +17,8 @@ class AnneeAcademique extends Model
         'est_active',
         'date_debut',
         'date_fin',
+        'nombre_evaluations_prevues',
+        'promouvoir_automatiquement',
     ];
 
     protected function casts(): array
@@ -25,6 +27,8 @@ class AnneeAcademique extends Model
             'est_active' => 'bool',
             'date_debut' => 'date',
             'date_fin' => 'date',
+            'nombre_evaluations_prevues' => 'integer',
+            'promouvoir_automatiquement' => 'bool',
         ];
     }
 
@@ -69,6 +73,17 @@ class AnneeAcademique extends Model
     public function examens(): HasMany
     {
         return $this->hasMany(Examen::class);
+    }
+
+    /**
+     * Programme de domaines d'évaluation (maternelle) — équivalent de
+     * niveauMatieres() pour les domaines. Voir NiveauDomaine.
+     *
+     * @return HasMany<NiveauDomaine, $this>
+     */
+    public function niveauDomaines(): HasMany
+    {
+        return $this->hasMany(NiveauDomaine::class);
     }
 
     /**

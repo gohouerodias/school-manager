@@ -107,6 +107,7 @@
                         <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*') && ! $affectationsActive])>Années académiques</a>
                         <a href="{{ route('academique.niveaux-matieres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.niveaux-matieres.*')])>Niveaux &amp; matières</a>
                         <a href="{{ route('academique.examens.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.examens.*')])>Examens</a>
+                        <a href="{{ route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.bulletins.*')])>Bulletins</a>
                         @if ($anneeAffectations)
                             <a href="{{ route('academique.annees.show', $anneeAffectations) }}?onglet=affectations" @class(['nav-subitem', 'active' => $affectationsActive])>Affectation des enseignants</a>
                         @else

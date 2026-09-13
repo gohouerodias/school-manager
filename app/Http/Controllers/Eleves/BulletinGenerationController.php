@@ -9,6 +9,7 @@ use App\Jobs\GenererBulletinsClasseJob;
 use App\Models\AnneeAcademique;
 use App\Models\Classe;
 use App\Models\DemandeGenerationBulletin;
+use App\Models\DemandeGenerationBulletinAnnuel;
 use App\Models\Examen;
 use App\Models\Inscription;
 use App\Services\BulletinGenerationService;
@@ -48,6 +49,8 @@ class BulletinGenerationController extends Controller
         $examenActif = null;
         $payload = null;
         $demande = null;
+        $payloadAnnuel = null;
+        $demandeAnnuel = null;
 
         if ($classe) {
             $examens = Examen::pourClasse($classe);
@@ -61,6 +64,13 @@ class BulletinGenerationController extends Controller
                     ->where('examen_id', $examenActif->id)
                     ->first();
             }
+
+            // Le bulletin annuel ne dépend pas de l'examen sélectionné
+            // ci-dessus (il porte sur toute l'année académique de la classe —
+            // voir BulletinGenerationService::payloadAnnuelPourClasse()), donc
+            // calculé indépendamment du bloc $examenActif.
+            $payloadAnnuel = $this->service->payloadAnnuelPourClasse($classe);
+            $demandeAnnuel = DemandeGenerationBulletinAnnuel::query()->where('classe_id', $classe->id)->first();
         }
 
         return view('eleves.bulletins.index', [
@@ -70,6 +80,8 @@ class BulletinGenerationController extends Controller
             'examenActif' => $examenActif,
             'payload' => $payload,
             'demande' => $demande,
+            'payloadAnnuel' => $payloadAnnuel,
+            'demandeAnnuel' => $demandeAnnuel,
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
                 'Dossier élève' => route('eleves.index'),
@@ -121,7 +133,11 @@ class BulletinGenerationController extends Controller
         $payload = $this->service->payloadPourClasse($classe, $examen);
 
         if ($payload['total'] === 0 || $payload['moyennesEnAttenteCount'] > 0) {
-            return $redirectBack->with('toast', "Impossible : la moyenne d'au moins un apprenant de la classe {$classe->nom} est encore en attente (notes incomplètes).");
+            $motif = $classe->estMaternelle()
+                ? "la grille d'évaluation d'au moins un apprenant de la classe {$classe->nom} est encore incomplète"
+                : "la moyenne d'au moins un apprenant de la classe {$classe->nom} est encore en attente (notes incomplètes)";
+
+            return $redirectBack->with('toast', "Impossible : {$motif}.");
         }
 
         $regeneration = $demandeExistante?->estGeneree() ?? false;

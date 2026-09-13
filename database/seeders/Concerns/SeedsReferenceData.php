@@ -8,6 +8,7 @@ use App\Enums\TypeChampPersonnalise;
 use App\Enums\TypeEvaluation;
 use App\Models\AnneeAcademique;
 use App\Models\ChampPersonnalise;
+use App\Models\DomaineEvaluation;
 use App\Models\Examen;
 use App\Models\Matiere;
 use App\Models\Niveau;
@@ -21,13 +22,19 @@ use Illuminate\Support\Collection;
 trait SeedsReferenceData
 {
     /**
+     * "Maternelle 1"/"Maternelle 2" (ordre 1-2) ne sont volontairement PAS
+     * ici : ils sont créés par la migration
+     * add_premiere_scolarisation_to_niveaux_table (retrofit historique d'une
+     * base déjà en prod à l'époque) — qui s'exécute pour toute installation,
+     * fraîche ou existante, puisque les migrations tournent toujours avant
+     * ce seeder. Les redéfinir ici les créerait une seconde fois (voir
+     * DatabaseSeederTest, qui a révélé le doublon).
+     *
      * @return Collection<int, Niveau>
      */
     public function seedNiveaux(): Collection
     {
         $definitions = [
-            ['libelle' => 'Maternelle 1', 'ordre' => 1, 'cycle' => CycleNiveau::Maternelle, 'premiere_scolarisation' => true],
-            ['libelle' => 'Maternelle 2', 'ordre' => 2, 'cycle' => CycleNiveau::Maternelle, 'premiere_scolarisation' => true],
             ['libelle' => 'CI', 'ordre' => 3, 'cycle' => CycleNiveau::Primaire],
             ['libelle' => 'CP', 'ordre' => 4, 'cycle' => CycleNiveau::Primaire],
             ['libelle' => 'CE1', 'ordre' => 5, 'cycle' => CycleNiveau::Primaire],
@@ -65,6 +72,13 @@ trait SeedsReferenceData
     }
 
     /**
+     * "Bulletin de l'école précédente" et "Certificat de scolarité
+     * antérieure" ne sont volontairement PAS ici : ils sont créés par la
+     * migration add_requis_si_transfert_to_types_documents_table (retrofit
+     * historique, comme Maternelle 1/2 — voir seedNiveaux()), qui s'exécute
+     * pour toute installation avant ce seeder. Les redéfinir ici les
+     * créerait une seconde fois.
+     *
      * @return Collection<int, TypeDocument>
      */
     public function seedTypesDocuments(): Collection
@@ -75,10 +89,6 @@ trait SeedsReferenceData
             ['libelle' => 'CIP', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
             ['libelle' => 'NPI', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
             ['libelle' => 'Certificat médical', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false],
-            // Shown by the fiche élève wizard's "Documents" step only when
-            // the classe désirée isn't Maternelle 1/2 (Niveau::premiere_scolarisation).
-            ['libelle' => "Bulletin de l'école précédente", 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false, 'requis_si_transfert' => true],
-            ['libelle' => 'Certificat de scolarité antérieure', 'formats' => ['PDF', 'JPG'], 'obligatoire' => false, 'protege' => false, 'requis_si_transfert' => true],
         ];
 
         return collect($definitions)->map(fn (array $data) => TypeDocument::create([
@@ -129,5 +139,33 @@ trait SeedsReferenceData
         ];
 
         return collect($noms)->map(fn (string $nom) => Matiere::create(['nom' => $nom]));
+    }
+
+    /**
+     * Domaines d'évaluation de la maternelle (voir RESULTATS DE FIN D'ANNEE.pdf,
+     * grille d'évaluation mensuelle) — équivalent des Matieres pour ce cycle,
+     * associés aux niveaux/classes via Académique > Niveaux & matières et la
+     * fiche de l'année académique (comme les matières, aucun lien n'est créé
+     * automatiquement ici).
+     *
+     * @return Collection<int, DomaineEvaluation>
+     */
+    public function seedDomainesEvaluation(): Collection
+    {
+        $noms = [
+            'Fréquentation',
+            'Propreté corporelle et vestimentaire',
+            'Dessin/Coloriage',
+            'Langage',
+            'Pré Ecriture',
+            'Education du mouvement',
+            'Pré-Lecture',
+            'Pré-mathématique',
+            'Poésie et Chant',
+            'Anglais',
+            'Autres',
+        ];
+
+        return collect($noms)->map(fn (string $nom) => DomaineEvaluation::create(['nom' => $nom]));
     }
 }

@@ -79,6 +79,53 @@ test('a teacher not assigned to a classe cannot open its saisie de notes', funct
     $response->assertForbidden();
 });
 
+test('the classe page shows the annual observation tab, independent of the selected examen', function () {
+    ['classe' => $classe, 'enseignant' => $enseignant, 'eleve' => $eleve] = creerContexteEnseignant();
+    Inscription::where('classe_id', $classe->id)->where('eleve_id', $eleve->id)->update(['observation_annuelle' => 'Année sérieuse et appliquée.']);
+
+    $response = $this->actingAs($enseignant)->get(route('enseignant.classes.show', $classe));
+
+    $response->assertOk();
+    $response->assertSee('Bulletin annuel — Observations');
+    $response->assertSee('Année sérieuse et appliquée.');
+});
+
+test('the titulaire can save an annual observation for an élève', function () {
+    ['classe' => $classe, 'enseignant' => $enseignant, 'eleve' => $eleve] = creerContexteEnseignant();
+
+    $response = $this->actingAs($enseignant)->patchJson(route('enseignant.classes.observation-annuelle.update', $classe), [
+        'eleve_id' => $eleve->id,
+        'observation' => 'Bon travail toute l’année, à encourager.',
+    ]);
+
+    $response->assertOk()->assertJson(['ok' => true]);
+    $this->assertDatabaseHas('inscriptions', [
+        'eleve_id' => $eleve->id,
+        'classe_id' => $classe->id,
+        'observation_annuelle' => 'Bon travail toute l’année, à encourager.',
+    ]);
+});
+
+test('a non-titulaire cannot save an annual observation', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'eleve' => $eleve, 'anneeActive' => $anneeActive] = creerContexteEnseignant();
+    $autreEnseignant = User::factory()->enseignant()->create();
+    AffectationEnseignant::create([
+        'enseignant_id' => $autreEnseignant->id,
+        'classe_id' => $classe->id,
+        'matiere_id' => $matiere->id,
+        'annee_academique_id' => $anneeActive->id,
+        'est_professeur_principal' => false,
+    ]);
+
+    $response = $this->actingAs($autreEnseignant)->patchJson(route('enseignant.classes.observation-annuelle.update', $classe), [
+        'eleve_id' => $eleve->id,
+        'observation' => 'Tentative non autorisée.',
+    ]);
+
+    $response->assertForbidden();
+    $this->assertDatabaseMissing('inscriptions', ['eleve_id' => $eleve->id, 'observation_annuelle' => 'Tentative non autorisée.']);
+});
+
 test('an assigned teacher can create a note', function () {
     ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
 
@@ -246,6 +293,7 @@ test('the titulaire can validate a bulletin that already has a brouillon', funct
         'examen_id' => $examen->id,
         'statut' => StatutBulletin::Valide->value,
         'valide_par_id' => $enseignant->id,
+        'moyenne_generale' => 14,
     ]);
 });
 
@@ -678,5 +726,11 @@ test('the titulaire can validate a bulletin once every matière has been noted',
     ]);
 
     $response->assertOk()->assertJson(['ok' => true, 'statut' => 'valide']);
-    $this->assertDatabaseHas('bulletins', ['examen_id' => $examen->id, 'statut' => StatutBulletin::Valide->value]);
+    // Même moyenne pondérée que Bulletin::calculerMoyenne() (voir le test
+    // "the titulaire sees the same weighted moyenne as the admin" ci-dessus) :
+    // la validation doit la calculer et la stocker immédiatement, sans
+    // attendre une génération groupée ultérieure côté admin — sinon
+    // Inscription::calculerMoyenneAnnuelle() ignorerait silencieusement ce
+    // mois (moyenne_generale resterait null malgré un bulletin Validé).
+    $this->assertDatabaseHas('bulletins', ['examen_id' => $examen->id, 'statut' => StatutBulletin::Valide->value, 'moyenne_generale' => 11.57]);
 });

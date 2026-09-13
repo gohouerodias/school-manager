@@ -239,12 +239,31 @@ class EleveController extends Controller
                 'telephone' => $parent->telephone,
                 'email' => $parent->email,
             ])->values(),
-            'parcours' => $eleve->inscriptions->sortByDesc('date_inscription')->map(fn (Inscription $inscription) => [
-                'annee' => $inscription->classe?->anneeAcademique?->libelle,
-                'classe' => $inscription->classe?->nom,
-                'moyenne_annuelle' => $inscription->moyenne_annuelle,
-                'decision' => $inscription->decision?->value,
-            ])->values(),
+            'parcours' => $eleve->inscriptions->sortByDesc('date_inscription')->map(function (Inscription $inscription) {
+                $classe = $inscription->classe;
+                $anneeAcademique = $classe?->anneeAcademique;
+                $estMaternelle = $classe?->estMaternelle() ?? false;
+
+                return [
+                    'inscription_id' => $inscription->id,
+                    'annee' => $anneeAcademique?->libelle,
+                    'annee_active' => $anneeAcademique?->est_active ?? false,
+                    'classe' => $classe?->nom,
+                    'niveau' => $classe?->niveau?->libelle,
+                    'titulaire' => $anneeAcademique && $classe ? $classe->titulairePour($anneeAcademique)?->name : null,
+                    // Pas de moyenne chiffrée en maternelle (évaluation par
+                    // domaines, pas par notes/matières) : voir
+                    // BulletinGenerationService::recalculerMoyennesAnnuellesPourAnnee(),
+                    // qui exclut déjà les classes maternelles de ce calcul.
+                    'moyenne_annuelle' => $estMaternelle ? null : $inscription->moyenne_annuelle,
+                    'decision' => $inscription->decision?->value,
+                    'decision_label' => $inscription->decision?->label(),
+                    'statut' => $inscription->statut->value,
+                    'statut_label' => $inscription->statut->label(),
+                    'statut_notable' => $inscription->statut->estNotable(),
+                    'statut_update_url' => route('eleves.inscriptions.statut.update', ['eleve' => $inscription->eleve_id, 'inscription' => $inscription->id]),
+                ];
+            })->values(),
             'documents' => $typesDocuments->map(function (TypeDocument $type) use ($eleve) {
                 $document = $eleve->documents->firstWhere('type_document_id', $type->id);
 

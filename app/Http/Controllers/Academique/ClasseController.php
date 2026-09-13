@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Academique;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClasseRequest;
 use App\Http\Requests\UpdateClasseRequest;
+use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Classe;
 use App\Models\Niveau;
@@ -31,6 +32,7 @@ class ClasseController extends Controller
         ]);
 
         $this->synchroniserMatieresDepuisNiveau($classe, $anneeAcademique);
+        $this->synchroniserDomainesDepuisNiveau($classe, $anneeAcademique);
 
         $message = "Classe « {$classe->nom} » créée"
             .($classe->matieres()->count() ? ", avec son programme de matières hérité de « {$niveau->libelle} »." : '.');
@@ -54,6 +56,7 @@ class ClasseController extends Controller
         $classe->update(['nom' => "{$classe->niveau->libelle} {$validated['lettre']}"]);
 
         $this->synchroniserMatieresDepuisNiveau($classe, $classe->anneeAcademique);
+        $this->synchroniserDomainesDepuisNiveau($classe, $classe->anneeAcademique);
 
         return back()->with('toast', "Classe renommée en « {$classe->nom} », programme de matières resynchronisé depuis « {$classe->niveau->libelle} ».");
     }
@@ -85,6 +88,33 @@ class ClasseController extends Controller
             ->mapWithKeys(fn ($matiere) => [$matiere->id => ['coefficient' => $matiere->pivot->coefficient]])
             ->all();
 
-        $classe->matieres()->sync($programme);
+        $resultat = $classe->matieres()->sync($programme);
+
+        // Une matière retirée du programme (voir NiveauMatiereController::
+        // destroy()) ne doit plus laisser d'enseignant "affecté" à cette
+        // classe pour elle — sinon il resterait affiché comme enseignant/
+        // titulaire de la classe sans plus aucune matière valide dans son
+        // programme actuel (voir Academique\AffectationEnseignantController).
+        if (! empty($resultat['detached'])) {
+            AffectationEnseignant::query()
+                ->where('classe_id', $classe->id)
+                ->where('annee_academique_id', $anneeAcademique->id)
+                ->whereIn('matiere_id', $resultat['detached'])
+                ->delete();
+        }
+    }
+
+    /**
+     * Équivalent de synchroniserMatieresDepuisNiveau() pour les domaines
+     * d'évaluation (maternelle) — sans coefficient à reporter, juste la
+     * liste des domaines actifs.
+     */
+    private function synchroniserDomainesDepuisNiveau(Classe $classe, AnneeAcademique $anneeAcademique): void
+    {
+        $classe->load('niveau');
+
+        $domaineIds = $classe->niveau->domainesPour($anneeAcademique)->pluck('id')->all();
+
+        $classe->domaines()->sync($domaineIds);
     }
 }

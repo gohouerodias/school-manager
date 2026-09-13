@@ -16,7 +16,7 @@
             <form method="POST" action="{{ route('academique.annees.demarrer', $anneeAcademique) }}"
                   data-confirm-submit data-confirm-danger="1" data-confirm-label="Démarrer cette année"
                   data-confirm-title="Démarrer cette année académique"
-                  data-confirm-message="Démarrer « {{ $anneeAcademique->libelle }} » ?{{ $anneeActive ? ' Les élèves admis ou redoublants de « '.$anneeActive->libelle.' » seront automatiquement inscrits dans une classe de cette nouvelle année, selon leur décision de fin d\'année.' : '' }} Cette action ne peut pas être annulée simplement.">
+                  data-confirm-message="Démarrer « {{ $anneeAcademique->libelle }} » ?{{ $anneeActive && $anneeAcademique->promouvoir_automatiquement ? ' Les élèves admis ou redoublants de « '.$anneeActive->libelle.' » seront automatiquement inscrits dans une classe de cette nouvelle année, selon leur décision de fin d\'année.' : '' }}{{ $anneeActive && ! $anneeAcademique->promouvoir_automatiquement ? ' La promotion automatique est désactivée pour cette année : aucun élève ne sera inscrit automatiquement.' : '' }} Cette action ne peut pas être annulée simplement.">
                 @csrf
                 <button type="submit" class="btn danger">Démarrer cette année</button>
             </form>
@@ -57,26 +57,37 @@
     <button type="button" class="tab-btn active" data-tab-btn="programme">Programme par niveau</button>
     <button type="button" class="tab-btn" data-tab-btn="classes">Classes</button>
     <button type="button" class="tab-btn" data-tab-btn="affectations">Affectations enseignants</button>
+    <button type="button" class="tab-btn" data-tab-btn="examens">Examens</button>
 </div>
 
 <div data-tab-panel="programme">
     <section class="config-section">
         <div class="config-section-head">
             <h2>Programme par niveau</h2>
-            <button type="button" class="btn primary" data-panel-open="new-niveau-matiere">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                Ajouter une matière au programme
-            </button>
+            <div class="content-head-actions">
+                <button type="button" class="btn ghost" data-panel-open="new-niveau-domaine">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Ajouter des domaines (maternelle)
+                </button>
+                <button type="button" class="btn primary" data-panel-open="new-niveau-matiere">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Ajouter une matière au programme
+                </button>
+            </div>
         </div>
 
         <x-data-table id="niveau-matieres-table">
             <x-slot:head>
                 <th>Niveau</th>
                 <th>Matières (coefficient)</th>
+                <th>Domaines d'évaluation (maternelle)</th>
             </x-slot:head>
 
             @forelse ($niveaux as $niveau)
-                @php $lignes = $anneeAcademique->niveauMatieres->where('niveau_id', $niveau->id); @endphp
+                @php
+                    $lignes = $anneeAcademique->niveauMatieres->where('niveau_id', $niveau->id);
+                    $lignesDomaines = $anneeAcademique->niveauDomaines->where('niveau_id', $niveau->id);
+                @endphp
                 <tr>
                     <td><b>{{ $niveau->libelle }}</b></td>
                     <td>
@@ -109,10 +120,29 @@
                             @endforelse
                         </div>
                     </td>
+                    <td>
+                        <div class="chips">
+                            @forelse ($lignesDomaines as $ligneDomaine)
+                                <span class="chip">
+                                    {{ $ligneDomaine->domaineEvaluation->nom }}
+                                    <form method="POST" action="{{ route('academique.niveau-domaines.destroy', $ligneDomaine) }}" style="display:inline;"
+                                          data-confirm-submit data-confirm-danger="1" data-confirm-label="Retirer"
+                                          data-confirm-title="Retirer ce domaine du programme"
+                                          data-confirm-message="Retirer « {{ $ligneDomaine->domaineEvaluation->nom }} » du programme de « {{ $niveau->libelle }} » pour « {{ $anneeAcademique->libelle }} » ? Les classes déjà créées pour ce niveau garderont ce domaine tant qu'elles ne sont pas modifiées.">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="chip-remove" title="Retirer">✕</button>
+                                    </form>
+                                </span>
+                            @empty
+                                <span class="table-empty-state">—</span>
+                            @endforelse
+                        </div>
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="2" class="table-empty-state">Aucun niveau — créez-en depuis « Niveaux &amp; matières ».</td>
+                    <td colspan="3" class="table-empty-state">Aucun niveau — créez-en depuis « Niveaux &amp; matières ».</td>
                 </tr>
             @endforelse
         </x-data-table>
@@ -188,16 +218,10 @@
             </div>
         </div>
 
-        <x-data-table id="affectations-table">
-            <x-slot:head>
-                <th>Classe</th>
-                <th>Enseignants affectés</th>
-                <th>Titulaire</th>
-                <th></th>
-            </x-slot:head>
-
+        <div class="affectation-cards-grid">
             @forelse ($anneeAcademique->classes as $classe)
                 @php
+                    $estMaternelle = $classe->niveau->cycle === \App\Enums\CycleNiveau::Maternelle;
                     $estClasseEntiere = in_array($classe->niveau->cycle, [\App\Enums\CycleNiveau::Maternelle, \App\Enums\CycleNiveau::Primaire], true);
                     $affectationsClasse = $anneeAcademique->affectations->where('classe_id', $classe->id);
                     $parEnseignant = $affectationsClasse->groupBy('enseignant_id');
@@ -209,41 +233,30 @@
                         'estTitulaire' => (bool) $groupe->first()->est_professeur_principal,
                         'destroyUrl' => route('academique.classes.enseignants.destroy', [$classe, $groupe->first()->enseignant_id]),
                     ])->values();
+
+                    // Programme de cette classe (matières pour primaire/
+                    // collège, domaines pour maternelle) avec, pour chacun,
+                    // l'enseignant qui le couvre actuellement s'il y en a
+                    // un — le détail matière par matière que l'ancien
+                    // tableau (une ligne "Enseignants affectés" globale par
+                    // classe) ne montrait pas.
+                    $itemsProgramme = $estMaternelle ? $classe->domaines : $classe->matieres;
+                    $itemsPayload = $itemsProgramme->map(function ($item) use ($estClasseEntiere, $affectationsClasse, $titulaireAffectation) {
+                        $enseignant = $estClasseEntiere
+                            ? $titulaireAffectation?->enseignant
+                            : $affectationsClasse->firstWhere('matiere_id', $item->id)?->enseignant;
+
+                        return ['nom' => $item->nom, 'enseignantNom' => $enseignant?->name];
+                    })->values();
+                    $nbAssignes = $itemsPayload->filter(fn (array $i) => $i['enseignantNom'])->count();
+                    $nbTotal = $itemsPayload->count();
                 @endphp
-                <tr>
-                    <td><b>{{ $classe->nom }}</b></td>
-                    <td>
-                        <div class="format-chips">
-                            @forelse ($parEnseignant as $groupeEnseignant)
-                                @php $estTitulaireDeCeGroupe = (bool) $groupeEnseignant->first()->est_professeur_principal; @endphp
-                                <div @class(['format-chip', 'is-titulaire' => $estTitulaireDeCeGroupe])>
-                                    <x-avatar :name="$groupeEnseignant->first()->enseignant->name" :profil="\App\Enums\ProfilUtilisateur::Enseignant" />
-                                    <div class="format-chip-text">
-                                        <span class="format-chip-name">
-                                            {{ $groupeEnseignant->first()->enseignant->name }}
-                                            @if ($estTitulaireDeCeGroupe)
-                                                <svg class="format-chip-crown" viewBox="0 0 24 24" fill="currentColor" stroke="none" title="Titulaire"><path d="M12 2 2 8.5l1.7 9.5h16.6L22 8.5 12 2Zm0 15.5a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8Z"/></svg>
-                                            @endif
-                                        </span>
-                                        <span class="format-chip-matieres">{{ $estClasseEntiere ? 'Toutes les matières' : $groupeEnseignant->pluck('matiere.nom')->implode(', ') }}</span>
-                                    </div>
-                                </div>
-                            @empty
-                                <span class="table-empty-state" style="padding:0;">Aucun enseignant affecté.</span>
-                            @endforelse
+                <div class="affectation-card">
+                    <div class="affectation-card-head">
+                        <div>
+                            <h3>{{ $classe->nom }}</h3>
+                            <span class="affectation-card-niveau">{{ $classe->niveau->libelle }}</span>
                         </div>
-                    </td>
-                    <td>
-                        @if ($titulaireAffectation)
-                            <span class="titulaire-pill">
-                                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2 2 8.5l1.7 9.5h16.6L22 8.5 12 2Zm0 15.5a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8Z"/></svg>
-                                {{ $titulaireAffectation->enseignant->name }}
-                            </span>
-                        @else
-                            <span class="titulaire-pill-empty">—</span>
-                        @endif
-                    </td>
-                    <td>
                         <button
                             type="button"
                             class="row-action-btn"
@@ -260,16 +273,227 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                             Gérer
                         </button>
+                    </div>
+
+                    @if ($estClasseEntiere)
+                        <div class="affectation-card-titulaire">
+                            @if ($titulaireAffectation)
+                                <x-avatar :name="$titulaireAffectation->enseignant->name" :profil="\App\Enums\ProfilUtilisateur::Enseignant" />
+                                <span>{{ $titulaireAffectation->enseignant->name }} <i>— enseignant unique de la classe</i></span>
+                            @else
+                                <span class="affectation-card-empty">Aucun enseignant affecté à cette classe.</span>
+                            @endif
+                        </div>
+                    @else
+                        <div class="affectation-card-progress">
+                            <span @class(['is-complete' => $nbTotal > 0 && $nbAssignes === $nbTotal])>{{ $nbAssignes }} / {{ $nbTotal }} matières assignées</span>
+                            @if ($titulaireAffectation)
+                                <span class="titulaire-pill">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2 2 8.5l1.7 9.5h16.6L22 8.5 12 2Zm0 15.5a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8Z"/></svg>
+                                    {{ $titulaireAffectation->enseignant->name }}
+                                </span>
+                            @endif
+                        </div>
+                    @endif
+
+                    <div class="affectation-card-items">
+                        @forelse ($itemsPayload as $item)
+                            <span @class(['matiere-badge', 'is-assigned' => $item['enseignantNom'], 'is-empty' => ! $item['enseignantNom']])>
+                                <b>{{ $item['nom'] }}</b>
+                                @unless ($estClasseEntiere)
+                                    <i>{{ $item['enseignantNom'] ?? 'Non assigné' }}</i>
+                                @endunless
+                            </span>
+                        @empty
+                            <span class="table-empty-state" style="padding:0;">{{ $estMaternelle ? 'Aucun domaine' : 'Aucune matière' }} au programme de cette classe.</span>
+                        @endforelse
+                    </div>
+                </div>
+            @empty
+                <div class="table-empty-state">Aucune classe pour cette année pour l'instant.</div>
+            @endforelse
+        </div>
+    </section>
+</div>
+
+{{-- La création d'un examen n'a de sens que pour l'année active (voir
+     ExamenController::store(), qui cible toujours l'année active quelle que
+     soit l'origine du formulaire) — sur une année passée ou pas encore
+     démarrée, cet onglet reste consultable (historique/à venir) mais sans
+     bouton « Créer ». Voir aussi Académique > Examens (academique.examens.index)
+     pour une vue filtrable toutes années confondues. --}}
+<div data-tab-panel="examens" style="display:none;">
+    <section class="config-section">
+        <div class="config-section-head">
+            <h2>Examens</h2>
+            @if ($anneeAcademique->est_active)
+                <div class="content-head-actions">
+                    <button type="button" class="btn ghost" data-panel-open="new-examen">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                        Créer un examen
+                    </button>
+                </div>
+            @endif
+        </div>
+
+        @unless ($anneeAcademique->est_active)
+            <p class="hint">Cette année n'est pas active : ces examens sont affichés à titre indicatif. Pour créer un nouvel examen, démarrez d'abord cette année.</p>
+        @endunless
+
+        <x-data-table id="examens-annee-table">
+            <x-slot:head>
+                <th>Système</th>
+                <th>Type</th>
+                <th>Date de l'examen</th>
+                <th>Date limite de saisie</th>
+                <th></th>
+            </x-slot:head>
+
+            @forelse ($examens as $examen)
+                <tr>
+                    <td><span class="chip">{{ $examen->systeme->label() }}</span></td>
+                    <td>{{ $examen->type->label() }}</td>
+                    <td>{{ $examen->date_examen->format('d/m/Y') }}</td>
+                    <td>{{ $examen->date_limite_saisie->format('d/m/Y') }}</td>
+                    <td>
+                        <div class="row-actions-group">
+                            <button
+                                type="button"
+                                class="row-edit"
+                                title="Modifier"
+                                data-panel-open="edit-examen"
+                                data-edit-examen-trigger
+                                data-edit-url="{{ route('academique.examens.update', $examen) }}"
+                                data-edit-systeme="{{ $examen->systeme->label() }}"
+                                data-edit-annee="{{ $anneeAcademique->libelle }}"
+                                data-edit-date-examen="{{ $examen->date_examen->format('Y-m-d') }}"
+                                data-edit-date-limite="{{ $examen->date_limite_saisie->format('Y-m-d') }}"
+                                data-edit-min="{{ $anneeAcademique->date_debut->format('Y-m-d') }}"
+                                data-edit-max="{{ $anneeAcademique->date_fin->format('Y-m-d') }}"
+                            >✎</button>
+                            <form method="POST" action="{{ route('academique.examens.destroy', $examen) }}"
+                                  data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                                  data-confirm-title="Supprimer cet examen"
+                                  data-confirm-message="Supprimer cet examen supprimera aussi toutes les notes, commentaires et bulletins déjà saisis pour cet examen. Continuer ?">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="row-delete" title="Supprimer">🗑</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="table-empty-state">Aucune classe pour cette année pour l'instant.</td>
+                    <td colspan="5" class="table-empty-state">Aucun examen pour cette année pour l'instant.</td>
                 </tr>
             @endforelse
         </x-data-table>
     </section>
 </div>
+
+{{-- Créer un examen : mêmes panneaux (mêmes IDs) que academique/examens/
+     index.blade.php — resources/js/examens.js les pilote déjà sans
+     modification, exactement comme decision-passage.js réutilisé sur
+     eleves/bulletins/index.blade.php. --}}
+<x-slide-panel id="new-examen" title="Créer un examen">
+    <form method="POST" action="{{ route('academique.examens.store') }}" id="new-examen-form">
+        @csrf
+        <input type="hidden" name="_panel" value="new-examen">
+
+        @error('systeme')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('date_examen')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('date_limite_saisie')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="new-examen-systeme">Système scolaire</label>
+            <select class="role-select" id="new-examen-systeme" name="systeme" required>
+                <option value="">— Sélectionner —</option>
+                <option value="maternelle" @selected(old('systeme') === 'maternelle')>Maternelle</option>
+                <option value="primaire" @selected(old('systeme', 'primaire') === 'primaire')>Primaire</option>
+                <option value="secondaire" @selected(old('systeme') === 'secondaire')>Secondaire</option>
+            </select>
+        </div>
+
+        <div id="new-examen-secondaire-hint" class="hint" style="display:none;">
+            Le système secondaire est en cours de développement et n'est pas encore disponible. Choisir « Créer » ici affichera simplement un message d'indisponibilité, sans créer d'examen.
+        </div>
+
+        <div id="new-examen-primaire-fields">
+            <div class="field">
+                <label>Année académique</label>
+                <div class="field-static">{{ $anneeAcademique->libelle }}</div>
+                <div class="hint">L'examen est toujours créé pour l'année académique actuellement active.</div>
+            </div>
+
+            <div class="hint">
+                Un examen mensuel unique sera créé, portant sur toutes les classes et tous les élèves du système
+                choisi pour cette année académique — chaque élève étant évalué dans les matières de son programme.
+            </div>
+
+            <div class="field">
+                <label for="new-examen-date">Date de l'examen</label>
+                <input type="date" id="new-examen-date" name="date_examen" value="{{ old('date_examen') }}"
+                    min="{{ $anneeAcademique->date_debut->format('Y-m-d') }}" max="{{ $anneeAcademique->date_fin->format('Y-m-d') }}">
+            </div>
+
+            <div class="field">
+                <label for="new-examen-date-limite">Date limite de saisie des notes</label>
+                <input type="date" id="new-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}"
+                    min="{{ $anneeAcademique->date_debut->format('Y-m-d') }}" max="{{ $anneeAcademique->date_fin->format('Y-m-d') }}">
+                <div class="hint">Délai laissé aux enseignants pour saisir les notes de cet examen.</div>
+            </div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="new-examen">Annuler</button>
+        <button type="submit" form="new-examen-form" class="btn dark">Créer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier un examen : seules les dates se modifient. --}}
+<x-slide-panel id="edit-examen" title="Modifier l'examen">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-examen-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-examen">
+        <input type="hidden" name="_edit_url" id="edit-examen-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('date_examen')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('date_limite_saisie')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label>Système / Année académique</label>
+            <div class="field-static" id="edit-examen-systeme-annee">—</div>
+        </div>
+
+        <div class="field">
+            <label for="edit-examen-date">Date de l'examen</label>
+            <input type="date" id="edit-examen-date" name="date_examen" value="{{ old('date_examen') }}" required>
+        </div>
+
+        <div class="field">
+            <label for="edit-examen-date-limite">Date limite de saisie des notes</label>
+            <input type="date" id="edit-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}" required>
+            <div class="hint">Délai laissé aux enseignants pour saisir les notes de cet examen.</div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-examen">Annuler</button>
+        <button type="submit" form="edit-examen-form" class="btn dark">Enregistrer</button>
+    </x-slot:footer>
+</x-slide-panel>
 
 {{-- Ajouter des matières au programme d'un niveau : plusieurs à la fois,
      via la même liste "en attente" que l'étape 3 du wizard élève (voir
@@ -322,6 +546,48 @@
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="new-niveau-matiere">Annuler</button>
         <button type="submit" form="new-niveau-matiere-form" class="btn dark">Ajouter</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Ajouter des domaines d'évaluation au programme d'un niveau de
+     maternelle : sélection multiple directe (pas de coefficient à saisir,
+     contrairement aux matières). --}}
+<x-slide-panel id="new-niveau-domaine" title="Ajouter des domaines au programme">
+    <form method="POST" action="{{ route('academique.annees.niveau-domaines.store', $anneeAcademique) }}" id="new-niveau-domaine-form">
+        @csrf
+        <input type="hidden" name="_panel" value="new-niveau-domaine">
+
+        @error('niveau_id')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+        @error('domaines')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="new-niveau-domaine-niveau">Niveau (maternelle)</label>
+            <select class="role-select" id="new-niveau-domaine-niveau" name="niveau_id" required>
+                <option value="">— Sélectionner —</option>
+                @foreach ($niveaux as $niveau)
+                    <option value="{{ $niveau->id }}" @selected((string) old('niveau_id') === (string) $niveau->id)>{{ $niveau->libelle }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="new-niveau-domaine-domaines">Domaines (Ctrl/Cmd + clic pour en choisir plusieurs)</label>
+            <select id="new-niveau-domaine-domaines" name="domaines[]" multiple size="8" style="width:100%; padding:8px; border:1px solid var(--line); border-radius:8px;">
+                @foreach ($domaines as $domaine)
+                    <option value="{{ $domaine->id }}">{{ $domaine->nom }}</option>
+                @endforeach
+            </select>
+            <div class="hint">Aucun domaine ? Créez-en d'abord depuis « Niveaux &amp; matières ».</div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="new-niveau-domaine">Annuler</button>
+        <button type="submit" form="new-niveau-domaine-form" class="btn dark">Ajouter</button>
     </x-slot:footer>
 </x-slide-panel>
 
@@ -495,6 +761,9 @@
 
     <div id="gerer-affectation-titulaire-section" style="margin-top:26px; display:none;">
         <div class="pending-list-title">Titulaire de la classe</div>
+        <div id="gerer-affectation-titulaire-entiere-note" class="hint" style="display:none;">
+            Maternelle/Primaire : un seul enseignant enseigne toute la classe, il est donc automatiquement titulaire — pas de choix à faire ici. Pour le remplacer, utilisez « Ajouter un enseignant à cette classe » ci-dessus avec le nouveau nom : l'ancien sera retiré automatiquement.
+        </div>
         <form method="POST" id="gerer-affectation-titulaire-form">
             @csrf
             @method('PATCH')

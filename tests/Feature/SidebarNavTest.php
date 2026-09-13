@@ -33,6 +33,15 @@ test('the sidebar shortcut is disabled when no année académique exists yet', f
     $response->assertSee('nav-subitem disabled', false);
 });
 
+test('the académique menu also links to the bulletins screen', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.index'));
+
+    $response->assertOk();
+    $response->assertSee(route('eleves.bulletins.index'), false);
+});
+
 test('a non-administrateur does not see the sidebar shortcut', function () {
     $agent = User::factory()->agentScolarite()->create();
     AnneeAcademique::factory()->create();

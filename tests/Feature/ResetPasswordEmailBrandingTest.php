@@ -27,3 +27,26 @@ test('the mail template shows the school logo instead of the Laravel logo', func
         ->and($html)->toContain('CSC Madre Trinidad')
         ->and($html)->not->toContain('Regards,');
 });
+
+/**
+ * `estEnAttenteActivation()` (jamais connecté) distingue les deux usages de
+ * cette même notification — voir son docblock dans `ResetPasswordNotification`.
+ */
+test('a freshly invited account (never logged in) gets an account-creation message', function () {
+    $user = User::factory()->create(['derniere_connexion_at' => null]);
+    $mailMessage = (new ResetPasswordNotification('un-jeton'))->toMail($user);
+
+    expect($mailMessage->subject)->toBe('Votre compte a été créé — CSC Madre Trinidad')
+        ->and(implode(' ', $mailMessage->introLines))->toContain("Un compte vient d'être créé pour vous")
+        ->and($mailMessage->actionText)->toBe('Créer mon mot de passe')
+        ->and(implode(' ', $mailMessage->introLines))->not->toContain('réinitialisation');
+});
+
+test('an existing user requesting a password reset gets the reset message', function () {
+    $user = User::factory()->create(['derniere_connexion_at' => now()->subDays(3)]);
+    $mailMessage = (new ResetPasswordNotification('un-jeton'))->toMail($user);
+
+    expect($mailMessage->subject)->toBe('Réinitialisation de votre mot de passe — CSC Madre Trinidad')
+        ->and(implode(' ', $mailMessage->introLines))->toContain('demande de réinitialisation de mot de passe')
+        ->and($mailMessage->actionText)->toBe('Réinitialiser mon mot de passe');
+});

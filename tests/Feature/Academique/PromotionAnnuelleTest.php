@@ -25,7 +25,7 @@ test('an élève admis is promoted to the same-lettered classe of the next nivea
     expect($rapport['promus'])->toBe(1);
     expect($rapport['redoublants'])->toBe(0);
     expect($rapport['non_resolus'])->toBe([]);
-    $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classeCibleAttendue->id]);
+    $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classeCibleAttendue->id, 'statut' => 'normal']);
 });
 
 test('an élève admis falls back to the first classe of the next niveau when no section matches', function () {
@@ -89,7 +89,7 @@ test('a redoublant is reinscribed in the same niveau of the new année', functio
 
     expect($rapport['promus'])->toBe(0);
     expect($rapport['redoublants'])->toBe(1);
-    $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classeCible->id]);
+    $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classeCible->id, 'statut' => 'redoublant']);
 });
 
 test('an élève exclu is left untouched and not reported', function () {
@@ -159,6 +159,24 @@ test('démarrer-ing an année runs the promotion and flips which année is activ
     expect($anneeSource->fresh()->est_active)->toBeFalse();
     expect($anneeCible->fresh()->est_active)->toBeTrue();
     $this->assertDatabaseHas('inscriptions', ['eleve_id' => $eleve->id, 'classe_id' => $classeCible->id]);
+});
+
+test('démarrer-ing an année with promouvoir_automatiquement disabled does not run the promotion', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeSource = AnneeAcademique::factory()->create(['est_active' => true]);
+    $anneeCible = AnneeAcademique::factory()->create(['est_active' => false, 'promouvoir_automatiquement' => false]);
+    $ce2 = Niveau::factory()->create(['ordre' => 21, 'libelle' => 'CE2']);
+    $cm1 = Niveau::factory()->create(['ordre' => 22, 'libelle' => 'CM1']);
+    $classeSource = Classe::factory()->create(['niveau_id' => $ce2->id, 'annee_academique_id' => $anneeSource->id, 'nom' => 'CE2 A']);
+    Classe::factory()->create(['niveau_id' => $cm1->id, 'annee_academique_id' => $anneeCible->id, 'nom' => 'CM1 A']);
+    $eleve = Eleve::factory()->create();
+    Inscription::create(['eleve_id' => $eleve->id, 'classe_id' => $classeSource->id, 'date_inscription' => '2026-10-01', 'decision' => DecisionAnnuelle::Admis]);
+
+    $response = $this->actingAs($admin)->post(route('academique.annees.demarrer', $anneeCible));
+
+    $response->assertRedirect(route('academique.annees.show', $anneeCible));
+    expect($anneeCible->fresh()->est_active)->toBeTrue();
+    expect(Inscription::where('eleve_id', $eleve->id)->count())->toBe(1);
 });
 
 test('démarrer-ing an already-active année is rejected without re-running the promotion', function () {

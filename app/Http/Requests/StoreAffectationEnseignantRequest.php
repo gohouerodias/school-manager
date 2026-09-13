@@ -76,8 +76,15 @@ class StoreAffectationEnseignantRequest extends FormRequest
             }
 
             if ($this->classeEstEnModeEntiere()) {
-                if ($classe->matieres()->count() === 0) {
-                    $validator->errors()->add('classe_id', "Cette classe n'a pas encore de programme (matières) configuré.");
+                // Maternelle n'a pas de matières (voir DomaineEvaluation) :
+                // c'est son programme de domaines qui doit être non vide.
+                $classe->loadMissing('niveau');
+                $programmeVide = $classe->niveau->cycle === CycleNiveau::Maternelle
+                    ? $classe->domaines()->count() === 0
+                    : $classe->matieres()->count() === 0;
+
+                if ($programmeVide) {
+                    $validator->errors()->add('classe_id', "Cette classe n'a pas encore de programme configuré.");
                 }
 
                 // No per-matière/doublon checks here: store() replaces every

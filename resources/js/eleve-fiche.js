@@ -144,12 +144,7 @@ function renderFiche(data) {
     const parcoursList = document.getElementById('fiche-parcours-list');
     if (parcoursList) {
         parcoursList.innerHTML = parcours.length
-            ? parcours.map((p) => `
-                <div class="fiche-parcours-item">
-                    <b>${escapeHTML(p.annee ?? '—')}</b> — ${escapeHTML(p.classe ?? 'Sans classe')}
-                    <br><span>Moyenne : ${p.moyenne_annuelle ?? '—'}${p.decision ? ' · ' + escapeHTML(p.decision) : ''}</span>
-                </div>
-            `).join('')
+            ? parcours.map(friseItemHTML).join('')
             : '<p class="table-empty-state">Aucune inscription enregistrée.</p>';
     }
 
@@ -169,6 +164,76 @@ function renderFiche(data) {
             </div>
         `).join('');
     }
+}
+
+/**
+ * One row of the "Parcours scolaire" tab's frise chronologique — one per
+ * Inscription (see Eleves\EleveController::fiche()'s `parcours` payload).
+ * Unlike the parents/documents cards, this one doesn't need a URL template:
+ * the backend already returns a ready-to-use `statut_update_url` per row.
+ */
+function friseItemHTML(p) {
+    const badges = [];
+
+    if (p.annee_active) {
+        badges.push('<span class="frise-badge badge-active">Année en cours</span>');
+    }
+    if (p.statut_notable) {
+        badges.push(`<span class="frise-badge badge-statut-${escapeHTML(p.statut)}">${statutIcon(p.statut)} ${escapeHTML(p.statut_label)}</span>`);
+    }
+    if (p.decision) {
+        const moyenneSuffix = (p.moyenne_annuelle ?? null) !== null ? ` (${formatMoyenne(p.moyenne_annuelle)}/20)` : '';
+        badges.push(`<span class="frise-badge badge-decision-${escapeHTML(p.decision)}">${p.decision === 'admis' ? '✓' : '✕'} ${escapeHTML(p.decision_label)}${moyenneSuffix}</span>`);
+    }
+
+    const metaParts = [];
+    if (p.annee_active && !p.decision && (p.moyenne_annuelle ?? null) !== null) {
+        metaParts.push(`Moyenne actuelle : ${formatMoyenne(p.moyenne_annuelle)}/20`);
+    }
+    metaParts.push(`Titulaire : ${p.titulaire ? escapeHTML(p.titulaire) : '—'}`);
+
+    return `
+        <div class="frise-item ${p.annee_active ? 'active' : ''}">
+            <div class="frise-marker"></div>
+            <div class="frise-content">
+                <div class="frise-header">
+                    <b>${escapeHTML(p.annee ?? '—')}</b> — ${escapeHTML(p.classe ?? 'Sans classe')}
+                    ${badges.join(' ')}
+                    ${editStatutTriggerHTML(p)}
+                </div>
+                <div class="frise-meta">${metaParts.join(' · ')}</div>
+            </div>
+        </div>
+    `;
+}
+
+function statutIcon(statut) {
+    return { redoublant: '▲', transfert_entrant: '⇥', transfert_sortant: '⇤', abandon: '⚠' }[statut] ?? '';
+}
+
+function formatMoyenne(moyenne) {
+    return Number(moyenne).toFixed(2);
+}
+
+/**
+ * "Modifier le statut" pencil button on a frise item — wired via event
+ * delegation in eleve-tuteur-document.js's initEditStatutParcoursPanel(),
+ * since (like editTuteurTriggerHTML) this button doesn't exist yet when
+ * that script's init-time listeners are attached.
+ */
+function editStatutTriggerHTML(p) {
+    if (!p.statut_update_url) {
+        return '';
+    }
+
+    return `
+        <button type="button" class="fiche-item-btn frise-edit-btn" title="Modifier le statut" aria-label="Modifier le statut"
+            data-edit-statut-trigger
+            data-edit-url="${escapeHTML(p.statut_update_url)}"
+            data-edit-statut="${escapeHTML(p.statut)}"
+            data-edit-annee="${escapeHTML(p.annee ?? '—')} — ${escapeHTML(p.classe ?? 'Sans classe')}"
+        >${editIcon()}</button>
+    `;
 }
 
 /**

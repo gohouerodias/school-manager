@@ -5,12 +5,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Seules les dates se modifient — le libellé reste fixe une fois l'année
- * créée (voir Academique\AnneeAcademiqueController::update()). Les
- * nouvelles dates doivent continuer à englober tous les examens déjà créés
- * pour cette année (voir StoreExamenRequest/UpdateExamenRequest, qui
- * exigent l'inverse : que les dates d'un examen restent dans la fenêtre de
- * son année).
+ * Le libellé reste fixe une fois l'année créée (voir Academique\
+ * AnneeAcademiqueController::update()) — seules les dates et le nombre
+ * d'évaluations prévues se modifient. Les nouvelles dates doivent continuer
+ * à englober tous les examens déjà créés pour cette année (voir
+ * StoreExamenRequest/UpdateExamenRequest, qui exigent l'inverse : que les
+ * dates d'un examen restent dans la fenêtre de son année).
  */
 class UpdateAnneeAcademiqueRequest extends FormRequest
 {
@@ -27,6 +27,9 @@ class UpdateAnneeAcademiqueRequest extends FormRequest
         return [
             'date_debut' => ['required', 'date'],
             'date_fin' => ['required', 'date', 'after:date_debut'],
+            // Voir StoreAnneeAcademiqueRequest : "nullable" pour rester
+            // compatible avec tout appel existant qui ne l'envoie pas encore.
+            'nombre_evaluations_prevues' => ['nullable', 'integer', 'min:1', 'max:20'],
         ];
     }
 
@@ -39,6 +42,9 @@ class UpdateAnneeAcademiqueRequest extends FormRequest
             'date_debut.required' => 'La date de début est obligatoire.',
             'date_fin.required' => 'La date de fin est obligatoire.',
             'date_fin.after' => 'La date de fin doit être postérieure à la date de début.',
+            'nombre_evaluations_prevues.integer' => "Le nombre d'évaluations prévues doit être un nombre entier.",
+            'nombre_evaluations_prevues.min' => "Le nombre d'évaluations prévues doit être d'au moins 1.",
+            'nombre_evaluations_prevues.max' => "Le nombre d'évaluations prévues ne peut pas dépasser 20.",
         ];
     }
 

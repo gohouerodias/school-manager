@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAnneeAcademiqueRequest;
 use App\Http\Requests\UpdateAnneeAcademiqueRequest;
 use App\Models\AnneeAcademique;
+use App\Models\DomaineEvaluation;
 use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\User;
@@ -36,15 +37,18 @@ class AnneeAcademiqueController extends Controller
 
     public function store(StoreAnneeAcademiqueRequest $request): RedirectResponse
     {
-        $anneeAcademique = AnneeAcademique::create($request->validated());
+        $validated = $request->validated();
+        $validated['promouvoir_automatiquement'] = $request->boolean('promouvoir_automatiquement');
+
+        $anneeAcademique = AnneeAcademique::create($validated);
 
         return redirect()->route('academique.annees.show', $anneeAcademique)->with('toast', "Année académique « {$anneeAcademique->libelle} » créée. Configurez son programme, ses classes et ses affectations avant de la démarrer.");
     }
 
     /**
-     * Seules les dates de début/fin se modifient — voir
-     * UpdateAnneeAcademiqueRequest, qui refuse toute nouvelle fenêtre qui
-     * exclurait un examen déjà créé pour cette année.
+     * Dates de début/fin et nombre d'évaluations mensuelles — voir
+     * UpdateAnneeAcademiqueRequest, qui refuse toute nouvelle fenêtre de
+     * dates qui exclurait un examen déjà créé pour cette année.
      */
     public function update(UpdateAnneeAcademiqueRequest $request, AnneeAcademique $anneeAcademique): RedirectResponse
     {
@@ -58,8 +62,11 @@ class AnneeAcademiqueController extends Controller
         $anneeAcademique->load([
             'niveauMatieres.niveau',
             'niveauMatieres.matiere',
+            'niveauDomaines.niveau',
+            'niveauDomaines.domaineEvaluation',
             'classes.niveau',
             'classes.matieres',
+            'classes.domaines',
             'affectations.enseignant',
             'affectations.classe',
             'affectations.matiere',
@@ -68,8 +75,10 @@ class AnneeAcademiqueController extends Controller
         return view('academique.annees.show', [
             'anneeAcademique' => $anneeAcademique,
             'anneeActive' => AnneeAcademique::query()->where('est_active', true)->where('id', '!=', $anneeAcademique->id)->first(),
+            'examens' => $anneeAcademique->examens()->orderByDesc('date_examen')->get(),
             'niveaux' => Niveau::query()->orderBy('ordre')->get(),
             'matieres' => Matiere::query()->orderBy('nom')->get(),
+            'domaines' => DomaineEvaluation::query()->orderBy('nom')->get(),
             'enseignants' => User::query()->where('profil', ProfilUtilisateur::Enseignant->value)->orderBy('name')->get(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
@@ -91,7 +100,7 @@ class AnneeAcademiqueController extends Controller
             ->where('id', '!=', $anneeAcademique->id)
             ->first();
 
-        $rapport = $anneeSource
+        $rapport = ($anneeSource && $anneeAcademique->promouvoir_automatiquement)
             ? $promotionAnnuelleService->promouvoir($anneeSource, $anneeAcademique)
             : ['promus' => 0, 'redoublants' => 0, 'non_resolus' => []];
 

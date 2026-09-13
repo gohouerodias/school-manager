@@ -9,7 +9,8 @@ use Illuminate\Database\Seeder;
 /**
  * Démarre une instance réelle (pas de démo) avec uniquement les données de
  * référence dont l'application a besoin pour fonctionner : niveaux, année
- * académique, examen, types de documents, matières, champs personnalisés.
+ * académique, examen, types de documents, matières, domaines d'évaluation
+ * (maternelle), champs personnalisés.
  *
  * Ne crée aucun compte utilisateur — le compte administrateur principal se
  * crée séparément via `php artisan admin:creer-principal`, puis sert à
@@ -33,6 +34,7 @@ class DatabaseSeeder extends Seeder
         $this->seedExamen($anneeAcademique);
         $this->seedTypesDocuments();
         $this->seedMatieres();
+        $this->seedDomainesEvaluation();
         $this->seedChampsPersonnalises();
     }
 }

@@ -4,6 +4,7 @@ use App\Enums\SystemeScolaire;
 use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Classe;
+use App\Models\DomaineEvaluation;
 use App\Models\Examen;
 use App\Models\Inscription;
 use App\Models\Matiere;
@@ -18,11 +19,30 @@ test('an administrateur can create an année académique', function () {
         'libelle' => '2026-2027',
         'date_debut' => '2026-10-01',
         'date_fin' => '2027-07-31',
+        'nombre_evaluations_prevues' => 3,
+        'promouvoir_automatiquement' => '1',
     ]);
 
     $anneeAcademique = AnneeAcademique::where('libelle', '2026-2027')->firstOrFail();
     $response->assertRedirect(route('academique.annees.show', $anneeAcademique));
     expect($anneeAcademique->est_active)->toBeFalse();
+    expect($anneeAcademique->nombre_evaluations_prevues)->toBe(3);
+    expect($anneeAcademique->promouvoir_automatiquement)->toBeTrue();
+});
+
+test('an année académique created without checking the promotion box has promouvoir_automatiquement set to false', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    $this->actingAs($admin)->post(route('academique.annees.store'), [
+        'libelle' => '2026-2027',
+        'date_debut' => '2026-10-01',
+        'date_fin' => '2027-07-31',
+        // "promouvoir_automatiquement" volontairement absent : une checkbox
+        // décochée n'envoie aucune valeur.
+    ]);
+
+    $anneeAcademique = AnneeAcademique::where('libelle', '2026-2027')->firstOrFail();
+    expect($anneeAcademique->promouvoir_automatiquement)->toBeFalse();
 });
 
 test('a non-administrateur cannot create an année académique', function () {
@@ -55,6 +75,24 @@ test('an administrateur can update an année académique’s dates without chang
     expect($anneeAcademique->libelle)->toBe('2026-2027');
     expect($anneeAcademique->date_debut->format('Y-m-d'))->toBe('2026-09-15');
     expect($anneeAcademique->date_fin->format('Y-m-d'))->toBe('2027-08-15');
+});
+
+test('an administrateur can update an année académique’s nombre d’évaluations prévues', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create([
+        'date_debut' => '2026-10-01',
+        'date_fin' => '2027-07-31',
+        'nombre_evaluations_prevues' => 2,
+    ]);
+
+    $response = $this->actingAs($admin)->patch(route('academique.annees.update', $anneeAcademique), [
+        'date_debut' => '2026-10-01',
+        'date_fin' => '2027-07-31',
+        'nombre_evaluations_prevues' => 4,
+    ]);
+
+    $response->assertRedirect();
+    expect($anneeAcademique->refresh()->nombre_evaluations_prevues)->toBe(4);
 });
 
 test('updating an année académique rejects a date_fin before date_debut', function () {
@@ -186,6 +224,25 @@ test('an administrateur can add a matière to a niveau’s programme for an ann�
         'annee_academique_id' => $anneeAcademique->id,
         'coefficient' => 3,
     ]);
+});
+
+test('adding a matière to a niveau’s programme immediately reaches classes already created for it', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->create();
+    $classe = Classe::factory()->create(['niveau_id' => $niveau->id, 'annee_academique_id' => $anneeAcademique->id]);
+    $matiere = Matiere::factory()->create();
+
+    expect($classe->matieres()->count())->toBe(0);
+
+    $this->actingAs($admin)->post(route('academique.annees.niveau-matieres.store', $anneeAcademique), [
+        'niveau_id' => $niveau->id,
+        'matieres' => [
+            ['matiere_id' => $matiere->id, 'coefficient' => 3],
+        ],
+    ]);
+
+    $this->assertDatabaseHas('classe_matiere', ['classe_id' => $classe->id, 'matiere_id' => $matiere->id, 'coefficient' => 3]);
 });
 
 test('an administrateur can add several matières to a niveau’s programme at once', function () {
@@ -617,6 +674,108 @@ test('a non-admin cannot remove an enseignant from a classe', function () {
     $response = $this->actingAs($prof)->delete(route('academique.classes.enseignants.destroy', [$classe, $prof]));
 
     $response->assertForbidden();
+});
+
+test('the affectations panel explains why the titulaire dropdown is absent for a maternelle/primaire classe', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => Niveau::factory()->primaire()]);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    $response->assertSee('un seul enseignant enseigne toute la classe');
+});
+
+test('removing a matière from a niveau’s programme immediately detaches it from already-created classes and deletes the now-orphaned affectations', function () {
+    $admin = User::factory()->administrateur()->create();
+    $prof = User::factory()->enseignant()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->college()->create();
+    $classe = Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => $niveau->id]);
+    $francais = Matiere::factory()->create(['nom' => 'Français']);
+    $niveauMatiere = NiveauMatiere::create(['niveau_id' => $niveau->id, 'matiere_id' => $francais->id, 'annee_academique_id' => $anneeAcademique->id, 'coefficient' => 4]);
+    $classe->matieres()->attach($francais->id, ['coefficient' => 4]);
+    AffectationEnseignant::create([
+        'enseignant_id' => $prof->id, 'classe_id' => $classe->id, 'matiere_id' => $francais->id,
+        'annee_academique_id' => $anneeAcademique->id, 'est_professeur_principal' => true,
+    ]);
+
+    $response = $this->actingAs($admin)->delete(route('academique.niveau-matieres.destroy', $niveauMatiere));
+
+    $response->assertRedirect();
+    expect($classe->matieres()->count())->toBe(0);
+    $this->assertDatabaseMissing('affectations_enseignant', ['classe_id' => $classe->id, 'matiere_id' => $francais->id]);
+});
+
+test('resaving a classe after its matière was removed from the niveau’s programme cleans up the stale affectation', function () {
+    $admin = User::factory()->administrateur()->create();
+    $prof = User::factory()->enseignant()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->college()->create();
+    $classe = Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => $niveau->id, 'nom' => "{$niveau->libelle} A"]);
+    $francais = Matiere::factory()->create(['nom' => 'Français']);
+    $classe->matieres()->attach($francais->id, ['coefficient' => 4]);
+    AffectationEnseignant::create([
+        'enseignant_id' => $prof->id, 'classe_id' => $classe->id, 'matiere_id' => $francais->id,
+        'annee_academique_id' => $anneeAcademique->id, 'est_professeur_principal' => true,
+    ]);
+
+    // Simule une donnée déjà orpheline (matière jamais retirée via
+    // NiveauMatiereController::destroy(), par exemple sur des données
+    // antérieures à ce correctif) : aucun NiveauMatiere pour ce niveau, donc
+    // matieresPour() ne renverra rien pour "Français".
+    $response = $this->actingAs($admin)->patch(route('academique.classes.update', $classe), ['lettre' => 'A']);
+
+    $response->assertRedirect();
+    expect($classe->matieres()->count())->toBe(0);
+    $this->assertDatabaseMissing('affectations_enseignant', ['classe_id' => $classe->id, 'matiere_id' => $francais->id]);
+});
+
+test('the affectations tab shows a card per classe with an assigned/unassigned badge per matière', function () {
+    $admin = User::factory()->administrateur()->create();
+    $prof = User::factory()->enseignant()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $classe = Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => Niveau::factory()->college()]);
+    $francais = Matiere::factory()->create(['nom' => 'Français']);
+    $maths = Matiere::factory()->create(['nom' => 'Mathématiques']);
+    $classe->matieres()->attach([$francais->id => ['coefficient' => 4], $maths->id => ['coefficient' => 4]]);
+
+    $this->actingAs($admin)->post(route('academique.annees.affectations.store', $anneeAcademique), [
+        'enseignant_id' => $prof->id,
+        'classe_id' => $classe->id,
+        'matiere_ids' => [$francais->id],
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    $response->assertSee($classe->nom);
+    $response->assertSee('1 / 2 matières assignées');
+    $response->assertSee($prof->name);
+    $response->assertSee('Non assigné');
+});
+
+test('the affectations tab shows a single titulaire, not per-matière badges, for a maternelle classe', function () {
+    $admin = User::factory()->administrateur()->create();
+    $prof = User::factory()->enseignant()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $classe = Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => Niveau::factory()->maternelle()]);
+    $domaine = DomaineEvaluation::factory()->create(['nom' => 'Langage']);
+    $classe->domaines()->attach($domaine->id);
+
+    $this->actingAs($admin)->post(route('academique.annees.affectations.store', $anneeAcademique), [
+        'enseignant_id' => $prof->id,
+        'classe_id' => $classe->id,
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    $response->assertSee($domaine->nom);
+    $response->assertSee($prof->name);
+    $response->assertSee('enseignant unique de la classe');
+    $response->assertDontSee('matières assignées');
 });
 
 test('a matière already taught by another enseignant in the same classe cannot be given to a second one', function () {

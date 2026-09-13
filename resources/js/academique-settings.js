@@ -7,6 +7,7 @@
 export function initAcademiqueSettings() {
     initNiveauEdit();
     initMatiereEdit();
+    initDomaineEdit();
 }
 
 function initNiveauEdit() {
@@ -43,6 +44,26 @@ function initMatiereEdit() {
     const editUrlHidden = document.getElementById('edit-matiere-edit-url');
 
     document.querySelectorAll('[data-edit-matiere-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            form.action = trigger.dataset.editUrl;
+            if (editUrlHidden) {
+                editUrlHidden.value = trigger.dataset.editUrl;
+            }
+            nomInput.value = trigger.dataset.editNom ?? '';
+        });
+    });
+}
+
+function initDomaineEdit() {
+    const form = document.getElementById('edit-domaine-form');
+    if (!form) {
+        return;
+    }
+
+    const nomInput = document.getElementById('edit-domaine-nom');
+    const editUrlHidden = document.getElementById('edit-domaine-edit-url');
+
+    document.querySelectorAll('[data-edit-domaine-trigger]').forEach((trigger) => {
         trigger.addEventListener('click', () => {
             form.action = trigger.dataset.editUrl;
             if (editUrlHidden) {

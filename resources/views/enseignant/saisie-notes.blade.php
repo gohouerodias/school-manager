@@ -158,6 +158,8 @@
     <button type="button" class="btn dark" id="saveBarBtn">Enregistrer les modifications</button>
 </div>
 
+@include('enseignant.partials.observations-annuelles')
+
 <div class="overlay" id="overlay"></div>
 
 <div class="panel" id="commentPanel">
