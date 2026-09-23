@@ -14,11 +14,26 @@ use App\Http\Controllers\Eleves\TuteurController;
 use App\Http\Controllers\Eleves\TypeDocumentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile:administrateur,agent_scolarite'])
+// Lecture seule : voir App\Enums\ProfilUtilisateur::Direction, dont les
+// seuls cas d'utilisation côté dossier élève sont "Consulter une fiche
+// élève" et "Rechercher un dossier élève" (voir le diagramme de cas
+// d'utilisation) — jamais la création, la modification, l'archivage, ni la
+// gestion des tuteurs/documents/statuts, toujours réservées ci-dessous à
+// administrateur/agent de scolarité. Les contrôles de mutation restent
+// aussi masqués côté vue pour la Direction (voir eleves/index.blade.php et
+// eleve-fiche.js) pour ne pas afficher de boutons qui échoueraient en 403.
+Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile:administrateur,agent_scolarite,direction'])
     ->prefix('eleves')
     ->name('eleves.')
     ->group(function () {
         Route::get('/', [EleveController::class, 'index'])->name('index');
+        Route::get('{eleve}/fiche', [EleveController::class, 'fiche'])->name('fiche');
+    });
+
+Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile:administrateur,agent_scolarite'])
+    ->prefix('eleves')
+    ->name('eleves.')
+    ->group(function () {
         Route::post('/', [EleveController::class, 'store'])->name('store');
         Route::patch('{eleve}', [EleveController::class, 'update'])->name('update');
 
@@ -32,7 +47,6 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::patch('{eleve}/archiver', [EleveController::class, 'archiver'])->name('archiver');
         Route::patch('{eleve}/classe', [EleveClasseController::class, 'update'])->name('classe.update');
         Route::patch('{eleve}/desarchiver', [EleveController::class, 'desarchiver'])->name('desarchiver');
-        Route::get('{eleve}/fiche', [EleveController::class, 'fiche'])->name('fiche');
         Route::patch('{eleve}/inscriptions/{inscription}/statut', [InscriptionStatutController::class, 'update'])->name('inscriptions.statut.update');
         Route::post('{eleve}/tuteurs', [TuteurController::class, 'store'])->name('tuteurs.store');
         Route::patch('{eleve}/tuteurs/{parentTuteur}', [TuteurController::class, 'update'])->name('tuteurs.update');

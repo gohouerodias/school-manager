@@ -12,21 +12,24 @@ use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\User;
 
-test('enseignants and direction cannot access the eleves list', function () {
+test('enseignants cannot access the eleves list', function () {
     $enseignant = User::factory()->enseignant()->create();
-    $direction = User::factory()->direction()->create();
 
     $this->actingAs($enseignant)->get(route('eleves.index'))->assertForbidden();
-    $this->actingAs($direction)->get(route('eleves.index'))->assertForbidden();
 });
 
-test('administrators and agents de scolarité can view the eleves list', function () {
+test('administrators, agents de scolarité and direction can view the eleves list', function () {
+    // Direction: read-only (see routes/eleves.php) — "Consulter une fiche
+    // élève" / "Rechercher un dossier élève" are its only dossier-élève use
+    // cases in the diagram, never create/edit/archive/export.
     $admin = User::factory()->administrateur()->create();
     $agent = User::factory()->agentScolarite()->create();
+    $direction = User::factory()->direction()->create();
     Eleve::factory()->count(2)->create();
 
     $this->actingAs($admin)->get(route('eleves.index'))->assertOk();
     $this->actingAs($agent)->get(route('eleves.index'))->assertOk();
+    $this->actingAs($direction)->get(route('eleves.index'))->assertOk();
 });
 
 test('the classe filter dropdown options use the real classe ids, not renumbered indexes', function () {

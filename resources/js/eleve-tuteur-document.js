@@ -72,6 +72,12 @@ export function initEleveTuteurDocument() {
                 resetDropzone();
                 updateFormatsHint();
                 hideFileClientError();
+                // Ce bouton (onglet Documents général) n'est jamais scopé à
+                // une inscription — form.reset() a déjà remis le champ caché
+                // à vide, mais on masque aussi l'indice affiché par
+                // initAddDocumentFromFrisePanel() s'il traînait d'une
+                // précédente ouverture depuis la frise.
+                hideDocumentInscriptionHint();
             });
         });
 
@@ -84,12 +90,80 @@ export function initEleveTuteurDocument() {
         });
     }
 
+    initAddDocumentFromFrisePanel();
+
     const typeSelect = document.getElementById('document-type');
     if (typeSelect) {
         typeSelect.addEventListener('change', updateFormatsHint);
     }
 
     initDropzone();
+}
+
+/**
+ * "+ Document justificatif" button on a frise item (see eleve-fiche.js's
+ * friseDocumentsHTML(), currently only rendered for statut "Transféré
+ * entrant"). Opens the same shared "add-document" panel as the Documents
+ * tab's general button, but pre-fills the hidden `inscription_id` field so
+ * the upload is attached to this specific année rather than to the élève in
+ * general (see DocumentController::store()). Delegated on
+ * #fiche-parcours-list, since the frise is rebuilt on every fiche render —
+ * this button doesn't exist yet when the module's other init-time listeners
+ * are attached (same reasoning as initEditStatutParcoursPanel() above).
+ */
+function initAddDocumentFromFrisePanel() {
+    const parcoursList = document.getElementById('fiche-parcours-list');
+    const documentForm = document.getElementById('add-document-form');
+    if (!parcoursList || !documentForm) {
+        return;
+    }
+
+    const documentActionHidden = document.getElementById('add-document-action');
+    const inscriptionIdHidden = document.getElementById('add-document-inscription-id');
+
+    parcoursList.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-add-document-frise-trigger]');
+        if (!trigger) {
+            return;
+        }
+
+        documentForm.action = trigger.dataset.uploadUrl;
+        if (documentActionHidden) {
+            documentActionHidden.value = trigger.dataset.uploadUrl;
+        }
+
+        documentForm.reset();
+        refreshDropdownSelect(documentForm.querySelector('select'));
+        resetDropzone();
+        updateFormatsHint();
+        hideFileClientError();
+
+        // form.reset() ci-dessus a remis inscription_id à vide (sa valeur
+        // HTML par défaut) — on la fixe *après*, pour cibler cette inscription.
+        if (inscriptionIdHidden) {
+            inscriptionIdHidden.value = trigger.dataset.inscriptionId ?? '';
+        }
+        showDocumentInscriptionHint(trigger.dataset.annee);
+
+        document.querySelector('[data-panel="add-document"]')?.classList.add('show');
+        document.querySelector('[data-panel-overlay="add-document"]')?.classList.add('show');
+    });
+}
+
+function showDocumentInscriptionHint(annee) {
+    const hint = document.getElementById('add-document-inscription-hint');
+    if (!hint) {
+        return;
+    }
+    hint.textContent = `Ce document sera rattaché à l'année ${annee ?? '—'} sur la frise du parcours scolaire.`;
+    hint.style.display = 'block';
+}
+
+function hideDocumentInscriptionHint() {
+    const hint = document.getElementById('add-document-inscription-hint');
+    if (hint) {
+        hint.style.display = 'none';
+    }
 }
 
 /**

@@ -12,6 +12,7 @@ use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\User;
 use App\Services\PromotionAnnuelleService;
+use App\Services\RapportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -57,7 +58,7 @@ class AnneeAcademiqueController extends Controller
         return back()->with('toast', "Dates de « {$anneeAcademique->libelle} » mises à jour.");
     }
 
-    public function show(AnneeAcademique $anneeAcademique): View
+    public function show(AnneeAcademique $anneeAcademique, RapportService $rapportService): View
     {
         $anneeAcademique->load([
             'niveauMatieres.niveau',
@@ -67,6 +68,7 @@ class AnneeAcademiqueController extends Controller
             'classes.niveau',
             'classes.matieres',
             'classes.domaines',
+            'classes.inscriptions.eleve',
             'affectations.enseignant',
             'affectations.classe',
             'affectations.matiere',
@@ -76,6 +78,7 @@ class AnneeAcademiqueController extends Controller
             'anneeAcademique' => $anneeAcademique,
             'anneeActive' => AnneeAcademique::query()->where('est_active', true)->where('id', '!=', $anneeAcademique->id)->first(),
             'examens' => $anneeAcademique->examens()->orderByDesc('date_examen')->get(),
+            'statistiquesEvaluations' => $rapportService->statistiquesEvaluations($anneeAcademique),
             'niveaux' => Niveau::query()->orderBy('ordre')->get(),
             'matieres' => Matiere::query()->orderBy('nom')->get(),
             'domaines' => DomaineEvaluation::query()->orderBy('nom')->get(),

@@ -58,6 +58,7 @@
     <button type="button" class="tab-btn" data-tab-btn="classes">Classes</button>
     <button type="button" class="tab-btn" data-tab-btn="affectations">Affectations enseignants</button>
     <button type="button" class="tab-btn" data-tab-btn="examens">Examens</button>
+    <button type="button" class="tab-btn" data-tab-btn="bulletins">Bulletins</button>
 </div>
 
 <div data-tab-panel="programme">
@@ -340,6 +341,16 @@
             <p class="hint">Cette année n'est pas active : ces examens sont affichés à titre indicatif. Pour créer un nouvel examen, démarrez d'abord cette année.</p>
         @endunless
 
+        {{-- Taux de complétion des notes + moyenne de classe, un point par
+             évaluation mensuelle — voir RapportService::statistiquesEvaluations().
+             Maternelle exclue (pas de notes chiffrées) : si l'année n'a
+             aucun examen non-maternelle pour l'instant, rien à tracer. --}}
+        @if ($statistiquesEvaluations->isNotEmpty())
+            <div class="chart-card" style="margin-bottom:18px;">
+                <canvas id="chart-examens-statistiques" data-stats="{{ json_encode($statistiquesEvaluations) }}"></canvas>
+            </div>
+        @endif
+
         <x-data-table id="examens-annee-table">
             <x-slot:head>
                 <th>Système</th>
@@ -388,6 +399,82 @@
                 </tr>
             @endforelse
         </x-data-table>
+    </section>
+</div>
+
+{{-- Pour l'année active, l'écran Bulletins (eleves/bulletins) fonctionne
+     directement — c'est le seul cas qu'il reconnaît (voir
+     BulletinGenerationController::index(), qui ne liste que les classes de
+     l'année active, quel que soit le classe_id passé en paramètre). Pour une
+     année passée, ce même écran serait donc trompeur ; on affiche ici, à la
+     place, la moyenne/décision déjà calculées de chaque apprenant avec un
+     lien direct vers l'aperçu/téléchargement de son bulletin annuel — ces
+     routes-là n'ont aucune restriction d'année (voir Eleves\
+     BulletinAnnuelGenerationController::apercu()/telechargerIndividuel()). --}}
+<div data-tab-panel="bulletins" style="display:none;">
+    <section class="config-section">
+        <div class="config-section-head">
+            <h2>Bulletins</h2>
+        </div>
+
+        @if ($anneeAcademique->est_active)
+            <p class="hint">Cette année est active : gérez la génération des bulletins mensuels et annuels depuis l'écran Bulletins, classe par classe.</p>
+
+            <div class="affectation-cards-grid">
+                @forelse ($anneeAcademique->classes as $classe)
+                    <div class="affectation-card">
+                        <div class="affectation-card-head">
+                            <div>
+                                <h3>{{ $classe->nom }}</h3>
+                                <span class="affectation-card-niveau">{{ $classe->niveau->libelle }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ route('eleves.bulletins.index', ['classe_id' => $classe->id]) }}" class="btn ghost">Gérer les bulletins →</a>
+                    </div>
+                @empty
+                    <div class="table-empty-state">Aucune classe pour cette année pour l'instant.</div>
+                @endforelse
+            </div>
+        @else
+            <p class="hint">Cette année n'est pas active : la génération de bulletins n'est possible que pour l'année active. Voici, à titre indicatif, le bulletin annuel déjà calculé de chaque apprenant de cette année.</p>
+
+            @forelse ($anneeAcademique->classes as $classe)
+                <div class="config-section" style="margin-top:18px;">
+                    <div class="config-section-head">
+                        <h3 style="margin:0;">{{ $classe->nom }} <span class="affectation-card-niveau">{{ $classe->niveau->libelle }}</span></h3>
+                    </div>
+
+                    <x-data-table :id="'bulletins-annee-classe-'.$classe->id">
+                        <x-slot:head>
+                            <th>Apprenant</th>
+                            <th>Moyenne annuelle</th>
+                            <th>Décision</th>
+                            <th></th>
+                        </x-slot:head>
+
+                        @forelse ($classe->inscriptions as $inscription)
+                            <tr>
+                                <td>{{ $inscription->eleve->nomComplet() }}</td>
+                                <td>{{ $inscription->moyenne_annuelle !== null ? number_format($inscription->moyenne_annuelle, 2).'/20' : '—' }}</td>
+                                <td>{{ $inscription->decision?->label() ?? '—' }}</td>
+                                <td>
+                                    <div class="row-actions-group">
+                                        <a href="{{ route('eleves.bulletins.annuel.apercu', ['classe' => $classe, 'inscription' => $inscription]) }}" class="btn ghost" target="_blank" rel="noopener">Aperçu</a>
+                                        <a href="{{ route('eleves.bulletins.annuel.apercu.telecharger', ['classe' => $classe, 'inscription' => $inscription]) }}" class="btn ghost">Télécharger</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="table-empty-state">Aucun apprenant inscrit dans cette classe.</td>
+                            </tr>
+                        @endforelse
+                    </x-data-table>
+                </div>
+            @empty
+                <div class="table-empty-state">Aucune classe pour cette année pour l'instant.</div>
+            @endforelse
+        @endif
     </section>
 </div>
 

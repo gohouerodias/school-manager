@@ -721,6 +721,23 @@ button.classe-badge:hover { filter: brightness(0.95); }
 .frise-badge.badge-statut-transfert_entrant, .frise-badge.badge-statut-transfert_sortant { background: var(--blue-tint); color: var(--blue); }
 .frise-badge.badge-statut-abandon { background: var(--red-tint); color: var(--red); }
 
+/* Documents justificatifs d'une ligne de la frise (ex : preuve d'un
+   "Transféré entrant") — voir eleve-fiche.js's friseDocumentsHTML() et
+   DocumentNumerique::inscription(). */
+.frise-documents { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.frise-document-item {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px;
+    border: 1px solid var(--line); border-radius: 20px; font-size: 11.5px; color: var(--ink-muted); background: #fff;
+}
+.frise-document-item a { display: inline-flex; color: var(--ink-muted); }
+.frise-document-item a:hover { color: var(--green-deep); }
+.frise-add-document-btn {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 7px;
+    border: 1px dashed var(--line); border-radius: 20px; background: #fff; color: var(--ink-muted);
+    font-size: 11.5px; cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+}
+.frise-add-document-btn:hover { background: var(--green-tint); border-color: var(--green); color: var(--green-deep); }
+
 /* Generic confirmation dialog (<x-confirm-modal>, confirm-modal.js): a much
    smaller centered dialog variant of .panel, same idea as .fiche-modal.
    Rendered once as a page-wide singleton (layouts/app.blade.php), so its
@@ -907,6 +924,21 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 .progress-summary .progress-fill { height: 100%; background: var(--green); border-radius: 10px; transition: width .3s ease; }
 .progress-summary .progress-fill.warn { background: var(--gold); }
 .status-sign-badge { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+
+/* Écran Rapports (rapports.index) */
+.rapport-summary-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.rapport-summary-card { padding: 16px 22px; display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+.rapport-summary-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); }
+.rapport-summary-value { font-size: 22px; font-weight: 700; color: var(--ink); }
+
+/* Conteneur d'un graphe Chart.js (rapports.index's onglet "Statistiques",
+   académique.annees.show's onglet Examens) — Chart.js a besoin d'un parent
+   de hauteur fixe pour son mode responsive, sinon le <canvas> grandit à
+   l'infini à chaque redessin. */
+.chart-card {
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; height: 340px;
+}
 .status-sign-badge.ok { background: var(--green-tint); color: var(--green); }
 .status-sign-badge.pending { background: var(--gold-tint); color: #8A6717; }
 .generate-bar {

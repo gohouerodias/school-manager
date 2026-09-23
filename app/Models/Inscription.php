@@ -68,6 +68,20 @@ class Inscription extends Model
     }
 
     /**
+     * Documents justifiant un événement précis de cette inscription — par
+     * exemple le certificat/l'attestation prouvant un "Transféré entrant"
+     * (voir App\Enums\StatutInscription et la frise chronologique de la
+     * fiche élève). La plupart des documents d'un élève n'ont pas de lien à
+     * une inscription précise ; voir plutôt Eleve::documents() pour ceux-là.
+     *
+     * @return HasMany<DocumentNumerique, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(DocumentNumerique::class);
+    }
+
+    /**
      * Moyenne simple des bulletins mensuels déjà Validés (voir
      * StatutBulletin) de l'année — un bulletin encore en Brouillon n'est pas
      * définitif et ne doit pas peser dans la moyenne annuelle. `null` (et non

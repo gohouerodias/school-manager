@@ -1,7 +1,15 @@
 {{-- Table + pagination for the eleves list. Extracted from eleves/index.blade.php
      so EleveController::index() can also return just this fragment for the
      live-search AJAX requests (see resources/js/live-search.js), instead of
-     the whole page. Needs $eleves, $obligatoireTypeIds and $classes. --}}
+     the whole page. Needs $eleves, $obligatoireTypeIds and $classes.
+     Computes $peutModifier itself (rather than relying on the parent's)
+     since the AJAX live-search path renders this partial standalone,
+     without going through eleves/index.blade.php first — see
+     Eleves\EleveController::index(). --}}
+@php
+    $peutModifier = auth()->user()->profil !== \App\Enums\ProfilUtilisateur::Direction;
+@endphp
+
 @if ($eleves->isEmpty())
     <p class="table-empty-state">Aucun apprenant ne correspond à votre recherche.</p>
 @endif
@@ -43,7 +51,7 @@
             <td>
                 @if ($isBrouillon)
                     <span class="classe-badge none">{{ $eleve->niveauSouhaite ? "{$eleve->niveauSouhaite->libelle} souhaité" : 'Non précisé' }}</span>
-                @else
+                @elseif ($peutModifier)
                     <select
                         class="filter-select classe-assign-select"
                         data-eleve-id="{{ $eleve->id }}"
@@ -60,12 +68,14 @@
                             </option>
                         @endforeach
                     </select>
+                @else
+                    <span class="classe-badge none">{{ $inscriptionActive ? "{$inscriptionActive->classe->niveau->libelle} — {$inscriptionActive->classe->nom}" : 'Sans classe' }}</span>
                 @endif
             </td>
             <td>
                 @if ($isBrouillon)
                     <span class="status pending-status"><span class="dot"></span> Brouillon</span>
-                @else
+                @elseif ($peutModifier)
                     <select
                         class="filter-select statut-assign-select"
                         data-eleve-id="{{ $eleve->id }}"
@@ -76,6 +86,8 @@
                         <option value="actif" @selected(! $isArchived)>Actif</option>
                         <option value="archive" @selected($isArchived)>Archivé</option>
                     </select>
+                @else
+                    <span class="status {{ $isArchived ? '' : 'pending-status' }}"><span class="dot"></span> {{ $isArchived ? 'Archivé' : 'Actif' }}</span>
                 @endif
             </td>
             <td>{{ $eleve->created_at->format('d/m/Y') }}</td>
@@ -90,7 +102,9 @@
             </td>
             <td>
                 @if ($isBrouillon)
-                    <a href="{{ route('eleves.wizard.edit', $eleve) }}" class="btn ghost" style="padding:6px 12px; font-size:12px;">Continuer</a>
+                    @if ($peutModifier)
+                        <a href="{{ route('eleves.wizard.edit', $eleve) }}" class="btn ghost" style="padding:6px 12px; font-size:12px;">Continuer</a>
+                    @endif
                 @else
                     {{-- The row-actions "⋯" submenu (Consulter/Modifier/Archiver) was
                          dropped in favor of a single "consulter la fiche" trigger:

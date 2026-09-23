@@ -202,9 +202,59 @@ function friseItemHTML(p) {
                     ${editStatutTriggerHTML(p)}
                 </div>
                 <div class="frise-meta">${metaParts.join(' · ')}</div>
+                ${friseDocumentsHTML(p)}
             </div>
         </div>
     `;
+}
+
+/**
+ * Documents justifiant cette inscription précise — surtout utile pour
+ * "Transféré entrant" : la preuve que l'élève vient bien d'une autre école
+ * (voir DocumentNumerique::inscription() et EleveController::fiche()'s
+ * `documents`/`document_upload_url` par item de parcours). Volontairement
+ * limité à ce seul statut pour l'instant plutôt qu'à tout statut_notable —
+ * c'est le seul cas demandé.
+ */
+function friseDocumentsHTML(p) {
+    if (p.statut !== 'transfert_entrant') {
+        return '';
+    }
+
+    const documentsList = (p.documents ?? []).map((d) => `
+        <span class="frise-document-item">
+            <a href="${escapeHTML(d.view_url)}" target="_blank" rel="noopener" title="Voir « ${escapeHTML(d.libelle)} »">${viewIcon()}</a>
+            <a href="${escapeHTML(d.download_url)}" title="Télécharger « ${escapeHTML(d.libelle)} »">${downloadIcon()}</a>
+            ${escapeHTML(d.libelle)}
+        </span>
+    `).join('');
+
+    const addButton = peutModifier() && p.document_upload_url ? `
+        <button type="button" class="frise-add-document-btn"
+            data-add-document-frise-trigger
+            data-upload-url="${escapeHTML(p.document_upload_url)}"
+            data-inscription-id="${escapeHTML(String(p.inscription_id ?? ''))}"
+            data-annee="${escapeHTML(p.annee ?? '—')}"
+        >+ Document justificatif</button>
+    ` : '';
+
+    if (!documentsList && !addButton) {
+        return '';
+    }
+
+    return `<div class="frise-documents">${documentsList}${addButton}</div>`;
+}
+
+/**
+ * Direction has read-only access to the fiche élève (see routes/eleves.php
+ * and eleves/index.blade.php's `$peutModifier`, threaded here via the
+ * `<x-fiche-modal data-peut-modifier>` attribute): every mutation control
+ * rendered from JS (tuteur/document edit+delete, parcours statut pencil)
+ * checks this before rendering, in addition to the ones already hidden
+ * server-side (#fiche-edit-eleve-trigger, "Ajouter un tuteur/document").
+ */
+function peutModifier() {
+    return document.querySelector('[data-panel="fiche"]')?.dataset.peutModifier === '1';
 }
 
 function statutIcon(statut) {
@@ -222,7 +272,7 @@ function formatMoyenne(moyenne) {
  * that script's init-time listeners are attached.
  */
 function editStatutTriggerHTML(p) {
-    if (!p.statut_update_url) {
+    if (!p.statut_update_url || !peutModifier()) {
         return '';
     }
 
@@ -265,7 +315,7 @@ function linkHTML(templateKey, eleveId, itemId, label, extraAttrs, icon) {
  * doesn't exist yet when that script's init-time listeners are attached.
  */
 function editTuteurTriggerHTML(eleveId, parent) {
-    if (!eleveId || !parent.id) {
+    if (!eleveId || !parent.id || !peutModifier()) {
         return '';
     }
 
@@ -332,7 +382,7 @@ function downloadIcon() {
  * browser's native confirm() popup.
  */
 function deleteFormHTML(templateKey, eleveId, itemId, confirmMessage) {
-    if (!eleveId || !itemId) {
+    if (!eleveId || !itemId || !peutModifier()) {
         return '';
     }
 

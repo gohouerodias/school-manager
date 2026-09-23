@@ -8,6 +8,7 @@ use App\Http\Requests\StoreEleveRequest;
 use App\Http\Requests\UpdateEleveRequest;
 use App\Models\ChampPersonnalise;
 use App\Models\Classe;
+use App\Models\DocumentNumerique;
 use App\Models\Eleve;
 use App\Models\Inscription;
 use App\Models\Niveau;
@@ -193,6 +194,7 @@ class EleveController extends Controller
             'parents',
             'inscriptions.classe.niveau',
             'inscriptions.classe.anneeAcademique',
+            'inscriptions.documents.typeDocument',
             'documents.typeDocument',
             'valeursPersonnalisees',
             'niveauSouhaite',
@@ -262,10 +264,29 @@ class EleveController extends Controller
                     'statut_label' => $inscription->statut->label(),
                     'statut_notable' => $inscription->statut->estNotable(),
                     'statut_update_url' => route('eleves.inscriptions.statut.update', ['eleve' => $inscription->eleve_id, 'inscription' => $inscription->id]),
+                    // Documents justifiant cette inscription précise — utile
+                    // surtout pour "Transféré entrant" (preuve que l'élève
+                    // vient bien d'une autre école) : voir
+                    // DocumentNumerique::inscription() et
+                    // eleve-fiche.js's friseItemHTML().
+                    'documents' => $inscription->documents->map(fn (DocumentNumerique $document) => [
+                        'id' => $document->id,
+                        'libelle' => $document->typeDocument->libelle,
+                        'view_url' => route('eleves.documents.show', ['eleve' => $inscription->eleve_id, 'document' => $document->id]),
+                        'download_url' => route('eleves.documents.download', ['eleve' => $inscription->eleve_id, 'document' => $document->id]),
+                    ])->values(),
+                    'document_upload_url' => route('eleves.documents.store', ['eleve' => $inscription->eleve_id]),
                 ];
             })->values(),
             'documents' => $typesDocuments->map(function (TypeDocument $type) use ($eleve) {
-                $document = $eleve->documents->firstWhere('type_document_id', $type->id);
+                // Exclut les documents rattachés à une inscription précise
+                // (ex : preuve d'un "Transféré entrant", affichée sur la
+                // frise du Parcours scolaire à la place — voir plus haut) :
+                // l'onglet Documents général ne doit montrer/compter que les
+                // documents de l'élève dans l'ensemble, pas ceux d'une année
+                // précise, sous peine de collision si le même type sert aux
+                // deux usages.
+                $document = $eleve->documents->whereNull('inscription_id')->firstWhere('type_document_id', $type->id);
 
                 return [
                     'id' => $document?->id,

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\TypeDocument;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreDocumentEleveRequest extends FormRequest
@@ -21,6 +22,16 @@ class StoreDocumentEleveRequest extends FormRequest
         return [
             'type_document_id' => ['required', 'exists:types_documents,id'],
             'fichier' => ['required', 'file', 'max:5120'],
+            // Optionnel : rempli seulement quand le document est ajouté
+            // depuis une ligne précise de la frise (parcours scolaire — voir
+            // DocumentNumerique::inscription()), jamais depuis l'onglet
+            // Documents général. La contrainte "appartient à cet élève"
+            // empêche de rattacher un document à l'inscription d'un autre
+            // apprenant en falsifiant le champ.
+            'inscription_id' => [
+                'nullable',
+                Rule::exists('inscriptions', 'id')->where(fn ($query) => $query->where('eleve_id', $this->route('eleve')?->id)),
+            ],
         ];
     }
 

@@ -3,25 +3,36 @@
 @section('title', 'Liste des apprenants')
 
 @section('content')
+@php
+    // La Direction n'a, côté dossier élève, que "Consulter une fiche élève"
+    // et "Rechercher un dossier élève" (voir le diagramme de cas
+    // d'utilisation et routes/eleves.php) — jamais la création, la
+    // modification, l'archivage, l'export, ni la gestion des tuteurs/
+    // documents/statuts : tous masqués ici pour ce profil.
+    $peutModifier = auth()->user()->profil !== \App\Enums\ProfilUtilisateur::Direction;
+@endphp
+
 <x-page-header title="Liste des apprenants" :subtitle="$subtitle">
-    <x-slot:actions>
-        @php
-            $activeFilters = array_filter([
-                'search' => $search,
-                'classe' => $classeFilter,
-                'statut' => $statutFilter,
-                'date_creation' => $dateFilter,
-            ]);
-        @endphp
-        <x-export-buttons
-            :excel-route="route('eleves.export.excel', $activeFilters)"
-            :pdf-route="route('eleves.export.pdf', $activeFilters)"
-        />
-        <a href="{{ route('eleves.wizard.create') }}" class="btn primary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            Nouvel apprenant
-        </a>
-    </x-slot:actions>
+    @if ($peutModifier)
+        <x-slot:actions>
+            @php
+                $activeFilters = array_filter([
+                    'search' => $search,
+                    'classe' => $classeFilter,
+                    'statut' => $statutFilter,
+                    'date_creation' => $dateFilter,
+                ]);
+            @endphp
+            <x-export-buttons
+                :excel-route="route('eleves.export.excel', $activeFilters)"
+                :pdf-route="route('eleves.export.pdf', $activeFilters)"
+            />
+            <a href="{{ route('eleves.wizard.create') }}" class="btn primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Nouvel apprenant
+            </a>
+        </x-slot:actions>
+    @endif
 </x-page-header>
 
 <form method="GET" action="{{ route('eleves.index') }}" class="toolbar">
@@ -91,6 +102,7 @@
     data-document-download-url-template="{{ route('eleves.documents.download', ['eleve' => '__EID__', 'document' => '__DID__']) }}"
     data-edit-eleve-url-template="{{ route('eleves.wizard.edit', ['eleve' => '__ID__']) }}"
     data-tuteur-recherche-url="{{ route('eleves.wizard.tuteurs.recherche') }}"
+    data-peut-modifier="{{ $peutModifier ? '1' : '0' }}"
 >
     <div class="fiche-breadcrumb-row">
         <span class="fiche-breadcrumb-text">Dossier élève et documents / Liste des apprenants</span>
@@ -135,19 +147,23 @@
                  élève is currently open — the wizard prefills itself
                  server-side from the Eleve model, so no data-edit-* payload
                  is needed here anymore. --}}
-            <a class="btn ghost" id="fiche-edit-eleve-trigger" href="#">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                Modifier
-            </a>
+            @if ($peutModifier)
+                <a class="btn ghost" id="fiche-edit-eleve-trigger" href="#">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    Modifier
+                </a>
+            @endif
         </div>
         <div class="fiche-grid" id="fiche-identite-grid"></div>
     </div>
     <div class="fiche-tab-content" data-fiche-content="parents" style="display:none;">
         <div class="fiche-actions-row">
-            <button type="button" class="btn primary" data-panel-open="add-tuteur">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                Ajouter un tuteur
-            </button>
+            @if ($peutModifier)
+                <button type="button" class="btn primary" data-panel-open="add-tuteur">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Ajouter un tuteur
+                </button>
+            @endif
         </div>
         <div id="fiche-parents-list"></div>
     </div>
@@ -156,10 +172,12 @@
     </div>
     <div class="fiche-tab-content" data-fiche-content="documents" style="display:none;">
         <div class="fiche-actions-row">
-            <button type="button" class="btn primary" data-panel-open="add-document">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                Ajouter un document
-            </button>
+            @if ($peutModifier)
+                <button type="button" class="btn primary" data-panel-open="add-document">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                    Ajouter un document
+                </button>
+            @endif
         </div>
         <div class="fiche-grid" id="fiche-documents-grid"></div>
     </div>
@@ -318,6 +336,13 @@
         @csrf
         <input type="hidden" name="_panel" value="add-document">
         <input type="hidden" name="_action" id="add-document-action" value="{{ old('_action') }}">
+        {{-- Rempli uniquement quand le panneau est ouvert depuis le bouton
+             "+ Document justificatif" d'une ligne de la frise (Parcours
+             scolaire) plutôt que depuis l'onglet Documents général — voir
+             DocumentNumerique::inscription() et eleve-tuteur-document.js's
+             initAddDocumentFromFrisePanel(). form.reset() le remet à vide. --}}
+        <input type="hidden" name="inscription_id" id="add-document-inscription-id" value="{{ old('inscription_id') }}">
+        <div class="hint" id="add-document-inscription-hint" style="display:none;"></div>
 
         @error('type_document_id')
             <div class="alert-error">{{ $message }}</div>

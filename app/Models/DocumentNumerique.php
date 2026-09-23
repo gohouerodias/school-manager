@@ -14,6 +14,7 @@ class DocumentNumerique extends Model
 
     protected $fillable = [
         'eleve_id',
+        'inscription_id',
         'type_document_id',
         'televerse_par',
         'chemin_fichier',
@@ -33,6 +34,19 @@ class DocumentNumerique extends Model
     public function eleve(): BelongsTo
     {
         return $this->belongsTo(Eleve::class);
+    }
+
+    /**
+     * Rempli seulement pour un document justifiant un événement précis du
+     * parcours scolaire (ex : preuve d'un "Transféré entrant") — voir la
+     * migration ajoutant cette colonne. Null pour les documents rattachés
+     * seulement à l'élève en général (pièce d'identité, photo…).
+     *
+     * @return BelongsTo<Inscription, $this>
+     */
+    public function inscription(): BelongsTo
+    {
+        return $this->belongsTo(Inscription::class);
     }
 
     /**

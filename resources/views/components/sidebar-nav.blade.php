@@ -1,6 +1,7 @@
 @php
     $profil = auth()->user()?->profil?->value;
     $isAdmin = $profil === \App\Enums\ProfilUtilisateur::Administrateur->value;
+    $isDirection = $profil === \App\Enums\ProfilUtilisateur::Direction->value;
     $canSeeDossiers = in_array($profil, ['administrateur', 'agent_scolarite'], true);
     $dossiersOpen = request()->routeIs('eleves.*') || request()->routeIs('tuteurs.*');
     $academiqueOpen = request()->routeIs('academique.*');
@@ -23,7 +24,10 @@
     $items = [
         ['label' => 'Gestion de compte', 'icon' => 'users', 'route' => $isAdmin ? 'comptes.index' : null, 'pattern' => 'comptes.*'],
         ['label' => 'Sécurité et Administration', 'icon' => 'shield', 'route' => null, 'pattern' => null],
-        ['label' => 'Rapports', 'icon' => 'rapports', 'route' => null, 'pattern' => null],
+        // Réservé à la Direction (voir le diagramme de cas d'utilisation et
+        // routes/rapports.php) — jamais à l'administrateur ni à l'agent de
+        // scolarité, même si eux aussi pourraient en avoir l'usage un jour.
+        ['label' => 'Rapports', 'icon' => 'rapports', 'route' => $isDirection ? 'rapports.index' : null, 'pattern' => 'rapports.*'],
     ];
 
     $icons = [
@@ -82,6 +86,16 @@
                         @endif
                     </div>
                 </div>
+            @elseif ($isDirection)
+                {{-- Un simple lien plutôt qu'un groupe déroulant : la Direction
+                     n'a, côté dossier élève, que "Consulter une fiche élève"
+                     et "Rechercher un dossier élève" (voir routes/eleves.php),
+                     toutes deux servies par cet unique écran — un sous-menu
+                     n'aurait qu'une seule entrée. --}}
+                <a href="{{ route('eleves.index') }}" @class(['nav-item', 'active' => request()->routeIs('eleves.*')]) title="Dossier élève et documents">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons['folder'] !!}</svg>
+                    <span class="nav-label">Dossier élève et documents</span>
+                </a>
             @else
                 <span class="nav-item disabled" title="Bientôt disponible">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons['folder'] !!}</svg>
@@ -123,10 +137,17 @@
             @endif
 
             @foreach (array_slice($items, 1) as $item)
-                <span class="nav-item disabled" title="Bientôt disponible">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons[$item['icon']] !!}</svg>
-                    <span class="nav-label">{{ $item['label'] }}</span>
-                </span>
+                @if ($item['route'])
+                    <a href="{{ route($item['route']) }}" @class(['nav-item', 'active' => request()->routeIs($item['pattern'])]) title="{{ $item['label'] }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons[$item['icon']] !!}</svg>
+                        <span class="nav-label">{{ $item['label'] }}</span>
+                    </a>
+                @else
+                    <span class="nav-item disabled" title="Bientôt disponible">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">{!! $icons[$item['icon']] !!}</svg>
+                        <span class="nav-label">{{ $item['label'] }}</span>
+                    </span>
+                @endif
             @endforeach
         </nav>
     </div>

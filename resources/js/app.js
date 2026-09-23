@@ -31,6 +31,7 @@ import { initDecisionPassage } from './decision-passage';
 import { initAnneeEdit } from './annees';
 import { initBulletinsGeneration, initBulletinsAnnuelsGeneration } from './bulletins';
 import { initBulletinApercu } from './bulletin-apercu';
+import { initRapportsEffectifsChart, initExamensStatistiquesChart } from './stats-charts';
 
 document.addEventListener('DOMContentLoaded', () => {
     initPageLoader();
@@ -66,4 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initBulletinsGeneration();
     initBulletinsAnnuelsGeneration();
     initBulletinApercu();
+    initRapportsEffectifsChart();
+    initExamensStatistiquesChart();
 });
