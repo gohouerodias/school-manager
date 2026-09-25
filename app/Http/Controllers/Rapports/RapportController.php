@@ -55,10 +55,6 @@ class RapportController extends Controller
             'annees' => $annees,
             'anneeAcademique' => $anneeAcademique,
             'donnees' => $donnees,
-            // Indépendant du type/année choisi ci-dessus : alimente l'onglet
-            // "Statistiques" (toutes les années du système d'un coup — voir
-            // RapportService::effectifsParAnnee()), toujours affiché.
-            'effectifsParAnnee' => $service->effectifsParAnnee(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
                 'Rapports' => null,

@@ -149,34 +149,6 @@ class RapportService
     }
 
     /**
-     * Effectifs d'apprenants par année académique, toutes les années du
-     * système (pas une seule) — alimente le graphe de l'onglet
-     * "Statistiques" de l'écran Rapports. Même règle d'exclusion que
-     * effectifs() : un apprenant archivé ne compte plus dans l'effectif
-     * "actuel" d'aucune année.
-     *
-     * @return Collection<int, array{annee_academique_id: int, libelle: string, effectif: int}>
-     */
-    public function effectifsParAnnee(): Collection
-    {
-        $annees = AnneeAcademique::query()->orderBy('date_debut')->get();
-
-        $effectifsParAnneeId = Inscription::query()
-            ->join('classes', 'classes.id', '=', 'inscriptions.classe_id')
-            ->join('eleves', 'eleves.id', '=', 'inscriptions.eleve_id')
-            ->where('eleves.statut', '!=', StatutEleve::Archive->value)
-            ->selectRaw('classes.annee_academique_id as annee_academique_id, count(*) as total')
-            ->groupBy('classes.annee_academique_id')
-            ->pluck('total', 'annee_academique_id');
-
-        return $annees->map(fn (AnneeAcademique $annee) => [
-            'annee_academique_id' => $annee->id,
-            'libelle' => $annee->libelle,
-            'effectif' => $effectifsParAnneeId[$annee->id] ?? 0,
-        ]);
-    }
-
-    /**
      * Taux de complétion des notes et moyenne de classe, une ligne par
      * évaluation mensuelle de l'année — alimente le graphe de l'onglet
      * Examens de la fiche année académique. Toutes classes confondues (le

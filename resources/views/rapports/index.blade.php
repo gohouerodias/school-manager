@@ -8,12 +8,6 @@
     subtitle="Statistiques d'effectifs, de résultats et d'archives, générées à la demande."
 />
 
-<div class="tabs-nav" data-tabs>
-    <button type="button" class="tab-btn active" data-tab-btn="rapports">Rapports</button>
-    <button type="button" class="tab-btn" data-tab-btn="statistiques">Statistiques</button>
-</div>
-
-<div data-tab-panel="rapports">
 <form method="GET" action="{{ route('rapports.index') }}" class="bulletins-toolbar">
     <select class="filter-select" name="type" onchange="this.form.submit()">
         <option value="">Choisir un type de rapport</option>
@@ -136,24 +130,4 @@
         @endif
     @endif
 @endif
-</div>
-
-<div data-tab-panel="statistiques" style="display:none;">
-    <section class="config-section">
-        <div class="config-section-head">
-            <h2>Effectifs par année académique</h2>
-        </div>
-        <p class="hint" style="margin-top:-4px;">Nombre d'apprenants actifs (non archivés) inscrits dans une classe, toutes les années académiques du système.</p>
-
-        @if ($effectifsParAnnee->isEmpty())
-            <div class="data-card" style="padding:24px;">
-                <p style="margin:0;color:var(--ink-muted);font-size:13.5px;">Aucune année académique pour l'instant.</p>
-            </div>
-        @else
-            <div class="chart-card">
-                <canvas id="chart-effectifs-annees" data-effectifs="{{ json_encode($effectifsParAnnee) }}"></canvas>
-            </div>
-        @endif
-    </section>
-</div>
 @endsection
