@@ -36,7 +36,10 @@
                     <div class="name">Complexe Scolaire Catholique<br><small>Madre Trinidad — Registre numérique</small></div>
                     <x-guide-menu />
                 </div>
-                <x-profile-menu :user="auth()->user()" />
+                <div class="topbar-actions">
+                    <x-notifications-menu :user="auth()->user()" />
+                    <x-profile-menu :user="auth()->user()" />
+                </div>
             </div>
 
             <x-breadcrumbs :items="$breadcrumbs ?? []" />

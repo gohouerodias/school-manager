@@ -8,6 +8,7 @@ import { initFlashToast } from './flash-toast';
 import { initAccountInvites } from './account-invites';
 import { initAccountEdit } from './account-edit';
 import { initProfileMenu } from './profile-menu';
+import { initNotificationsMenu } from './notifications-menu';
 import { initSidebar } from './sidebar';
 import { initGuideMenu } from './guide-menu';
 import { initEleveFiche } from './eleve-fiche';
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAccountInvites();
     initAccountEdit();
     initProfileMenu();
+    initNotificationsMenu();
     initSidebar();
     initGuideMenu();
     initEleveFiche();

@@ -22,31 +22,42 @@ class ResetPasswordNotification extends Notification
     }
 
     /**
-     * Same underlying mécanisme (jeton + lien vers `password.reset`) pour
-     * deux cas distincts, différenciés via `User::estEnAttenteActivation()` :
-     * l'invitation d'un compte fraîchement créé (Comptes\UserAccountController::store())
-     * — qui n'a encore jamais servi, donc jamais de mot de passe à
-     * « réinitialiser » — et une vraie demande de réinitialisation par un
-     * utilisateur existant (Auth\PasswordResetLinkController).
+     * Même mécanisme de jeton Laravel (Password broker) pour deux cas
+     * distincts, différenciés via `User::estEnAttenteActivation()` : le lien
+     * pointe vers l'écran dédié `compte.activer` (voir
+     * Auth\AccountActivationController) pour l'invitation d'un compte
+     * fraîchement créé (Comptes\UserAccountController::store()) — qui n'a
+     * encore jamais servi, donc jamais de mot de passe à « réinitialiser » —
+     * et vers `password.reset` pour une vraie demande de réinitialisation
+     * par un utilisateur existant (Auth\PasswordResetLinkController).
      */
     public function toMail(User $notifiable): MailMessage
     {
-        $url = url(route('password.reset', [
-            'token' => $this->token,
-            'email' => $notifiable->getEmailForPasswordReset(),
-        ], false));
-
         $message = (new MailMessage)->greeting('Bonjour '.$notifiable->name.',');
 
         if ($notifiable->estEnAttenteActivation()) {
+            // Lien vers l'écran dédié "Activer votre compte" (voir
+            // Auth\AccountActivationController), pas vers `password.reset` :
+            // ce compte n'a encore jamais eu de mot de passe, donc rien à
+            // "réinitialiser" à proprement parler.
+            $url = url(route('compte.activer', [
+                'token' => $this->token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
             $message
                 ->subject('Votre compte a été créé — CSC Madre Trinidad')
                 ->line("Un compte vient d'être créé pour vous sur le registre numérique du CSC Madre Trinidad.")
                 ->line('Pour l\'activer, choisissez votre mot de passe en cliquant sur le bouton ci-dessous.')
-                ->action('Créer mon mot de passe', $url)
+                ->action('Activer mon compte', $url)
                 ->line('Ce lien expirera dans 60 minutes.')
                 ->line("Si vous ne vous attendiez pas à cet e-mail, vous pouvez l'ignorer sans risque.");
         } else {
+            $url = url(route('password.reset', [
+                'token' => $this->token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
             $message
                 ->subject('Réinitialisation de votre mot de passe — CSC Madre Trinidad')
                 ->line('Vous recevez cet e-mail car une demande de réinitialisation de mot de passe a été effectuée pour votre compte.')

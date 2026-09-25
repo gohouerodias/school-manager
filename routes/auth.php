@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AccountActivationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ForcePasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -16,6 +17,14 @@ Route::middleware('guest')->group(function () {
 
     Route::get('reinitialiser-mot-de-passe/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
     Route::post('reinitialiser-mot-de-passe', [NewPasswordController::class, 'store'])->name('password.reset.update');
+
+    // Écran "Activer votre compte" : mécanisme de jeton identique à la
+    // réinitialisation ci-dessus (voir AccountActivationController), mais
+    // page + messages distincts pour un compte fraîchement créé par un
+    // administrateur — voir App\Notifications\ResetPasswordNotification et
+    // User::estEnAttenteActivation().
+    Route::get('activer-mon-compte/{token}', [AccountActivationController::class, 'create'])->name('compte.activer');
+    Route::post('activer-mon-compte', [AccountActivationController::class, 'store'])->name('compte.activer.update');
 });
 
 Route::middleware(['auth', 'account.active'])->group(function () {

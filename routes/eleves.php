@@ -7,6 +7,7 @@ use App\Http\Controllers\Eleves\DocumentController;
 use App\Http\Controllers\Eleves\EleveClasseController;
 use App\Http\Controllers\Eleves\EleveController;
 use App\Http\Controllers\Eleves\EleveExportController;
+use App\Http\Controllers\Eleves\EleveImportController;
 use App\Http\Controllers\Eleves\EleveWizardController;
 use App\Http\Controllers\Eleves\InscriptionStatutController;
 use App\Http\Controllers\Eleves\ParametresDossiersController;
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
 
         Route::get('export/excel', [EleveExportController::class, 'excel'])->name('export.excel');
         Route::get('export/pdf', [EleveExportController::class, 'pdf'])->name('export.pdf');
+
+        Route::get('import', [EleveImportController::class, 'create'])->name('import.create');
+        Route::post('import', [EleveImportController::class, 'store'])->name('import.store');
 
         // Bulletins mensuels : suivi des signatures classe par classe et
         // génération (immédiate, en file d'attente — voir

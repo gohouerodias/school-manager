@@ -38,7 +38,8 @@ test('a freshly invited account (never logged in) gets an account-creation messa
 
     expect($mailMessage->subject)->toBe('Votre compte a été créé — CSC Madre Trinidad')
         ->and(implode(' ', $mailMessage->introLines))->toContain("Un compte vient d'être créé pour vous")
-        ->and($mailMessage->actionText)->toBe('Créer mon mot de passe')
+        ->and($mailMessage->actionText)->toBe('Activer mon compte')
+        ->and($mailMessage->actionUrl)->toContain(route('compte.activer', ['token' => 'un-jeton', 'email' => $user->email], false))
         ->and(implode(' ', $mailMessage->introLines))->not->toContain('réinitialisation');
 });
 

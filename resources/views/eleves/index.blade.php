@@ -27,6 +27,10 @@
                 :excel-route="route('eleves.export.excel', $activeFilters)"
                 :pdf-route="route('eleves.export.pdf', $activeFilters)"
             />
+            <a href="{{ route('eleves.import.create') }}" class="btn ghost">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/></svg>
+                Importer
+            </a>
             <a href="{{ route('eleves.wizard.create') }}" class="btn primary">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 Nouvel apprenant

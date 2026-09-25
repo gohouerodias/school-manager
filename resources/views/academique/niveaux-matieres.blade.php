@@ -24,11 +24,20 @@
         @error('seuil_passage')
             <div class="alert-error">{{ $message }}</div>
         @enderror
+        @error('duree_conservation_donnees')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
 
         <div class="field">
             <label for="seuil-passage">Seuil de passage en classe supérieure (moyenne annuelle /20)</label>
             <input type="number" id="seuil-passage" name="seuil_passage" step="0.01" min="0" max="20" value="{{ old('seuil_passage', $parametre?->seuil_passage ?? 10) }}" required style="max-width: 160px;">
             <div class="hint">À partir de cette moyenne, le système propose automatiquement "Admis" lors des décisions de passage — la direction garde la main pour valider ou modifier chaque cas (voir Années académiques → Décisions de passage).</div>
+        </div>
+
+        <div class="field">
+            <label for="duree-conservation">Durée de conservation des dossiers archivés (mois)</label>
+            <input type="number" id="duree-conservation" name="duree_conservation_donnees" step="1" min="0" max="600" value="{{ old('duree_conservation_donnees', $parametre?->duree_conservation_donnees ?? 60) }}" required style="max-width: 160px;">
+            <div class="hint">Passé ce délai après l'archivage d'un apprenant, son dossier est supprimé définitivement chaque nuit (documents, notes, bulletins compris). Mettre 0 pour désactiver la purge automatique.</div>
         </div>
 
         <button type="submit" class="btn dark">Enregistrer</button>

@@ -154,6 +154,46 @@ button.user-chip:hover { background: var(--green-tint); }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .profile-wrap .logout-btn { padding: 6px 12px; font-size: 12px; }
 
+.topbar-actions { display: flex; align-items: center; gap: 14px; }
+
+/* Notifications bell + popover, anchored in the topbar (mirrors .profile-wrap/.profile-menu) */
+.notif-wrap { position: relative; display: flex; align-items: center; }
+.notif-bell {
+    position: relative; cursor: pointer; background: none; border: none; padding: 7px;
+    border-radius: 8px; color: var(--ink-muted); display: flex; align-items: center; justify-content: center;
+}
+.notif-bell:hover { background: var(--green-tint); }
+.notif-bell svg { width: 20px; height: 20px; }
+.notif-badge {
+    position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+}
+.notif-menu {
+    position: absolute; top: 46px; right: 0; width: 340px; max-height: 420px; overflow-y: auto;
+    background: #fff; border: 1px solid var(--line); border-radius: 13px;
+    box-shadow: 0 14px 34px rgba(38, 89, 74, .16); padding: 20px; display: none; z-index: 45;
+}
+.notif-menu.show { display: block; }
+.notif-menu-head {
+    font-family: 'Fraunces', serif; font-size: 14.5px; font-weight: 600; color: var(--green-deep);
+    margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.notif-empty { font-size: 13px; color: var(--ink-muted); }
+.notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.notif-item { border-radius: 9px; }
+.notif-item.unread { background: var(--green-tint); }
+.notif-item-link {
+    width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 10px;
+    border-radius: 9px; display: flex; flex-direction: column; gap: 3px;
+}
+.notif-item-link:hover { background: var(--line); }
+.notif-item-title { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.notif-item-message { font-size: 12px; color: var(--ink-muted); }
+.notif-item-date { font-size: 11px; color: var(--ink-muted); }
+.notif-mark-all { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.notif-mark-all .btn { width: 100%; justify-content: center; }
+
 /* Avatar color variants, keyed to the same palette as .role-badge */
 .avatar-admin { background: var(--red-tint); color: var(--red); }
 .avatar-scol { background: var(--green-tint); color: var(--green); }
