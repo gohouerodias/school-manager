@@ -60,14 +60,16 @@ export function showPageLoader() {
 
 /**
  * True for plain links that actually leave the page — excludes in-page
- * anchors, new-tab/download links, and anything already wired to its own
- * JS behaviour (opening a panel/modal, switching a fiche tab, etc.), which
- * shouldn't get the full-page loader.
+ * anchors, new-tab/download links, mailto:/tel: links (these open another
+ * app/prompt instead of navigating, so the overlay would otherwise never be
+ * hidden again — see "Besoin d'aide ?" in layouts/guest.blade.php), and
+ * anything already wired to its own JS behaviour (opening a panel/modal,
+ * switching a fiche tab, etc.), which shouldn't get the full-page loader.
  */
 function isRealNavigationLink(link) {
     const href = link.getAttribute('href');
 
-    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
         return false;
     }
 
