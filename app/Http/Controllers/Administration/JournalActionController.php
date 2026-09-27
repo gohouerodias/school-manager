@@ -20,28 +20,34 @@ class JournalActionController extends Controller
 
     public function index(Request $request): View
     {
-        $utilisateurId = $request->input('user_id', '');
-        $action = trim((string) $request->input('action', ''));
-        $dateDebut = $request->input('date_debut', '');
-        $dateFin = $request->input('date_fin', '');
+        // filled() plutôt qu'une comparaison à '' : robuste même si le
+        // paramètre est absent, null, ou une chaîne d'espaces (un champ de
+        // filtre vidé peut arriver dans l'un ou l'autre état selon le
+        // navigateur) — évite de transmettre une valeur vide à whereDate(),
+        // qui lève "Illegal operator and value combination" si elle reçoit
+        // null avec un opérateur autre que =/<>/!=.
+        $utilisateurId = $request->filled('user_id') ? $request->input('user_id') : null;
+        $action = $request->filled('action') ? trim((string) $request->input('action')) : null;
+        $dateDebut = $request->filled('date_debut') ? $request->input('date_debut') : null;
+        $dateFin = $request->filled('date_fin') ? $request->input('date_fin') : null;
 
         $query = JournalAction::query()
             ->with('user')
             ->latest('date_heure');
 
-        if ($utilisateurId !== '') {
+        if ($utilisateurId) {
             $query->where('user_id', $utilisateurId);
         }
 
-        if ($action !== '') {
+        if ($action) {
             $query->where('action', $action);
         }
 
-        if ($dateDebut !== '') {
+        if ($dateDebut) {
             $query->whereDate('date_heure', '>=', $dateDebut);
         }
 
-        if ($dateFin !== '') {
+        if ($dateFin) {
             $query->whereDate('date_heure', '<=', $dateFin);
         }
 

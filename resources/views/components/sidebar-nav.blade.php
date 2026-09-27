@@ -24,10 +24,9 @@
     $items = [
         ['label' => 'Gestion de compte', 'icon' => 'users', 'route' => $isAdmin ? 'comptes.index' : null, 'pattern' => 'comptes.*'],
         ['label' => 'Sécurité et Administration', 'icon' => 'shield', 'route' => $isAdmin ? 'administration.journal.index' : null, 'pattern' => 'administration.*'],
-        // Réservé à la Direction (voir le diagramme de cas d'utilisation et
-        // routes/rapports.php) — jamais à l'administrateur ni à l'agent de
-        // scolarité, même si eux aussi pourraient en avoir l'usage un jour.
-        ['label' => 'Rapports', 'icon' => 'rapports', 'route' => $isDirection ? 'rapports.index' : null, 'pattern' => 'rapports.*'],
+        // Direction et Administrateur (voir routes/rapports.php) — jamais
+        // l'agent de scolarité.
+        ['label' => 'Rapports', 'icon' => 'rapports', 'route' => ($isDirection || $isAdmin) ? 'rapports.index' : null, 'pattern' => 'rapports.*'],
     ];
 
     $icons = [

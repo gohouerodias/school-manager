@@ -107,29 +107,35 @@
             <div class="alert-error">{{ $message }}</div>
         @enderror
 
+        <div class="alert-error" id="invite-add-error" style="display:none;"></div>
+
         <div class="field">
-            <label for="invite-email">Adresse e-mail</label>
+            <label for="invite-email">Adresse e-mail <span class="required-star">*</span></label>
             <input type="email" id="invite-email" placeholder="prenom.nom@cscmadretrinidad.bj">
+            <p class="error" data-error-for="invite-email" style="display:none;"></p>
             <div class="hint">Un e-mail sera envoyé pour définir le mot de passe.</div>
         </div>
 
         <div class="field">
-            <label for="invite-nom">Nom</label>
+            <label for="invite-nom">Nom <span class="required-star">*</span></label>
             <input type="text" id="invite-nom" placeholder="Nom de famille">
+            <p class="error" data-error-for="invite-nom" style="display:none;"></p>
         </div>
 
         <div class="field">
-            <label for="invite-prenoms">Prénoms</label>
+            <label for="invite-prenoms">Prénoms <span class="required-star">*</span></label>
             <input type="text" id="invite-prenoms" placeholder="Prénom(s)">
+            <p class="error" data-error-for="invite-prenoms" style="display:none;"></p>
         </div>
 
         <div class="field">
-            <label for="invite-telephone">Numéro de téléphone</label>
+            <label for="invite-telephone">Numéro de téléphone <span class="required-star">*</span></label>
             <input type="tel" id="invite-telephone" placeholder="+229 XX XX XX XX">
+            <p class="error" data-error-for="invite-telephone" style="display:none;"></p>
         </div>
 
         <div class="field">
-            <label for="invite-role">Profil</label>
+            <label for="invite-role">Profil <span class="required-star">*</span></label>
             <select class="role-select" id="invite-role">
                 @foreach ($profils as $profil)
                     <option value="{{ $profil->value }}" @selected($profil === \App\Enums\ProfilUtilisateur::AgentScolarite)>{{ $profil->label() }}</option>

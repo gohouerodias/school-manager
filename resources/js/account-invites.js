@@ -22,6 +22,25 @@ const roleDescriptions = {
     },
 };
 
+/**
+ * Same `.field.invalid` + `<p class="error">` pattern as the app-wide
+ * `[required]` styling (see resources/js/form-required.js), applied here by
+ * hand: these fields deliberately have no `required` attribute, since they
+ * feed a "pending list" the user builds up before a single real submit (see
+ * the submit listener below), so the generic mechanism — which validates on
+ * submit — would incorrectly block that submit once fields are cleared back
+ * out after being queued.
+ */
+function setFieldInvalid(input, invalid, message = '') {
+    input.closest('.field')?.classList.toggle('invalid', invalid);
+
+    const errorEl = document.querySelector(`[data-error-for="${input.id}"]`);
+    if (errorEl) {
+        errorEl.textContent = invalid ? message : '';
+        errorEl.style.display = invalid ? 'block' : 'none';
+    }
+}
+
 export function initAccountInvites() {
     const form = document.getElementById('invite-form');
 
@@ -42,6 +61,7 @@ export function initAccountInvites() {
     const count = document.getElementById('invite-pending-count');
     const saveButton = document.getElementById('invite-save-btn');
     const callout = document.getElementById('invite-callout');
+    const addError = document.getElementById('invite-add-error');
 
     const roleLabels = {};
     Array.from(roleSelect.options).forEach((option) => {
@@ -86,6 +106,16 @@ export function initAccountInvites() {
     roleSelect.addEventListener('change', updateRoleDescription);
     updateRoleDescription();
 
+    const invitableInputs = [emailInput, nomInput, prenomsInput, telephoneInput];
+    invitableInputs.forEach((input) => {
+        input.addEventListener('input', () => {
+            setFieldInvalid(input, false);
+            if (invitableInputs.every((i) => !i.closest('.field')?.classList.contains('invalid'))) {
+                addError.style.display = 'none';
+            }
+        });
+    });
+
     addButton.addEventListener('click', () => {
         const email = emailInput.value.trim();
         const nom = nomInput.value.trim();
@@ -95,19 +125,22 @@ export function initAccountInvites() {
 
         let hasError = false;
         [
-            [emailInput, email && email.includes('@')],
-            [nomInput, nom.length > 0],
-            [prenomsInput, prenoms.length > 0],
-            [telephoneInput, telephone.length > 0],
-        ].forEach(([input, isValid]) => {
-            input.style.borderColor = isValid ? '' : 'var(--red)';
+            [emailInput, email && email.includes('@'), 'Adresse e-mail invalide.'],
+            [nomInput, nom.length > 0, 'Le nom est obligatoire.'],
+            [prenomsInput, prenoms.length > 0, 'Les prénoms sont obligatoires.'],
+            [telephoneInput, telephone.length > 0, 'Le numéro de téléphone est obligatoire.'],
+        ].forEach(([input, isValid, message]) => {
+            setFieldInvalid(input, !isValid, message);
             hasError = hasError || !isValid;
         });
 
         if (hasError) {
+            addError.textContent = 'Merci de renseigner tous les champs obligatoires (marqués *) avant d’ajouter cet utilisateur à la liste.';
+            addError.style.display = 'block';
             return;
         }
 
+        addError.style.display = 'none';
         pending.push({ email, name, telephone, profil: roleSelect.value });
         render();
         emailInput.value = '';

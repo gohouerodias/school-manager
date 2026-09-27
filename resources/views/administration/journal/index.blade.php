@@ -18,7 +18,7 @@
 
     <button type="submit" class="btn ghost">Filtrer</button>
 
-    @if ($utilisateurId !== '' || $action !== '' || $dateDebut !== '' || $dateFin !== '')
+    @if ($utilisateurId || $action || $dateDebut || $dateFin)
         <a href="{{ route('administration.journal.index') }}" class="btn ghost">Réinitialiser</a>
     @endif
 </form>

@@ -11,14 +11,14 @@ use App\Models\Inscription;
 use App\Models\Niveau;
 use App\Models\User;
 
-test('only direction can access the rapports screen', function () {
+test('only direction and administrateur can access the rapports screen', function () {
     $direction = User::factory()->direction()->create();
     $admin = User::factory()->administrateur()->create();
     $agent = User::factory()->agentScolarite()->create();
     $enseignant = User::factory()->enseignant()->create();
 
     $this->actingAs($direction)->get(route('rapports.index'))->assertOk();
-    $this->actingAs($admin)->get(route('rapports.index'))->assertForbidden();
+    $this->actingAs($admin)->get(route('rapports.index'))->assertOk();
     $this->actingAs($agent)->get(route('rapports.index'))->assertForbidden();
     $this->actingAs($enseignant)->get(route('rapports.index'))->assertForbidden();
 });
@@ -111,9 +111,11 @@ test('exporting the archives rapport to excel does not require an année académ
     ]);
 });
 
-test('administrators and agents de scolarité cannot export rapports', function () {
+test('agents de scolarité cannot export rapports, but administrators can', function () {
     $admin = User::factory()->administrateur()->create();
+    $agent = User::factory()->agentScolarite()->create();
     $annee = AnneeAcademique::factory()->create();
 
-    $this->actingAs($admin)->get(route('rapports.export.pdf', ['type' => 'effectifs', 'annee_academique_id' => $annee->id]))->assertForbidden();
+    $this->actingAs($admin)->get(route('rapports.export.pdf', ['type' => 'effectifs', 'annee_academique_id' => $annee->id]))->assertOk();
+    $this->actingAs($agent)->get(route('rapports.export.pdf', ['type' => 'effectifs', 'annee_academique_id' => $annee->id]))->assertForbidden();
 });
