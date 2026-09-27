@@ -14,8 +14,10 @@ use Illuminate\Validation\Validator;
 /**
  * Two very different affectation models depending on the classe's cycle
  * (see Academique\AffectationEnseignantController):
- *  - Maternelle/Primaire: one teacher for the whole classe, every matière of
- *    its programme — no `matiere_ids` needed here.
+ *  - Maternelle/Primaire: several teachers can share the whole classe, every
+ *    matière of its programme, with exactly one of them titulaire at a time
+ *    (the first one added, by default — see designerTitulaire() to change
+ *    it later) — no `matiere_ids` needed here.
  *  - Collège: one teacher per matière, but they can be affected to several
  *    matières of the same classe in a single submission — `matiere_ids`
  *    required (US A.3).
@@ -87,10 +89,23 @@ class StoreAffectationEnseignantRequest extends FormRequest
                     $validator->errors()->add('classe_id', "Cette classe n'a pas encore de programme configuré.");
                 }
 
-                // No per-matière/doublon checks here: store() replaces every
-                // existing affectation for this classe/année wholesale, so a
-                // "duplicate" of the previous teacher's rows is expected,
-                // not an error.
+                // Plusieurs enseignants peuvent partager cette classe, mais
+                // jamais le même deux fois — évite une erreur SQL brute sur
+                // la contrainte unique (enseignant_id, classe_id, matiere_id,
+                // annee_academique_id).
+                $enseignantId = $this->input('enseignant_id');
+                if ($enseignantId) {
+                    $dejaAffecte = AffectationEnseignant::query()
+                        ->where('enseignant_id', $enseignantId)
+                        ->where('classe_id', $classeId)
+                        ->where('annee_academique_id', $this->route('anneeAcademique')?->id)
+                        ->exists();
+
+                    if ($dejaAffecte) {
+                        $validator->errors()->add('enseignant_id', 'Cet enseignant est déjà affecté à cette classe.');
+                    }
+                }
+
                 return;
             }
 

@@ -21,11 +21,12 @@ export function initAnneeAcademiqueShow() {
  * enseignants already affected (each removable in one action, all their
  * matières at once — see Academique\AffectationEnseignantController::
  * destroyEnseignant()), a form to affect a new enseignant to one or several
- * matières at once (US A.3), and — Collège only — who's titulaire, restricted
- * to enseignants already affected to this classe (US A.4). Maternelle/
- * Primaire classes hide the matière checkboxes and titulaire section
- * entirely: one teacher owns the whole classe (see StoreAffectationEnseignant
- * Request::classeEstEnModeEntiere()).
+ * matières at once (US A.3), and who's titulaire, restricted to enseignants
+ * already affected to this classe (US A.4). Maternelle/Primaire classes hide
+ * the matière checkboxes (every enseignant covers the whole programme, no
+ * picking) but — like Collège — can have several enseignants and show the
+ * titulaire picker among them (see StoreAffectationEnseignantRequest::
+ * classeEstEnModeEntiere() and AffectationEnseignantController::store()).
  */
 function initGererAffectationPanel() {
     const list = document.getElementById('gerer-affectation-list');
@@ -77,28 +78,24 @@ function initGererAffectationPanel() {
         if (estClasseEntiere) {
             if (matieresField) matieresField.style.display = 'none';
             if (classeEntiereHint) classeEntiereHint.style.display = 'block';
-            // Un seul enseignant possible pour toute la classe : pas de
-            // titulaire à choisir parmi plusieurs, mais on explique pourquoi
-            // ce menu n'apparaît pas plutôt que de faire disparaître toute
-            // la section « Titulaire de la classe » sans explication.
-            titulaireSection.style.display = 'block';
             titulaireEntiereNote.style.display = 'block';
-            titulaireForm.style.display = 'none';
-            return;
+        } else {
+            if (matieresField) matieresField.style.display = 'block';
+            if (classeEntiereHint) classeEntiereHint.style.display = 'none';
+            titulaireEntiereNote.style.display = 'none';
+
+            matieresCheckWrap.innerHTML = matiereIds.map((id) => `
+                <label>
+                    <input type="checkbox" name="matiere_ids[]" value="${id}" ${oldMatiereIds.includes(String(id)) ? 'checked' : ''}>
+                    ${escapeHTML(matieresMap[id] ?? '')}
+                </label>`).join('');
         }
 
-        if (matieresField) matieresField.style.display = 'block';
-        if (classeEntiereHint) classeEntiereHint.style.display = 'none';
-
-        matieresCheckWrap.innerHTML = matiereIds.map((id) => `
-            <label>
-                <input type="checkbox" name="matiere_ids[]" value="${id}" ${oldMatiereIds.includes(String(id)) ? 'checked' : ''}>
-                ${escapeHTML(matieresMap[id] ?? '')}
-            </label>`).join('');
-
+        // Choisir le titulaire parmi les enseignants déjà affectés
+        // s'applique aux deux modes désormais (voir US A.4 et le nouveau
+        // support multi-enseignant maternelle/primaire).
         titulaireSection.style.display = enseignants.length ? 'block' : 'none';
-        titulaireEntiereNote.style.display = 'none';
-        titulaireForm.style.display = 'block';
+        titulaireForm.style.display = enseignants.length ? 'block' : 'none';
         titulaireForm.action = trigger.dataset.titulaireUrl;
         titulaireSelect.innerHTML = enseignants.map((e) => `<option value="${e.id}" ${e.estTitulaire ? 'selected' : ''}>${escapeHTML(e.nom)}</option>`).join('');
         // titulaireSelect is a .role-select enhanced by dropdown-select.js:

@@ -155,10 +155,11 @@ class EspaceEnseignantController extends Controller
     /**
      * Grille d'évaluation qualitative de la maternelle (voir
      * App\Enums\NiveauQualitatif) — équivalent maternelle de show(), branché
-     * depuis celui-ci. Une classe de maternelle n'a qu'un seul enseignant
-     * (voir Academique\AffectationEnseignantController), toujours titulaire,
-     * qui voit et modifie donc tous les domaines de la classe (pas de
-     * découpage par matière/affectation comme au primaire/collège).
+     * depuis celui-ci. Une classe de maternelle peut avoir plusieurs
+     * enseignants (voir Academique\AffectationEnseignantController) : tous
+     * voient et modifient tous les domaines de la classe (pas de découpage
+     * par matière/affectation comme au primaire/collège) — seul le
+     * titulaire ($isTitulaire) peut valider le bulletin mensuel.
      */
     private function showMaternelle(Request $request, Classe $classe, AnneeAcademique $anneeActive): View
     {

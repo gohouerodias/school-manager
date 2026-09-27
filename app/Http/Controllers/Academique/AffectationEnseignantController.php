@@ -16,10 +16,13 @@ use Illuminate\Http\RedirectResponse;
  * Assigns a teacher to a classe for a given année académique — the shape of
  * that assignment depends on the classe's cycle (see class diagram note on
  * AffectationEnseignant):
- *  - Maternelle/Primaire: a classe has exactly one teacher, who teaches
- *    every matière of its programme to its élèves — picking a teacher here
- *    replaces whichever teacher (and matières) were previously affected to
- *    that classe/année, and always marks them professeur principal.
+ *  - Maternelle/Primaire: a classe can have several teachers, each with the
+ *    same full rights over every matière of its programme (no per-matière
+ *    split) — adding one here never removes the others already affected.
+ *    Exactly one of them is titulaire at a time: the first one added to an
+ *    empty classe becomes titulaire automatically, and designerTitulaire()
+ *    lets the admin move that badge to another already-affected teacher
+ *    afterwards.
  *  - Collège: unchanged — one teacher per matière, several teachers per
  *    classe, "professeur principal" is a deliberate admin choice.
  */
@@ -31,38 +34,45 @@ class AffectationEnseignantController extends Controller
         $enseignant = User::findOrFail($request->validated('enseignant_id'));
 
         if (in_array($classe->niveau->cycle, [CycleNiveau::Maternelle, CycleNiveau::Primaire], true)) {
-            AffectationEnseignant::query()
+            // Le premier enseignant affecté à une classe encore vide en
+            // devient automatiquement titulaire ; un enseignant ajouté
+            // ensuite a les mêmes droits sur toutes les matières mais reste
+            // simple membre (voir designerTitulaire() pour changer qui est
+            // titulaire par la suite).
+            $estPremierEnseignant = ! AffectationEnseignant::query()
                 ->where('classe_id', $classe->id)
                 ->where('annee_academique_id', $anneeAcademique->id)
-                ->delete();
+                ->exists();
 
             // Maternelle n'a pas de matières (voir DomaineEvaluation) : une
             // seule ligne d'affectation, sans matiere_id, suffit à couvrir
-            // toute la classe (tous ses domaines) pour son unique
-            // enseignant — pas de boucle par matière comme pour le primaire.
+            // toute la classe (tous ses domaines) pour cet enseignant — pas
+            // de boucle par matière comme pour le primaire.
             if ($classe->niveau->cycle === CycleNiveau::Maternelle) {
                 AffectationEnseignant::create([
                     'enseignant_id' => $enseignant->id,
                     'classe_id' => $classe->id,
                     'matiere_id' => null,
                     'annee_academique_id' => $anneeAcademique->id,
-                    'est_professeur_principal' => true,
+                    'est_professeur_principal' => $estPremierEnseignant,
                 ]);
-
-                return back()->with('toast', "{$enseignant->name} est maintenant l'enseignant de « {$classe->nom} ».");
+            } else {
+                foreach ($classe->matieres as $matiere) {
+                    AffectationEnseignant::create([
+                        'enseignant_id' => $enseignant->id,
+                        'classe_id' => $classe->id,
+                        'matiere_id' => $matiere->id,
+                        'annee_academique_id' => $anneeAcademique->id,
+                        'est_professeur_principal' => $estPremierEnseignant,
+                    ]);
+                }
             }
 
-            foreach ($classe->matieres as $matiere) {
-                AffectationEnseignant::create([
-                    'enseignant_id' => $enseignant->id,
-                    'classe_id' => $classe->id,
-                    'matiere_id' => $matiere->id,
-                    'annee_academique_id' => $anneeAcademique->id,
-                    'est_professeur_principal' => true,
-                ]);
-            }
+            $toast = $estPremierEnseignant
+                ? "{$enseignant->name} est maintenant titulaire de « {$classe->nom} »."
+                : "{$enseignant->name} a été ajouté(e) à « {$classe->nom} », avec les mêmes droits que les autres enseignants sur toutes les matières.";
 
-            return back()->with('toast', "{$enseignant->name} est maintenant l'enseignant de « {$classe->nom} » pour toutes ses matières.");
+            return back()->with('toast', $toast);
         }
 
         $matiereIds = $request->validated('matiere_ids');
@@ -97,10 +107,14 @@ class AffectationEnseignantController extends Controller
     }
 
     /**
-     * Désigne le titulaire d'une classe collège parmi les enseignants déjà
-     * affectés à cette classe (US A.4) — indépendant de l'affectation d'une
-     * matière : ne crée ni ne modifie aucune matière, ne fait que déplacer le
-     * badge "Titulaire" d'un enseignant affecté à un autre.
+     * Désigne le titulaire d'une classe parmi les enseignants déjà affectés
+     * à cette classe (US A.4) — indépendant de l'affectation d'une matière :
+     * ne crée ni ne modifie aucune matière, ne fait que déplacer le badge
+     * "Titulaire" d'un enseignant affecté à un autre. Fonctionne aussi bien
+     * pour une classe collège (un titulaire parmi plusieurs enseignants
+     * chacun sur ses propres matières) que pour une classe maternelle/
+     * primaire à plusieurs enseignants (tous sur les mêmes matières, un seul
+     * a le badge).
      */
     public function designerTitulaire(DesignerTitulaireRequest $request, Classe $classe): RedirectResponse
     {
@@ -160,9 +174,26 @@ class AffectationEnseignantController extends Controller
         $classe = $affectationEnseignant->classe()->with('niveau')->first();
 
         if ($classe && in_array($classe->niveau->cycle, [CycleNiveau::Maternelle, CycleNiveau::Primaire], true)) {
+            // Ne retire que cet enseignant (toutes ses matières, une seule
+            // ligne pour maternelle) — plusieurs enseignants pouvant
+            // désormais partager la classe, il ne faut plus vider toute la
+            // classe comme avant l'ajout du multi-enseignant. Même garde
+            // que destroyEnseignant() : refuse de retirer le titulaire s'il
+            // reste d'autres enseignants sans qu'un nouveau titulaire ait
+            // été désigné.
+            $autresEnseignants = AffectationEnseignant::query()
+                ->where('classe_id', $affectationEnseignant->classe_id)
+                ->where('enseignant_id', '!=', $affectationEnseignant->enseignant_id)
+                ->exists();
+
+            if ($affectationEnseignant->est_professeur_principal && $autresEnseignants) {
+                return back()->with('toast', "Impossible de retirer cet enseignant : désignez d'abord un autre titulaire pour « {$classe->nom} ».");
+            }
+
             AffectationEnseignant::query()
                 ->where('classe_id', $affectationEnseignant->classe_id)
                 ->where('annee_academique_id', $affectationEnseignant->annee_academique_id)
+                ->where('enseignant_id', $affectationEnseignant->enseignant_id)
                 ->delete();
 
             return back()->with('toast', "Enseignant retiré de « {$classe->nom} ».");

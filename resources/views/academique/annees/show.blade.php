@@ -278,12 +278,14 @@
 
                     @if ($estClasseEntiere)
                         <div class="affectation-card-titulaire">
-                            @if ($titulaireAffectation)
-                                <x-avatar :name="$titulaireAffectation->enseignant->name" :profil="\App\Enums\ProfilUtilisateur::Enseignant" />
-                                <span>{{ $titulaireAffectation->enseignant->name }} <i>— enseignant unique de la classe</i></span>
-                            @else
+                            @forelse ($enseignantsPayload as $ens)
+                                <div class="affectation-card-enseignant-row">
+                                    <x-avatar :name="$ens['nom']" :profil="\App\Enums\ProfilUtilisateur::Enseignant" />
+                                    <span>{{ $ens['nom'] }} @if ($ens['estTitulaire']) <i>— titulaire</i> @endif</span>
+                                </div>
+                            @empty
                                 <span class="affectation-card-empty">Aucun enseignant affecté à cette classe.</span>
-                            @endif
+                            @endforelse
                         </div>
                     @else
                         <div class="affectation-card-progress">
@@ -838,8 +840,9 @@
             </div>
 
             <div id="gerer-affectation-classe-entiere-hint" class="hint" style="display:none;">
-                Maternelle/Primaire : cet enseignant sera affecté à <b>toutes les matières</b> de cette classe et
-                deviendra automatiquement son titulaire. L'enseignant déjà en place, s'il y en a un, sera retiré.
+                Maternelle/Primaire : cet enseignant sera affecté à <b>toutes les matières</b> de cette classe, avec
+                les mêmes droits que les autres enseignants déjà en place. Le premier enseignant ajouté à une classe
+                encore vide en devient automatiquement titulaire — désignez-en un autre ci-dessous si besoin.
             </div>
 
             <button type="submit" class="btn add-pending">+ Ajouter à la classe</button>
@@ -849,7 +852,7 @@
     <div id="gerer-affectation-titulaire-section" style="margin-top:26px; display:none;">
         <div class="pending-list-title">Titulaire de la classe</div>
         <div id="gerer-affectation-titulaire-entiere-note" class="hint" style="display:none;">
-            Maternelle/Primaire : un seul enseignant enseigne toute la classe, il est donc automatiquement titulaire — pas de choix à faire ici. Pour le remplacer, utilisez « Ajouter un enseignant à cette classe » ci-dessus avec le nouveau nom : l'ancien sera retiré automatiquement.
+            Maternelle/Primaire : tous les enseignants affectés ont les mêmes droits sur toutes les matières — seul le titulaire peut valider le bulletin mensuel de la classe.
         </div>
         <form method="POST" id="gerer-affectation-titulaire-form">
             @csrf
