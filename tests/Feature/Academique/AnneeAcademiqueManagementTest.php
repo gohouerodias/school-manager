@@ -774,8 +774,32 @@ test('the affectations tab shows a single titulaire, not per-matière badges, fo
     $response->assertOk();
     $response->assertSee($domaine->nom);
     $response->assertSee($prof->name);
-    $response->assertSee('enseignant unique de la classe');
+    $response->assertSee('— titulaire', false);
     $response->assertDontSee('matières assignées');
+});
+
+test('the classes tab counts domaines, not matières, for a maternelle classe', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeAcademique = AnneeAcademique::factory()->create();
+    $classe = Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => Niveau::factory()->maternelle()]);
+    $classe->domaines()->attach([
+        DomaineEvaluation::factory()->create()->id,
+        DomaineEvaluation::factory()->create()->id,
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
+
+    $response->assertOk();
+    // Avant le correctif, cette colonne comptait toujours $classe->matieres
+    // (toujours vide en maternelle) et affichait 0 même quand le programme
+    // de domaines était correctement configuré (2 domaines attachés ici).
+    $content = $response->getContent();
+    $positionNomClasse = strpos($content, "<b>{$classe->nom}</b>");
+    $finLigne = strpos($content, '</tr>', $positionNomClasse);
+    $ligne = substr($content, $positionNomClasse, $finLigne - $positionNomClasse);
+
+    expect($ligne)->toContain('<td>2</td>')
+        ->and($ligne)->not->toContain('<td>0</td>');
 });
 
 test('a matière already taught by another enseignant in the same classe cannot be given to a second one', function () {

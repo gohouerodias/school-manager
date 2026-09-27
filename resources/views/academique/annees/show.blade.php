@@ -164,7 +164,7 @@
             <x-slot:head>
                 <th>Nom</th>
                 <th>Niveau</th>
-                <th>Matières</th>
+                <th>Matières / domaines</th>
                 <th></th>
             </x-slot:head>
 
@@ -172,11 +172,16 @@
                 @php
                     $lettreActuelle = \Illuminate\Support\Str::of($classe->nom)->afterLast(' ')->upper()->toString();
                     $autresLettres = collect($lettresParNiveau[$classe->niveau_id] ?? [])->reject(fn ($l) => $l === $lettreActuelle)->implode(',');
+                    // Maternelle utilise des "domaines d'évaluation" qualitatifs,
+                    // pas des matières chiffrées (voir Classe::estMaternelle()) —
+                    // compter matieres() pour ce cycle donnerait toujours 0 même
+                    // quand le programme est correctement configuré.
+                    $estMaternelleClasse = $classe->niveau->cycle === \App\Enums\CycleNiveau::Maternelle;
                 @endphp
                 <tr>
                     <td><b>{{ $classe->nom }}</b></td>
                     <td>{{ $classe->niveau->libelle }}</td>
-                    <td>{{ $classe->matieres->count() }}</td>
+                    <td>{{ $estMaternelleClasse ? $classe->domaines->count() : $classe->matieres->count() }}</td>
                     <td>
                         <div class="row-actions-group">
                             <button
