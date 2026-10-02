@@ -29,6 +29,26 @@ test('the mail template shows the school logo instead of the Laravel logo', func
 });
 
 /**
+ * Le petit texte sous le bouton d'action ("If you're having trouble
+ * clicking...") vient de la traduction par défaut de Laravel
+ * (vendor/laravel/framework/.../Notifications/resources/views/email.blade.php,
+ * `@lang(...)`), pas d'un vendor view publié — traduit via lang/fr.json
+ * (App_LOCALE=fr, voir config/app.php) plutôt qu'en surchargeant le template.
+ */
+test('the "trouble clicking the button" subcopy is shown in French', function () {
+    $user = User::factory()->create();
+    $mailMessage = (new ResetPasswordNotification('un-jeton'))->toMail($user);
+
+    $html = app(Markdown::class)->render(
+        $mailMessage->markdown,
+        $mailMessage->data()
+    )->toHtml();
+
+    expect($html)->toContain('Si vous rencontrez des difficultés pour cliquer sur le bouton')
+        ->and($html)->not->toContain("If you're having trouble clicking");
+});
+
+/**
  * `estEnAttenteActivation()` (jamais connecté) distingue les deux usages de
  * cette même notification — voir son docblock dans `ResetPasswordNotification`.
  */
