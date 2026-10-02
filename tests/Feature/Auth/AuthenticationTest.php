@@ -70,6 +70,20 @@ test('users on their temporary password are redirected to the force-password scr
     $response->assertRedirect(route('password.force'));
 });
 
+test('the first-login hint is only shown on the force-password screen, not on every login', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertDontSee('toute première connexion');
+
+    $user = User::factory()->create([
+        'doit_changer_mot_de_passe' => true,
+    ]);
+
+    $this->actingAs($user)->get(route('password.force'))
+        ->assertOk()
+        ->assertSee('toute première connexion');
+});
+
 test('users can set a new password on first login', function () {
     $user = User::factory()->create([
         'doit_changer_mot_de_passe' => true,
