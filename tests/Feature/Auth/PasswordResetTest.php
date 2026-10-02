@@ -22,6 +22,20 @@ test('a reset link is sent when requesting a password reset for an existing acco
     Notification::assertSentTo($user, ResetPasswordNotification::class);
 });
 
+test('the email form is hidden once a reset link has been requested, to avoid resubmission confusion', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->post(route('password.email'), ['email' => $user->email]);
+    $response = $this->get(route('password.request'));
+
+    $response->assertOk();
+    $response->assertDontSee('id="email"', false);
+    $response->assertDontSee('name="email"', false);
+    $response->assertSee('Réessayer avec une autre adresse');
+});
+
 test('the same generic message is shown for an unknown email, avoiding account enumeration', function () {
     Notification::fake();
 

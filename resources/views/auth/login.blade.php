@@ -58,11 +58,6 @@
             Se connecter
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
-
-        <div class="security-hint">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/></svg>
-            <span>Un code de vérification vous sera demandé après cette étape si la double authentification est active sur votre compte. Lors de votre toute première connexion, vous devrez également définir un nouveau mot de passe.</span>
-        </div>
     </form>
 
     <div class="divider"><div class="line"></div><span>INFORMATION</span><div class="line"></div></div>
