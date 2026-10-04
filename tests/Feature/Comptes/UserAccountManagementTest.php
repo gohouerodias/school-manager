@@ -193,3 +193,37 @@ test('the account list paginates at 50 per page and keeps active filters across 
     expect($paginator->total())->toBe(60);
     expect($paginator->nextPageUrl())->toContain('profil='.ProfilUtilisateur::Enseignant->value);
 });
+
+test('administrators can resend the activation link to a pending account', function () {
+    Notification::fake();
+    $admin = User::factory()->administrateur()->create();
+    $pending = User::factory()->enseignant()->create(['derniere_connexion_at' => null, 'statut' => StatutUtilisateur::Actif]);
+
+    $response = $this->actingAs($admin)->from(route('comptes.index'))->post(route('comptes.renvoyer-invitation', $pending));
+
+    $response->assertRedirect(route('comptes.index'));
+    $response->assertSessionHas('toast', "Le lien d'activation a été renvoyé à {$pending->email}.");
+    Notification::assertSentTo($pending, ResetPasswordNotification::class);
+});
+
+test('no activation link is resent to an account that has already logged in', function () {
+    Notification::fake();
+    $admin = User::factory()->administrateur()->create();
+    $actif = User::factory()->enseignant()->create(['derniere_connexion_at' => now(), 'statut' => StatutUtilisateur::Actif]);
+
+    $this->actingAs($admin)->post(route('comptes.renvoyer-invitation', $actif))->assertRedirect();
+
+    Notification::assertNothingSentTo($actif);
+});
+
+test('the resend action only appears for pending accounts, and non-admins cannot use it', function () {
+    $admin = User::factory()->administrateur()->create(['derniere_connexion_at' => now()]);
+    $pending = User::factory()->enseignant()->create(['derniere_connexion_at' => null, 'statut' => StatutUtilisateur::Actif]);
+    $enseignant = User::factory()->enseignant()->create(['derniere_connexion_at' => now()]);
+
+    $this->actingAs($admin)->get(route('comptes.index'))
+        ->assertSee(route('comptes.renvoyer-invitation', $pending), false)
+        ->assertDontSee(route('comptes.renvoyer-invitation', $enseignant), false);
+
+    $this->actingAs($enseignant)->post(route('comptes.renvoyer-invitation', $pending))->assertForbidden();
+});

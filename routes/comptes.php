@@ -13,6 +13,7 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::patch('{user}', [UserAccountController::class, 'update'])->name('update');
         Route::patch('{user}/archiver', [UserAccountController::class, 'archiver'])->name('archiver');
         Route::patch('{user}/reactiver', [UserAccountController::class, 'reactiver'])->name('reactiver');
+        Route::post('{user}/renvoyer-invitation', [UserAccountController::class, 'renvoyerInvitation'])->name('renvoyer-invitation');
 
         Route::get('export/excel', [UserAccountExportController::class, 'excel'])->name('export.excel');
         Route::get('export/pdf', [UserAccountExportController::class, 'pdf'])->name('export.pdf');

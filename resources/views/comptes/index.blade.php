@@ -80,6 +80,12 @@
                             data-edit-telephone="{{ $user->telephone }}"
                             data-edit-email="{{ $user->email }}"
                         >✎ Modifier le profil</button>
+                        @if ($isPending)
+                            <form method="POST" action="{{ route('comptes.renvoyer-invitation', $user) }}">
+                                @csrf
+                                <button type="submit" class="positive">✉ Renvoyer le lien d'activation</button>
+                            </form>
+                        @endif
                         <hr>
                         <form method="POST" action="{{ route('comptes.archiver', $user) }}"
                               data-confirm-submit data-confirm-danger="1" data-confirm-label="Archiver"

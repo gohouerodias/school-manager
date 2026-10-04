@@ -121,4 +121,26 @@ class UserAccountController extends Controller
 
         return back()->with('toast', "Le compte de {$user->name} a été réactivé.");
     }
+
+    /**
+     * Re-sends the « Votre compte a été créé » activation e-mail to an
+     * account still waiting for its first login (lost e-mail, expired
+     * link…). Same mail as the initial invitation (see store()):
+     * ResetPasswordNotification points to compte.activer while the account
+     * is pending. Each new link replaces the previous one.
+     */
+    public function renvoyerInvitation(User $user): RedirectResponse
+    {
+        if (! $user->estEnAttenteActivation()) {
+            return back()->with('toast', "Le compte de {$user->name} est déjà activé : aucun lien à renvoyer.");
+        }
+
+        $statut = Password::sendResetLink(['email' => $user->email]);
+
+        if ($statut === Password::RESET_THROTTLED) {
+            return back()->with('toast', "Un lien vient déjà d'être envoyé à {$user->email}. Patientez une minute avant de réessayer.");
+        }
+
+        return back()->with('toast', "Le lien d'activation a été renvoyé à {$user->email}.");
+    }
 }
