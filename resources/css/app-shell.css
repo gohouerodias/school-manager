@@ -950,6 +950,10 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 
 .wizard-document-field .hint { color: var(--green-deep); font-weight: 600; }
 .wizard-document-formats { font-weight: 500; color: var(--ink-muted); text-transform: uppercase; font-size: 11px; letter-spacing: .02em; }
+.wizard-size-reminder {
+    background: var(--gold-tint); color: #8A6717; border: 1px solid var(--gold);
+    border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.5; margin-bottom: 18px;
+}
 
 /* Étape 4's file fields reuse the same .dropzone look as "Ajouter un
    document" (see initWizardDropzones() in eleve-wizard.js) instead of a bare

@@ -215,11 +215,11 @@ class EleveController extends Controller
                 'matricule' => $eleve->matricule,
                 'identifiant_virtuel' => $eleve->identifiantVirtuel(),
                 'sexe' => $eleve->sexe,
-                'date_naissance' => $eleve->date_naissance->format('d/m/Y'),
+                'date_naissance' => $eleve->date_naissance?->format('d/m/Y') ?? '—',
                 // Raw Y-m-d value, alongside the display-formatted one above:
                 // needed to prefill the "Modifier" panel's <input type="date">
                 // (see eleve-fiche.js's renderFiche()).
-                'date_naissance_iso' => $eleve->date_naissance->format('Y-m-d'),
+                'date_naissance_iso' => $eleve->date_naissance?->format('Y-m-d'),
                 'date_creation' => $eleve->created_at->format('d/m/Y'),
                 'statut' => $eleve->statut->value,
                 'classe' => $inscriptionActuelle?->classe

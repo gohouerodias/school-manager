@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\StatutEleve;
 use App\Models\ChampPersonnalise;
 use App\Models\Eleve;
 use App\Models\Niveau;
 use App\Models\TypeDocument;
+use App\Support\LimitesEnvoi;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -59,7 +61,35 @@ class SaveEleveWizardRequest extends FormRequest
             $rules["champs.{$champ->id}"] = [$champ->obligatoire ? 'required' : 'nullable', 'string', 'max:255'];
         }
 
+        // « Sauvegarder en brouillon » : seuls nom et prénom restent exigés
+        // (pour retrouver la fiche dans la liste) ; tout ce qui est fourni
+        // reste vérifié (format, taille, valeurs autorisées).
+        if ($this->enregistreEnBrouillon()) {
+            foreach (['niveau_souhaite_id', 'sexe', 'date_naissance'] as $champ) {
+                $rules[$champ][0] = 'nullable';
+            }
+
+            foreach ($rules as $cle => $regles) {
+                if (str_starts_with($cle, 'champs.') && $regles[0] === 'required') {
+                    $rules[$cle][0] = 'nullable';
+                }
+            }
+        }
+
         return $rules;
+    }
+
+    /**
+     * True when the agent clicked « Sauvegarder en brouillon » on a new
+     * fiche, or on one that is still a brouillon. An Actif/Archivé fiche
+     * can never be turned back into a brouillon by an edit.
+     */
+    public function enregistreEnBrouillon(): bool
+    {
+        $eleve = $this->route('eleve');
+
+        return $this->boolean('brouillon')
+            && (! $eleve instanceof Eleve || $eleve->statut === StatutEleve::Brouillon);
     }
 
     /**
@@ -82,6 +112,15 @@ class SaveEleveWizardRequest extends FormRequest
         // naming the champ explicitly makes the error summary usable.
         foreach (ChampPersonnalise::query()->get() as $champ) {
             $messages["champs.{$champ->id}.required"] = "Le champ « {$champ->libelle} » est obligatoire.";
+        }
+
+        // Same idea for documents: name the document and the size limit
+        // instead of "The documents.3 field must not be greater than 5120 kilobytes."
+        $limiteServeur = LimitesEnvoi::enMo(LimitesEnvoi::octetsMaxParFichier());
+        foreach (TypeDocument::query()->get() as $type) {
+            $messages["documents.{$type->id}.max"] = "Le document « {$type->libelle} » est trop volumineux (5 Mo maximum). Réduisez sa taille (photo moins lourde, PDF compressé) puis réessayez.";
+            // Rejected by PHP itself (upload_max_filesize) before Laravel sees it.
+            $messages["documents.{$type->id}.uploaded"] = "Le document « {$type->libelle} » n'a pas pu être envoyé : il dépasse la taille autorisée par le serveur ({$limiteServeur} maximum).";
         }
 
         return $messages;
@@ -136,20 +175,20 @@ class SaveEleveWizardRequest extends FormRequest
                 }
 
                 $type = TypeDocument::find($typeDocumentId);
-                $accepted = array_map('strtoupper', $type?->formats_acceptes ?? []);
 
-                if ($accepted === []) {
+                if (! $type || $type->accepteExtension($fichier->getClientOriginalExtension())) {
                     continue;
                 }
 
-                $extension = strtoupper($fichier->getClientOriginalExtension());
+                $validator->errors()->add(
+                    "documents.{$typeDocumentId}",
+                    'Format non accepté pour ce type de document. Formats attendus : '.implode(', ', $type->formatsAcceptes()).'.'
+                );
+            }
 
-                if (! in_array($extension, $accepted, true)) {
-                    $validator->errors()->add(
-                        "documents.{$typeDocumentId}",
-                        'Format non accepté pour ce type de document. Formats attendus : '.implode(', ', $accepted).'.'
-                    );
-                }
+            // Un brouillon peut être enregistré sans ses documents obligatoires.
+            if ($this->enregistreEnBrouillon()) {
+                return;
             }
 
             $niveauId = $this->input('niveau_souhaite_id');

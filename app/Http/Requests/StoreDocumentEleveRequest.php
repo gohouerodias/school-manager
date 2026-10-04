@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\TypeDocument;
+use App\Support\LimitesEnvoi;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -51,20 +52,15 @@ class StoreDocumentEleveRequest extends FormRequest
             }
 
             $type = TypeDocument::find($typeId);
-            $accepted = array_map('strtoupper', $type?->formats_acceptes ?? []);
 
-            if ($accepted === []) {
+            if (! $type || $type->accepteExtension($fichier->getClientOriginalExtension())) {
                 return;
             }
 
-            $extension = strtoupper($fichier->getClientOriginalExtension());
-
-            if (! in_array($extension, $accepted, true)) {
-                $validator->errors()->add(
-                    'fichier',
-                    'Format non accepté pour ce type de document. Formats attendus : '.implode(', ', $accepted).'.'
-                );
-            }
+            $validator->errors()->add(
+                'fichier',
+                'Format non accepté pour ce type de document. Formats attendus : '.implode(', ', $type->formatsAcceptes()).'.'
+            );
         });
     }
 
@@ -77,6 +73,9 @@ class StoreDocumentEleveRequest extends FormRequest
             'type_document_id.required' => 'Sélectionnez un type de document.',
             'fichier.required' => 'Sélectionnez un fichier à téléverser.',
             'fichier.max' => 'Le fichier dépasse la taille maximale de 5 Mo.',
+            // Rejected by PHP itself (upload_max_filesize) before Laravel sees it.
+            'fichier.uploaded' => "Le fichier n'a pas pu être envoyé : il dépasse la taille autorisée par le serveur ("
+                .LimitesEnvoi::enMo(LimitesEnvoi::octetsMaxParFichier()).' maximum).',
         ];
     }
 }

@@ -25,9 +25,9 @@ use Illuminate\View\View;
  * Full-page, 4-étapes wizard (classe désirée → infos perso → parents/tuteurs
  * → documents) that fully replaces the old "Nouvel apprenant" / "Modifier la
  * fiche" slide panels. Every step lives on the same page and travels in a
- * single submission (see SaveEleveWizardRequest), always fully validated —
- * there is no "brouillon" (draft) save anymore: "Terminer" is the only way
- * to persist a fiche, whether creating a new one or editing an existing one.
+ * single submission (see SaveEleveWizardRequest). "Terminer" is fully
+ * validated; « Sauvegarder en brouillon » (new or still-brouillon fiches
+ * only) saves an incomplete fiche with just nom + prénom required.
  */
 class EleveWizardController extends Controller
 {
@@ -115,18 +115,20 @@ class EleveWizardController extends Controller
             'niveau_souhaite_id' => $validated['niveau_souhaite_id'] ?? null,
         ];
 
+        $brouillon = $request->enregistreEnBrouillon();
+
         if ($eleve) {
-            // A lingering StatutEleve::Brouillon (from before this save-as-
-            // draft path was removed) is promoted to Actif once it's fully
-            // completed and saved — but an already-Actif or Archive fiche
-            // must never have its statut silently changed by an unrelated
-            // edit here; only archiver()/desarchiver() may do that.
+            // A brouillon stays a brouillon on « Sauvegarder en brouillon »
+            // and is promoted to Actif once fully completed (« Terminer ») —
+            // but an already-Actif or Archive fiche must never have its
+            // statut silently changed by an unrelated edit here; only
+            // archiver()/desarchiver() may do that.
             if ($eleve->statut === StatutEleve::Brouillon) {
-                $donneesEleve['statut'] = StatutEleve::Actif;
+                $donneesEleve['statut'] = $brouillon ? StatutEleve::Brouillon : StatutEleve::Actif;
             }
             $eleve->update($donneesEleve);
         } else {
-            $donneesEleve['statut'] = StatutEleve::Actif;
+            $donneesEleve['statut'] = $brouillon ? StatutEleve::Brouillon : StatutEleve::Actif;
             $eleve = Eleve::create($donneesEleve);
         }
 
@@ -202,6 +204,13 @@ class EleveWizardController extends Controller
 
     private function rediriger(Request $request, Eleve $eleve): RedirectResponse
     {
+        if ($eleve->statut === StatutEleve::Brouillon) {
+            return redirect()->route('eleves.index')->with(
+                'toast',
+                "La fiche de {$eleve->nomComplet()} a été sauvegardée en brouillon. Utilisez « Continuer » dans la liste pour la compléter."
+            );
+        }
+
         $verbe = $request->isMethod('patch') ? 'mise à jour' : 'enregistrée';
 
         return redirect()->route('eleves.index')->with('toast', "La fiche de {$eleve->nomComplet()} a été {$verbe}.");

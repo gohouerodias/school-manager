@@ -46,4 +46,35 @@ class TypeDocument extends Model
     {
         return $this->hasMany(DocumentNumerique::class, 'type_document_id');
     }
+
+    /**
+     * Formats acceptés en majuscules (ex. ['PDF', 'JPG']) — vide = tout format.
+     *
+     * @return array<int, string>
+     */
+    public function formatsAcceptes(): array
+    {
+        return array_map('strtoupper', $this->formats_acceptes ?? []);
+    }
+
+    /**
+     * Vrai si un fichier de cette extension est accepté pour ce type de
+     * document. « .jpeg » compte comme « JPG » (même format, autre extension).
+     * Même règle côté navigateur : resources/js/document-file-check.js.
+     */
+    public function accepteExtension(string $extension): bool
+    {
+        $formats = $this->formatsAcceptes();
+
+        if ($formats === []) {
+            return true;
+        }
+
+        $extension = strtoupper($extension);
+        if ($extension === 'JPEG') {
+            $extension = 'JPG';
+        }
+
+        return in_array($extension, $formats, true);
+    }
 }

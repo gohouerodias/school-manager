@@ -528,3 +528,35 @@ test('viewing a document whose stored file is missing returns 404', function () 
 
     $response->assertNotFound();
 });
+
+test('a .jpeg file is accepted for a type that accepts JPG', function () {
+    Storage::fake('local');
+
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create();
+    $type = TypeDocument::factory()->create(['formats_acceptes' => ['JPG']]);
+
+    $response = $this->actingAs($agent)->from(route('eleves.index'))->post(route('eleves.documents.store', $eleve), [
+        'type_document_id' => $type->id,
+        'fichier' => UploadedFile::fake()->create('acte.jpeg', 100, 'image/jpeg'),
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    $this->assertDatabaseHas('documents_numeriques', ['eleve_id' => $eleve->id, 'type_document_id' => $type->id]);
+});
+
+test('a word document is rejected for a type that only accepts PDF and JPG', function () {
+    Storage::fake('local');
+
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create();
+    $type = TypeDocument::factory()->create(['formats_acceptes' => ['PDF', 'JPG']]);
+
+    $response = $this->actingAs($agent)->from(route('eleves.index'))->post(route('eleves.documents.store', $eleve), [
+        'type_document_id' => $type->id,
+        'fichier' => UploadedFile::fake()->create('bulletin.docx', 10, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+    ]);
+
+    $response->assertSessionHasErrors('fichier');
+    $this->assertDatabaseMissing('documents_numeriques', ['eleve_id' => $eleve->id]);
+});

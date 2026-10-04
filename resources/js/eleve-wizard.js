@@ -1,4 +1,6 @@
 import { initTuteurQuickSearch } from './tuteur-quick-search';
+import { askConfirmation } from './confirm-modal';
+import { acceptAttribute, enMo, erreurFichierDocument, parseFormats } from './document-file-check';
 
 /**
  * Fiche élève wizard (resources/views/eleves/wizard.blade.php): 4 étapes
@@ -22,8 +24,160 @@ export function initEleveWizard() {
 
     initStepNavigation();
     initDocumentConditionality();
-    initWizardDropzones();
+    initWizardDropzones(form);
     initTuteurPendingList(form);
+    initTotalUploadCheck(form);
+    initDraftButton(form);
+    initUnsavedChangesGuard(form);
+}
+
+/**
+ * Prévient la perte des saisies : tant que le formulaire a été modifié sans
+ * être enregistré, quitter la page (« Retour à la liste », menu, fil
+ * d'Ariane…) demande d'abord confirmation via la fenêtre de confirmation
+ * de l'app ; fermer l'onglet / recharger déclenche l'alerte du navigateur.
+ * Écoute en phase de capture, donc avant page-loader.js : un départ annulé
+ * n'affiche pas l'écran de chargement.
+ */
+function initUnsavedChangesGuard(form) {
+    let modifie = false;
+    let envoiEnCours = false;
+
+    const marquerModifie = () => {
+        modifie = true;
+    };
+    form.addEventListener('input', marquerModifie);
+    form.addEventListener('change', marquerModifie);
+    form.addEventListener('drop', marquerModifie);
+    form.addEventListener('submit', (event) => {
+        // Un envoi bloqué par une vérification (ex. taille totale) garde
+        // la protection active.
+        setTimeout(() => {
+            envoiEnCours = !event.defaultPrevented;
+        });
+    });
+
+    window.addEventListener('beforeunload', (event) => {
+        if (modifie && !envoiEnCours) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!modifie || envoiEnCours || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) {
+            return;
+        }
+
+        const lien = event.target.closest('a[href]');
+        const href = lien?.getAttribute('href') ?? '';
+        if (!lien || form.contains(lien) || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || lien.target === '_blank' || lien.hasAttribute('download')) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        askConfirmation({
+            title: 'Modifications non enregistrées',
+            message: "Vous avez modifié cette fiche sans l'enregistrer. Si vous quittez maintenant, vos modifications seront perdues.",
+            confirmLabel: 'Quitter sans enregistrer',
+            danger: true,
+            onConfirm: () => {
+                modifie = false;
+                window.location.href = lien.href;
+            },
+        });
+    }, true);
+}
+
+const CHAMPS_IDENTITE_REQUIS = ['niveau_souhaite_id', 'nom', 'prenom', 'sexe', 'date_naissance'];
+
+/**
+ * « Sauvegarder en brouillon » n'apparaît que tant que la fiche est
+ * incomplète (champ obligatoire vide ou document obligatoire manquant) —
+ * une fiche complète se termine normalement avec « Terminer ».
+ */
+function initDraftButton(form) {
+    const draftBtn = document.getElementById('wizard-draft-btn');
+    if (!draftBtn) {
+        return;
+    }
+
+    const estVide = (element) => !element || String(element.value ?? '').trim() === '';
+
+    function ficheComplete() {
+        const identiteIncomplete = CHAMPS_IDENTITE_REQUIS.some((nom) => estVide(form.elements.namedItem(nom)));
+        if (identiteIncomplete) {
+            return false;
+        }
+
+        const champIncomplet = [...form.querySelectorAll('[data-wizard-requis]')]
+            .some((field) => estVide(field.querySelector('input, select, textarea')));
+        if (champIncomplet) {
+            return false;
+        }
+
+        return ![...form.querySelectorAll('.wizard-document-field')].some((field) => {
+            const requis = field.dataset.obligatoire === '1'
+                || (field.dataset.requisSiTransfert === '1' && field.style.display !== 'none');
+            const input = field.querySelector('input[type="file"]');
+
+            return requis && field.dataset.dejaFourni !== '1' && !(input?.files?.length > 0);
+        });
+    }
+
+    function update() {
+        draftBtn.style.display = ficheComplete() ? 'none' : 'inline-flex';
+    }
+
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+    form.addEventListener('drop', () => setTimeout(update));
+    update();
+}
+
+/**
+ * Refuse l'envoi quand l'ensemble des documents dépasse la limite du
+ * serveur (post_max_size, voir App\Support\LimitesEnvoi) : sinon le
+ * navigateur téléverse tout pendant de longues minutes pour finir sur une
+ * erreur « 413 Content Too Large » et une fiche non enregistrée.
+ * Enregistré avant le loader de page (page-loader.js écoute sur document),
+ * donc un envoi bloqué ici n'affiche pas l'écran de chargement.
+ */
+function initTotalUploadCheck(form) {
+    const limite = Number(form.dataset.tailleMaxEnvoi || 0);
+    if (!limite) {
+        return;
+    }
+
+    form.addEventListener('submit', (event) => {
+        const total = [...form.querySelectorAll('input[type="file"]')]
+            .flatMap((input) => [...input.files])
+            .reduce((somme, fichier) => somme + fichier.size, 0);
+
+        // Marge pour les autres champs du formulaire et l'encodage multipart.
+        if (total <= limite * 0.95) {
+            return;
+        }
+
+        event.preventDefault();
+        const message = `Les documents choisis pèsent ${enMo(total)} au total, au-delà de la limite du serveur (${enMo(limite)} par envoi). `
+            + "Retirez ou réduisez certains documents, puis ajoutez-les ensuite un par un depuis la fiche de l'apprenant.";
+        afficherErreurEnvoi(form, message);
+    });
+}
+
+function afficherErreurEnvoi(form, message) {
+    let alerte = document.getElementById('wizard-envoi-error');
+    if (!alerte) {
+        alerte = document.createElement('div');
+        alerte.id = 'wizard-envoi-error';
+        alerte.className = 'alert-error';
+        form.prepend(alerte);
+    }
+    alerte.textContent = message;
+    alerte.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function initStepNavigation() {
@@ -58,7 +212,11 @@ function initStepNavigation() {
 
         prevBtn.style.visibility = step === 1 ? 'hidden' : 'visible';
         nextBtn.style.display = step === TOTAL_STEPS ? 'none' : 'inline-flex';
-        finishBtn.style.display = step === TOTAL_STEPS ? 'inline-flex' : 'none';
+        // Modifier une fiche existante : on peut enregistrer depuis
+        // n'importe quelle étape (corriger un nom ne doit pas obliger à
+        // parcourir les 4 étapes). Nouvelle fiche : « Terminer » à la fin.
+        const enregistrableAChaqueEtape = document.getElementById('eleve-wizard-form')?.dataset.wizardMode === 'edit';
+        finishBtn.style.display = step === TOTAL_STEPS || enregistrableAChaqueEtape ? 'inline-flex' : 'none';
     }
 
     stepButtons.forEach((btn) => {
@@ -108,14 +266,31 @@ function initDocumentConditionality() {
  * rather than a global id, so this scales to however many document fields
  * the "Paramètres des dossiers" config defines.
  */
-function initWizardDropzones() {
+function initWizardDropzones(form) {
+    const tailleMaxFichier = Number(form.dataset.tailleMaxFichier || 0) || undefined;
+
     document.querySelectorAll('[data-wizard-dropzone]').forEach((dropzone) => {
         const fileInput = dropzone.querySelector('input[type="file"]');
         const textBlock = dropzone.querySelector('.wizard-dropzone-text');
         const filenameLabel = dropzone.querySelector('.wizard-dropzone-filename');
+        const field = dropzone.closest('.wizard-document-field');
+        const clientError = field?.querySelector('[data-wizard-dropzone-error]');
+        const formats = parseFormats(fileInput?.dataset.formats);
 
         if (!fileInput || !filenameLabel) {
             return;
+        }
+
+        if (formats.length > 0) {
+            fileInput.accept = acceptAttribute(formats);
+        }
+
+        function showClientError(message) {
+            if (clientError) {
+                clientError.textContent = message;
+                clientError.style.display = message ? 'block' : 'none';
+            }
+            field?.classList.toggle('invalid', Boolean(message));
         }
 
         function showSelectedFile(file) {
@@ -123,6 +298,19 @@ function initWizardDropzones() {
                 resetDropzone();
                 return;
             }
+
+            // Refusé tout de suite (format/taille) : on vide le champ plutôt
+            // que de laisser croire que le fichier est accepté jusqu'à
+            // l'enregistrement final.
+            const erreur = erreurFichierDocument(file, formats, tailleMaxFichier);
+            if (erreur) {
+                fileInput.value = '';
+                resetDropzone();
+                showClientError(erreur);
+                return;
+            }
+
+            showClientError('');
 
             const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
             filenameLabel.textContent = `📎 ${file.name} (${sizeMb} Mo)`;

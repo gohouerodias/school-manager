@@ -1,5 +1,6 @@
 import { refreshDropdownSelect } from './dropdown-select';
 import { initTuteurQuickSearch } from './tuteur-quick-search';
+import { acceptAttribute, enMo, erreurFichierDocument, parseFormats, TAILLE_MAX_DOCUMENT_OCTETS } from './document-file-check';
 
 /**
  * "Ajouter un tuteur" / "Ajouter un document" panels, opened from within the
@@ -266,11 +267,43 @@ function initEditStatutParcoursPanel() {
     });
 }
 
-function showFileClientError() {
+function showFileClientError(message = "Sélectionnez un fichier avant d'enregistrer.") {
     const error = document.getElementById('document-file-client-error');
     if (error) {
+        error.textContent = message;
         error.style.display = 'block';
     }
+}
+
+/** Limite réelle du serveur (App\Support\LimitesEnvoi), 5 Mo par défaut. */
+function tailleMaxFichier() {
+    return Number(document.getElementById('document-dropzone')?.dataset.tailleMaxFichier || 0) || TAILLE_MAX_DOCUMENT_OCTETS;
+}
+
+function selectedTypeFormats() {
+    return parseFormats(document.getElementById('document-type')?.selectedOptions[0]?.dataset.formats);
+}
+
+/**
+ * Vérifie tout de suite le fichier choisi (format du type sélectionné +
+ * 5 Mo max, voir document-file-check.js) : un fichier refusé est retiré du
+ * champ au lieu d'être affiché comme accepté jusqu'à l'enregistrement.
+ */
+function acceptOrRejectFile(file) {
+    if (!file) {
+        showSelectedFile(null);
+        return;
+    }
+
+    const erreur = erreurFichierDocument(file, selectedTypeFormats(), tailleMaxFichier());
+    if (erreur) {
+        resetDropzone();
+        showFileClientError(erreur);
+        return;
+    }
+
+    showSelectedFile(file);
+    hideFileClientError();
 }
 
 function hideFileClientError() {
@@ -288,7 +321,19 @@ function updateFormatsHint() {
     }
 
     const formats = typeSelect.selectedOptions[0]?.dataset.formats;
-    hint.textContent = formats ? `${formats.split(',').join(', ')} — 5 Mo maximum` : 'PDF, JPG ou PNG — 5 Mo maximum';
+    const maximum = `${enMo(tailleMaxFichier())} maximum`;
+    hint.textContent = formats ? `${formats.split(',').join(', ')} — ${maximum}` : `PDF, JPG ou PNG — ${maximum}`;
+
+    const fileInput = document.getElementById('document-file-input');
+    if (fileInput) {
+        fileInput.accept = acceptAttribute(parseFormats(formats));
+
+        // Le fichier déjà choisi doit aussi respecter les formats du
+        // nouveau type sélectionné.
+        if (fileInput.files.length > 0) {
+            acceptOrRejectFile(fileInput.files[0]);
+        }
+    }
 }
 
 /**
@@ -312,12 +357,7 @@ function initDropzone() {
         }
     });
 
-    fileInput.addEventListener('change', () => {
-        showSelectedFile(fileInput.files[0]);
-        if (fileInput.files.length > 0) {
-            hideFileClientError();
-        }
-    });
+    fileInput.addEventListener('change', () => acceptOrRejectFile(fileInput.files[0]));
 
     ['dragenter', 'dragover'].forEach((eventName) => {
         dropzone.addEventListener(eventName, (event) => {
@@ -343,8 +383,7 @@ function initDropzone() {
         const file = event.dataTransfer?.files?.[0];
         if (file) {
             fileInput.files = event.dataTransfer.files;
-            showSelectedFile(file);
-            hideFileClientError();
+            acceptOrRejectFile(file);
         }
     });
 }

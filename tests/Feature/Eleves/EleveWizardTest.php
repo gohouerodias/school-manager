@@ -7,6 +7,7 @@ use App\Models\Niveau;
 use App\Models\ParentTuteur;
 use App\Models\TypeDocument;
 use App\Models\User;
+use App\Support\LimitesEnvoi;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,8 +28,8 @@ test('administrators and agents de scolarité can open the wizard to create a ne
 });
 
 test('"Terminer" on a brand-new fiche missing required fields fails validation and creates nothing', function () {
-    // There is no more "Sauvegarder le brouillon" — every submission is
-    // always fully validated, whether creating or editing a fiche.
+    // "Terminer" (no brouillon flag) is always fully validated — only
+    // "Sauvegarder en brouillon" relaxes the rules (see the tests below).
     $agent = User::factory()->agentScolarite()->create();
 
     $response = $this->actingAs($agent)->post(route('eleves.wizard.store'), [
@@ -340,4 +341,214 @@ test('a brouillon with no nom/prénom yet still renders in the list without erro
 
     $response->assertOk();
     $response->assertSee('Nouvelle fiche (brouillon)');
+});
+
+test('a word document is rejected for a type that only accepts PDF and JPG', function () {
+    Storage::fake('local');
+
+    $agent = User::factory()->agentScolarite()->create();
+    $niveau = Niveau::factory()->maternelle()->create();
+    $bulletin = TypeDocument::factory()->create(['libelle' => "Bulletin de l'école précédente", 'formats_acceptes' => ['PDF', 'JPG']]);
+
+    $response = $this->actingAs($agent)->post(route('eleves.wizard.store'), [
+        'niveau_souhaite_id' => $niveau->id,
+        'nom' => 'Formatdocx',
+        'prenom' => 'Test',
+        'sexe' => 'M',
+        'date_naissance' => '2021-04-12',
+        'documents' => [
+            $bulletin->id => UploadedFile::fake()->create('Choix universités.docx', 10, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+        ],
+    ]);
+
+    $response->assertSessionHasErrors(["documents.{$bulletin->id}"]);
+    $this->assertDatabaseMissing('eleves', ['nom' => 'Formatdocx']);
+});
+
+test('each document field tells the browser which formats it accepts, so a wrong file is refused as soon as it is dropped', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $bulletin = TypeDocument::factory()->create(['formats_acceptes' => ['PDF', 'JPG']]);
+
+    $this->actingAs($agent)->get(route('eleves.wizard.create'))
+        ->assertOk()
+        ->assertSee('name="documents['.$bulletin->id.']" data-formats="PDF,JPG"', false)
+        ->assertSee('data-wizard-dropzone-error', false);
+});
+
+test('an upload larger than the server limit sends the agent back with a clear french message instead of a 413 page', function () {
+    $agent = User::factory()->agentScolarite()->create();
+
+    $response = $this->actingAs($agent)
+        ->from(route('eleves.wizard.create'))
+        ->withServerVariables(['CONTENT_LENGTH' => (string) (LimitesEnvoi::octetsMaxParRequete() + 1024)])
+        ->post(route('eleves.wizard.store'), ['nom' => 'Tropgros']);
+
+    $response->assertRedirect(route('eleves.wizard.create'));
+    $response->assertSessionHasErrors('envoi');
+    expect(session('errors')->first('envoi'))->toContain('trop volumineux');
+    $this->assertDatabaseMissing('eleves', ['nom' => 'Tropgros']);
+});
+
+test('the wizard tells the browser the server upload limits', function () {
+    $agent = User::factory()->agentScolarite()->create();
+
+    $this->actingAs($agent)->get(route('eleves.wizard.create'))
+        ->assertOk()
+        ->assertSee('data-taille-max-envoi="'.LimitesEnvoi::octetsMaxParRequete().'"', false)
+        ->assertSee('data-taille-max-fichier="'.LimitesEnvoi::octetsMaxParFichier().'"', false);
+});
+
+test('"Sauvegarder en brouillon" saves an incomplete new fiche as a brouillon', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    TypeDocument::factory()->create(['obligatoire' => true]);
+
+    $response = $this->actingAs($agent)->post(route('eleves.wizard.store'), [
+        'brouillon' => '1',
+        'nom' => 'Incomplet',
+        'prenom' => 'Marie',
+        // classe désirée, sexe, date de naissance and the obligatoire document all missing.
+    ]);
+
+    $response->assertRedirect(route('eleves.index'));
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('toast', fn (string $toast) => str_contains($toast, 'brouillon'));
+    $this->assertDatabaseHas('eleves', ['nom' => 'Incomplet', 'prenom' => 'Marie', 'statut' => StatutEleve::Brouillon->value]);
+});
+
+test('a brouillon still needs a nom and a prénom to be found again in the list', function () {
+    $agent = User::factory()->agentScolarite()->create();
+
+    $response = $this->actingAs($agent)->post(route('eleves.wizard.store'), [
+        'brouillon' => '1',
+        'nom' => 'Sansprenom',
+    ]);
+
+    $response->assertSessionHasErrors('prenom');
+    $this->assertDatabaseMissing('eleves', ['nom' => 'Sansprenom']);
+});
+
+test('a brouillon still rejects a document in the wrong format', function () {
+    Storage::fake('local');
+    $agent = User::factory()->agentScolarite()->create();
+    $type = TypeDocument::factory()->create(['formats_acceptes' => ['PDF']]);
+
+    $response = $this->actingAs($agent)->post(route('eleves.wizard.store'), [
+        'brouillon' => '1',
+        'nom' => 'Brouillon',
+        'prenom' => 'Docx',
+        'documents' => [$type->id => UploadedFile::fake()->create('bulletin.docx', 10)],
+    ]);
+
+    $response->assertSessionHasErrors("documents.{$type->id}");
+});
+
+test('saving a brouillon again keeps it a brouillon, and "Terminer" then promotes it to Actif', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $niveau = Niveau::factory()->maternelle()->create();
+    $eleve = Eleve::factory()->create(['nom' => 'Encours', 'prenom' => 'Paul', 'statut' => StatutEleve::Brouillon]);
+
+    $this->actingAs($agent)->patch(route('eleves.wizard.update', $eleve), [
+        'brouillon' => '1',
+        'nom' => 'Encours',
+        'prenom' => 'Paul',
+    ])->assertSessionHasNoErrors();
+
+    expect($eleve->fresh()->statut)->toBe(StatutEleve::Brouillon);
+
+    $this->actingAs($agent)->patch(route('eleves.wizard.update', $eleve), [
+        'niveau_souhaite_id' => $niveau->id,
+        'nom' => 'Encours',
+        'prenom' => 'Paul',
+        'sexe' => 'M',
+        'date_naissance' => '2021-04-12',
+    ])->assertSessionHasNoErrors();
+
+    expect($eleve->fresh()->statut)->toBe(StatutEleve::Actif);
+});
+
+test('an Actif fiche can never be turned back into a brouillon', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create(['nom' => 'Actif', 'prenom' => 'Jean', 'statut' => StatutEleve::Actif]);
+
+    $response = $this->actingAs($agent)->patch(route('eleves.wizard.update', $eleve), [
+        'brouillon' => '1',
+        'nom' => 'Actif',
+        'prenom' => 'Jean',
+    ]);
+
+    // Fully validated like a normal edit: incomplete → rejected, statut unchanged.
+    $response->assertSessionHasErrors(['sexe', 'date_naissance', 'niveau_souhaite_id']);
+    expect($eleve->fresh()->statut)->toBe(StatutEleve::Actif);
+});
+
+test('the "Sauvegarder en brouillon" button is offered for new fiches but not when editing an Actif one', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create(['statut' => StatutEleve::Actif]);
+
+    $this->actingAs($agent)->get(route('eleves.wizard.create'))
+        ->assertOk()
+        ->assertSee('Sauvegarder en brouillon');
+
+    $this->actingAs($agent)->get(route('eleves.wizard.edit', $eleve))
+        ->assertOk()
+        ->assertDontSee('id="wizard-draft-btn"', false);
+});
+
+test('the fiche of a brouillon without a date de naissance opens without error', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create(['statut' => StatutEleve::Brouillon, 'date_naissance' => null, 'sexe' => null]);
+
+    $this->actingAs($agent)->getJson(route('eleves.fiche', $eleve))
+        ->assertOk()
+        ->assertJsonPath('identite.date_naissance', '—');
+});
+
+test('editing an Actif fiche can be saved from any step, and says so', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $eleve = Eleve::factory()->create(['statut' => StatutEleve::Actif]);
+
+    $this->actingAs($agent)->get(route('eleves.wizard.edit', $eleve))
+        ->assertOk()
+        ->assertSee('data-wizard-mode="edit"', false)
+        ->assertSee('Enregistrer les modifications')
+        ->assertSee('disponible à chaque étape')
+        ->assertSee('id="wizard-back-link"', false);
+});
+
+test('a new fiche keeps « Terminer » at the last step', function () {
+    $agent = User::factory()->agentScolarite()->create();
+
+    $this->actingAs($agent)->get(route('eleves.wizard.create'))
+        ->assertOk()
+        ->assertSee('data-wizard-mode="create"', false)
+        ->assertSee('>Terminer</button>', false)
+        ->assertDontSee('id="wizard-finish-btn">Enregistrer les modifications', false);
+});
+
+test('the documents step reminds the maximum file size', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    TypeDocument::factory()->create(['libelle' => "Photo d'identité", 'formats_acceptes' => ['JPG', 'PNG']]);
+    $limite = LimitesEnvoi::enMo(LimitesEnvoi::octetsMaxParFichier());
+
+    $this->actingAs($agent)->get(route('eleves.wizard.create'))
+        ->assertOk()
+        ->assertSee("Taille maximale : <b>{$limite} par fichier</b>", false)
+        ->assertSee("(JPG, PNG — {$limite} max)", false);
+});
+
+test('a document over 5 Mo gets a clear french message naming the document', function () {
+    Storage::fake('local');
+    $agent = User::factory()->agentScolarite()->create();
+    $photo = TypeDocument::factory()->create(['libelle' => "Photo d'identité", 'formats_acceptes' => ['JPG']]);
+
+    $response = $this->actingAs($agent)->post(route('eleves.wizard.store'), [
+        'brouillon' => '1',
+        'nom' => 'Photo',
+        'prenom' => 'Lourde',
+        'documents' => [$photo->id => UploadedFile::fake()->create('photo.jpg', 7 * 1024, 'image/jpeg')],
+    ]);
+
+    $response->assertSessionHasErrors("documents.{$photo->id}");
+    expect(session('errors')->first("documents.{$photo->id}"))
+        ->toContain("« Photo d'identité » est trop volumineux (5 Mo maximum)");
 });

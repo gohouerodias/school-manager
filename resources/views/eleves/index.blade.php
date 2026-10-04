@@ -377,7 +377,7 @@
         <div class="field">
             <label>Fichier</label>
             <div class="alert-error" id="document-file-client-error" style="display:none;">Sélectionnez un fichier avant d'enregistrer.</div>
-            <div class="dropzone" id="document-dropzone" tabindex="0">
+            <div class="dropzone" id="document-dropzone" tabindex="0" data-taille-max-fichier="{{ \App\Support\LimitesEnvoi::octetsMaxParFichier() }}">
                 <input type="file" id="document-file-input" name="fichier" hidden>
                 <div class="dropzone-text" id="document-dropzone-text">
                     Glissez-déposez un fichier ici, ou <b>parcourez vos fichiers</b><br>

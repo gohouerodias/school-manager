@@ -21,7 +21,7 @@
             $activeStep = 2;
         } elseif ($tuteurErrors) {
             $activeStep = 3;
-        } elseif ($documentErrors) {
+        } elseif ($documentErrors || $errors->has('envoi')) {
             $activeStep = 4;
         }
     }
@@ -32,7 +32,7 @@
     subtitle="Classe désirée, infos personnelles, parents/tuteurs et documents — 4 étapes, à compléter dans l'ordre voulu."
 >
     <x-slot:actions>
-        <a href="{{ route('eleves.index') }}" class="btn ghost">← Retour à la liste</a>
+        <a href="{{ route('eleves.index') }}" class="btn ghost" id="wizard-back-link">← Retour à la liste</a>
     </x-slot:actions>
 </x-page-header>
 
@@ -44,12 +44,19 @@
                 <li>{{ $message }}</li>
             @endforeach
         </ul>
+        @if (! $eleve || $eleve->statut->value === 'brouillon')
+            Il manque des informations ? Utilisez « Sauvegarder en brouillon » pour ne rien perdre et compléter la fiche plus tard.
+        @endif
     </div>
 @endif
 
 @if ($eleve && $eleve->statut->value === 'brouillon')
     <div class="wizard-draft-banner">
         Cette fiche est un <b>brouillon</b> : elle n'apparaîtra comme « Actif » dans la liste qu'une fois toutes les étapes terminées.
+    </div>
+@elseif ($eleve)
+    <div class="wizard-draft-banner">
+        Vos modifications ne sont enregistrées qu'après un clic sur <b>« Enregistrer les modifications »</b>, disponible à chaque étape — inutile d'aller jusqu'à la dernière.
     </div>
 @endif
 
@@ -73,8 +80,11 @@
     method="POST"
     action="{{ $eleve ? route('eleves.wizard.update', $eleve) : route('eleves.wizard.store') }}"
     id="eleve-wizard-form"
+    data-wizard-mode="{{ $eleve && $eleve->statut->value !== 'brouillon' ? 'edit' : 'create' }}"
     enctype="multipart/form-data"
     data-tuteur-recherche-url="{{ route('eleves.wizard.tuteurs.recherche') }}"
+    data-taille-max-fichier="{{ \App\Support\LimitesEnvoi::octetsMaxParFichier() }}"
+    data-taille-max-envoi="{{ \App\Support\LimitesEnvoi::octetsMaxParRequete() }}"
     {{-- When "Terminer" fails validation (e.g. a missing document at étape 4),
          Laravel flashes the raw submission back via old() — every plain input
          below already reads old('field', ...) so it survives the reload, but
@@ -166,7 +176,7 @@
                 @php
                     $valeurExistante = $eleve?->valeursPersonnalisees->firstWhere('champ_personnalise_id', $champ->id)?->valeur;
                 @endphp
-                <div class="field @error("champs.{$champ->id}") invalid @enderror">
+                <div class="field @error("champs.{$champ->id}") invalid @enderror" @if ($champ->obligatoire) data-wizard-requis @endif>
                     <label for="wizard-champ-{{ $champ->id }}">{{ $champ->libelle }}{{ $champ->obligatoire ? ' *' : '' }}</label>
                     @if ($champ->type->value === 'liste_deroulante')
                         <select class="role-select" id="wizard-champ-{{ $champ->id }}" name="champs[{{ $champ->id }}]">
@@ -240,6 +250,15 @@
 
         {{-- Étape 4 : Documents --}}
         <div class="wizard-step-content" data-wizard-step="4" style="@if ($activeStep !== 4) display:none; @endif">
+            @php
+                $tailleMaxFichier = \App\Support\LimitesEnvoi::enMo(\App\Support\LimitesEnvoi::octetsMaxParFichier());
+                $tailleMaxEnvoi = \App\Support\LimitesEnvoi::octetsMaxParRequete();
+            @endphp
+            <div class="wizard-size-reminder">
+                📏 Taille maximale : <b>{{ $tailleMaxFichier }} par fichier</b>@if ($tailleMaxEnvoi > 0), <b>{{ \App\Support\LimitesEnvoi::enMo($tailleMaxEnvoi) }} pour l'ensemble des documents</b>@endif.
+                Une photo prise au téléphone pèse souvent plus : réduisez-la ou envoyez-la en qualité « moyenne » avant de l'ajouter.
+            </div>
+
             @foreach ($typesDocuments as $type)
                 @php
                     $documentExistant = $eleve?->documents->firstWhere('type_document_id', $type->id);
@@ -247,15 +266,19 @@
                 <div
                     class="field wizard-document-field @error("documents.{$type->id}") invalid @enderror"
                     data-requis-si-transfert="{{ $type->requis_si_transfert ? '1' : '0' }}"
+                    data-obligatoire="{{ $type->obligatoire ? '1' : '0' }}"
+                    data-deja-fourni="{{ $documentExistant ? '1' : '0' }}"
                 >
                     <label for="wizard-document-{{ $type->id }}">
                         {{ $type->libelle }}{{ ($type->obligatoire || $type->requis_si_transfert) ? ' *' : '' }}
                         @if (! empty($type->formats_acceptes))
-                            <span class="wizard-document-formats">({{ implode(', ', $type->formats_acceptes) }})</span>
+                            <span class="wizard-document-formats">({{ implode(', ', $type->formats_acceptes) }} — {{ $tailleMaxFichier }} max)</span>
+                        @else
+                            <span class="wizard-document-formats">({{ $tailleMaxFichier }} max)</span>
                         @endif
                     </label>
                     <div class="dropzone wizard-dropzone" data-wizard-dropzone tabindex="0">
-                        <input type="file" id="wizard-document-{{ $type->id }}" name="documents[{{ $type->id }}]" hidden>
+                        <input type="file" id="wizard-document-{{ $type->id }}" name="documents[{{ $type->id }}]" data-formats="{{ implode(',', $type->formats_acceptes ?? []) }}" hidden>
                         <div class="dropzone-text wizard-dropzone-text">
                             <b>📎 Glissez-déposez</b> ou <b>parcourez vos fichiers</b>
                         </div>
@@ -264,6 +287,7 @@
                     @if ($documentExistant)
                         <div class="hint">Déjà fourni — choisissez un fichier pour le remplacer.</div>
                     @endif
+                    <div class="error" data-wizard-dropzone-error style="display:none;"></div>
                     @error("documents.{$type->id}")
                         <div class="error">{{ $message }}</div>
                     @enderror
@@ -276,8 +300,14 @@
     <div class="wizard-nav">
         <button type="button" class="btn ghost" id="wizard-prev-btn">Précédent</button>
         <div class="wizard-nav-right">
+            @if (! $eleve || $eleve->statut->value === 'brouillon')
+                {{-- Shown by eleve-wizard.js only while the fiche is still
+                     incomplete (see initDraftButton()). formnovalidate +
+                     name="brouillon" → SaveEleveWizardRequest::enregistreEnBrouillon(). --}}
+                <button type="submit" class="btn ghost" id="wizard-draft-btn" name="brouillon" value="1" formnovalidate>Sauvegarder en brouillon</button>
+            @endif
             <button type="button" class="btn dark" id="wizard-next-btn">Suivant</button>
-            <button type="submit" class="btn primary" id="wizard-finish-btn">Terminer</button>
+            <button type="submit" class="btn primary" id="wizard-finish-btn">{{ $eleve && $eleve->statut->value !== 'brouillon' ? 'Enregistrer les modifications' : 'Terminer' }}</button>
         </div>
     </div>
 </form>
@@ -307,6 +337,7 @@
 
     <div class="wizard-info-content" data-wizard-info="4" style="@if ($activeStep !== 4) display:none; @endif">
         <p>Les documents marqués d'un <b>*</b> sont obligatoires pour « Terminer » la fiche.</p>
+        <p>Chaque fichier doit peser <b>{{ \App\Support\LimitesEnvoi::enMo(\App\Support\LimitesEnvoi::octetsMaxParFichier()) }} maximum</b>. Un fichier trop lourd est refusé dès qu'il est déposé.</p>
         <p>Le bulletin et le certificat de l'école précédente ne sont demandés que si la classe désirée choisie à l'étape 1 n'est pas Maternelle 1 ou 2.</p>
         <p>Un document déjà fourni lors d'un enregistrement précédent reste conservé : ne choisissez un fichier que pour le remplacer.</p>
     </div>
