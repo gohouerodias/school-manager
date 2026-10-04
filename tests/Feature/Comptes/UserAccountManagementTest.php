@@ -58,6 +58,21 @@ test('inviting an already-registered email fails validation', function () {
     $response->assertSessionHasErrors('invites.0.email');
 });
 
+test('the reason an invitation was rejected is shown to the administrator', function () {
+    $admin = User::factory()->administrateur()->create();
+    $existing = User::factory()->create(['email' => 'deja.inscrit@cscmadretrinidad.bj']);
+
+    $response = $this->actingAs($admin)->from(route('comptes.index'))->followingRedirects()->post(route('comptes.store'), [
+        'invites' => [
+            ['email' => $existing->email, 'name' => 'Coffi Zannou', 'telephone' => '+229 01 02 03 04', 'profil' => ProfilUtilisateur::Enseignant->value],
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertSee("Aucun compte n'a été créé", false)
+        ->assertSee("Un compte existe déjà avec l'adresse deja.inscrit@cscmadretrinidad.bj.");
+});
+
 test('inviting without a name or telephone fails validation', function () {
     $admin = User::factory()->administrateur()->create();
 

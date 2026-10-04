@@ -5,7 +5,7 @@
 @section('content')
 <x-page-header title="Gestion des comptes utilisateurs" :subtitle="$subtitle">
     <x-slot:actions>
-        <x-export-buttons :excel-route="route('comptes.export.excel')" :pdf-route="route('comptes.export.pdf')" />
+        <x-export-buttons :excel-route="route('comptes.export.excel', $activeFilters)" :pdf-route="route('comptes.export.pdf', $activeFilters)" />
         <button type="button" class="btn primary" data-panel-open="invite">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Inviter un utilisateur
@@ -106,6 +106,16 @@
         @error('invites')
             <div class="alert-error">{{ $message }}</div>
         @enderror
+
+        @if ($errors->has('invites.*'))
+            <div class="alert-error">
+                Aucun compte n'a été créé :
+                @foreach (collect($errors->get('invites.*'))->flatten()->unique() as $message)
+                    <br>• {{ $message }}
+                @endforeach
+                <br>Corrigez puis ajoutez de nouveau les utilisateurs à la liste.
+            </div>
+        @endif
 
         <div class="alert-error" id="invite-add-error" style="display:none;"></div>
 

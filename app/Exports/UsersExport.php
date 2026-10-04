@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use App\Enums\StatutUtilisateur;
 use App\Models\User;
+use App\Support\UserFilters;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -11,9 +13,15 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class UsersExport implements FromCollection, WithHeadings, WithMapping
 {
+    public function __construct(private readonly Request $request) {}
+
+    /**
+     * Same search/profil/statut filters as the on-screen list (see
+     * UserAccountController::index() / App\Support\UserFilters).
+     */
     public function collection(): Collection
     {
-        return User::query()->orderBy('name')->get();
+        return UserFilters::apply(User::query()->orderBy('name'), $this->request)->get();
     }
 
     /**

@@ -467,7 +467,7 @@
                                 <td>
                                     <div class="row-actions-group">
                                         <a href="{{ route('eleves.bulletins.annuel.apercu', ['classe' => $classe, 'inscription' => $inscription]) }}" class="btn ghost" target="_blank" rel="noopener">Aperçu</a>
-                                        <a href="{{ route('eleves.bulletins.annuel.apercu.telecharger', ['classe' => $classe, 'inscription' => $inscription]) }}" class="btn ghost">Télécharger</a>
+                                        <a href="{{ route('eleves.bulletins.annuel.apercu.telecharger', ['classe' => $classe, 'inscription' => $inscription]) }}" class="btn ghost" data-no-loader>Télécharger</a>
                                     </div>
                                 </td>
                             </tr>

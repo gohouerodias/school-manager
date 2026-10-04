@@ -11,7 +11,7 @@
 <x-page-header :title="'Aperçu bulletin — '.$eleve->nomComplet()" :subtitle="$classe->nom.' · '.$examen->date_examen->translatedFormat('F Y')">
     <x-slot:actions>
         <a href="{{ route('eleves.bulletins.index', ['classe_id' => $classe->id, 'examen_id' => $examen->id]) }}" class="btn ghost">← Retour aux bulletins</a>
-        <a href="{{ $telechargerUrl }}" class="btn primary">
+        <a href="{{ $telechargerUrl }}" class="btn primary" data-no-loader>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
             Télécharger en PDF
         </a>

@@ -33,7 +33,7 @@
         @endif
 
         @if ($examenActif && $matieres->isNotEmpty())
-            <a class="btn ghost" href="{{ route('enseignant.classes.notes.export', ['classe' => $classe, 'examen_id' => $examenActif->id]) }}">Exporter en Excel</a>
+            <a class="btn ghost" href="{{ route('enseignant.classes.notes.export', ['classe' => $classe, 'examen_id' => $examenActif->id]) }}" data-no-loader>Exporter en Excel</a>
         @endif
     </div>
 </div>

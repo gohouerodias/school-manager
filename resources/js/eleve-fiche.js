@@ -157,7 +157,7 @@ function renderFiche(data) {
                 ${d.fourni ? `
                     <div class="fiche-doc-actions">
                         ${linkHTML('document-view-url-template', eleveId, d.id, 'Voir le document', 'target="_blank" rel="noopener"', viewIcon())}
-                        ${linkHTML('document-download-url-template', eleveId, d.id, 'Télécharger le document', '', downloadIcon())}
+                        ${linkHTML('document-download-url-template', eleveId, d.id, 'Télécharger le document', 'data-no-loader', downloadIcon())}
                         ${deleteFormHTML('document-delete-url-template', eleveId, d.id, `Supprimer le document « ${d.libelle} » ?`)}
                     </div>
                 ` : ''}

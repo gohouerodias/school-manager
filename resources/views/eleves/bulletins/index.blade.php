@@ -45,7 +45,7 @@
             @if ($demande->estGeneree())
                 ✓ Bulletins générés le {{ $demande->genere_at->format('d/m/Y à H:i') }} ({{ $demande->nb_bulletins_generes }} bulletin(s)).
                 @if ($demande->chemin_pdf)
-                    <a href="{{ route('eleves.bulletins.telecharger', $demande) }}">Télécharger le PDF groupé</a>
+                    <a href="{{ route('eleves.bulletins.telecharger', $demande) }}" data-no-loader>Télécharger le PDF groupé</a>
                 @endif
             @elseif ($demande->aEchoue())
                 ✕ La génération a échoué : {{ $demande->erreur }}
@@ -173,7 +173,7 @@
                     @if ($demandeAnnuel->estGeneree())
                         ✓ Bulletins générés le {{ $demandeAnnuel->genere_at->format('d/m/Y à H:i') }} ({{ $demandeAnnuel->nb_bulletins_generes }} bulletin(s)).
                         @if ($demandeAnnuel->chemin_pdf)
-                            <a href="{{ route('eleves.bulletins.annuel.telecharger', $demandeAnnuel) }}">Télécharger le PDF groupé</a>
+                            <a href="{{ route('eleves.bulletins.annuel.telecharger', $demandeAnnuel) }}" data-no-loader>Télécharger le PDF groupé</a>
                         @endif
                     @elseif ($demandeAnnuel->aEchoue())
                         ✕ La génération a échoué : {{ $demandeAnnuel->erreur }}

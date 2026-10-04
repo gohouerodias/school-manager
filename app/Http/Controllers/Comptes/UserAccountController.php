@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Comptes;
 
 use App\Enums\ProfilUtilisateur;
-use App\Enums\StatutUtilisateur;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAccountsRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\User;
+use App\Support\UserFilters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -33,26 +33,7 @@ class UserAccountController extends Controller
         $statutFilter = (string) $request->input('statut', '');
 
         // Always alphabetical by name, regardless of which filters are active.
-        $query = User::query()->orderBy('name');
-
-        if ($search !== '') {
-            $query->where(function ($inner) use ($search) {
-                $inner->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($profilFilter !== '' && ProfilUtilisateur::tryFrom($profilFilter) !== null) {
-            $query->where('profil', $profilFilter);
-        }
-
-        if ($statutFilter === 'archive') {
-            $query->where('statut', StatutUtilisateur::Archive);
-        } elseif ($statutFilter === 'attente') {
-            $query->where('statut', StatutUtilisateur::Actif)->whereNull('derniere_connexion_at');
-        } elseif ($statutFilter === 'actif') {
-            $query->where('statut', StatutUtilisateur::Actif)->whereNotNull('derniere_connexion_at');
-        }
+        $query = UserFilters::apply(User::query()->orderBy('name'), $request);
 
         $users = $query->paginate(self::PER_PAGE)->withQueryString();
 
@@ -72,6 +53,7 @@ class UserAccountController extends Controller
             'search' => $search,
             'profilFilter' => $profilFilter,
             'statutFilter' => $statutFilter,
+            'activeFilters' => array_filter(['search' => $search, 'profil' => $profilFilter, 'statut' => $statutFilter]),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
                 'Gestion des comptes' => null,
