@@ -105,7 +105,7 @@ class TuteurController extends Controller
                 'nom_complet' => $eleve->nomComplet(),
                 'matricule' => $eleve->matricule,
                 'lien_parente' => $eleve->pivot->lien_parente,
-                'liste_url' => route('eleves.index', ['search' => $eleve->matricule]),
+                'fiche_url' => route('eleves.index', ['fiche' => $eleve->id]),
             ])->values(),
         ]);
     }

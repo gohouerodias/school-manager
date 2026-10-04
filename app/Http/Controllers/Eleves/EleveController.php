@@ -89,6 +89,9 @@ class EleveController extends Controller
             'classeFilter' => $classeFilter,
             'statutFilter' => $statutFilter,
             'dateFilter' => $dateFilter,
+            // ?fiche={id} (e.g. from the tuteurs list's "enfants liés" modal)
+            // opens that élève's fiche straight away — see eleve-fiche.js.
+            'ficheAOuvrir' => $request->filled('fiche') ? Eleve::query()->find($request->integer('fiche')) : null,
             'subtitle' => sprintf(
                 '%d apprenants · %d actifs, %d archivés',
                 Eleve::query()->count(),

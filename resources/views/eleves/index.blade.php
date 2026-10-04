@@ -187,6 +187,10 @@
     </div>
 </x-fiche-modal>
 
+@if ($ficheAOuvrir)
+    <button type="button" hidden data-fiche-trigger data-fiche-autoopen data-fiche-url="{{ route('eleves.fiche', $ficheAOuvrir) }}"></button>
+@endif
+
 {{-- Ajouter un tuteur (depuis la fiche ouverte) --}}
 <x-slide-panel id="add-tuteur" title="Ajouter un tuteur">
     <form method="POST" action="{{ old('_action', '') }}" id="add-tuteur-form">

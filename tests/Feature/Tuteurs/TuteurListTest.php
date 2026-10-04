@@ -151,6 +151,36 @@ test('the enfants endpoint returns each linked élève with their lien de parent
     $response->assertJsonFragment(['nom_complet' => 'Ahouansou Roméo', 'lien_parente' => 'Père']);
 });
 
+test('each enfant links straight to their fiche, even without a matricule', function () {
+    $admin = User::factory()->administrateur()->create();
+    $tuteur = ParentTuteur::factory()->create();
+    $eleve = Eleve::factory()->create(['matricule' => null]);
+    $eleve->parents()->attach($tuteur->id, ['lien_parente' => 'Père']);
+
+    $response = $this->actingAs($admin)->getJson(route('tuteurs.enfants', $tuteur));
+
+    $response->assertOk();
+    $response->assertJsonPath('enfants.0.fiche_url', route('eleves.index', ['fiche' => $eleve->id]));
+});
+
+test('the élèves list opens the requested fiche on load when given ?fiche={id}', function () {
+    $admin = User::factory()->administrateur()->create();
+    $eleve = Eleve::factory()->create();
+
+    $response = $this->actingAs($admin)->get(route('eleves.index', ['fiche' => $eleve->id]));
+
+    $response->assertOk();
+    $response->assertSee('data-fiche-autoopen data-fiche-url="'.route('eleves.fiche', $eleve).'"', false);
+});
+
+test('the élèves list ignores an unknown ?fiche id', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    $this->actingAs($admin)->get(route('eleves.index', ['fiche' => 999999]))
+        ->assertOk()
+        ->assertDontSee('data-fiche-autoopen', false);
+});
+
 test('the enfants endpoint returns an empty list for a tuteur with no élèves linked', function () {
     $admin = User::factory()->administrateur()->create();
     $tuteur = ParentTuteur::factory()->create();

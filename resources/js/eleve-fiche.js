@@ -52,6 +52,10 @@ export function initEleveFiche() {
         }
     });
 
+    // eleves.index?fiche={id} (see EleveController::index()) renders a
+    // hidden [data-fiche-autoopen] trigger: open that fiche on page load.
+    document.querySelector('[data-fiche-autoopen]')?.click();
+
     document.querySelectorAll('[data-fiche-tab]').forEach((tabBtn) => {
         tabBtn.addEventListener('click', () => {
             document.querySelectorAll('[data-fiche-tab]').forEach((btn) => btn.classList.remove('active'));

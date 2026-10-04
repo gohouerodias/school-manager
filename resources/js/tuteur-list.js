@@ -68,10 +68,10 @@ function renderEnfants(data) {
 
     list.innerHTML = enfants.length
         ? enfants.map((enfant) => `
-            <div class="fiche-parcours-item">
-                <a href="${escapeHTML(enfant.liste_url)}"><b>${escapeHTML(enfant.nom_complet)}</b></a> — ${escapeHTML(enfant.lien_parente ?? '')}
+            <a class="tuteur-enfant-link" href="${escapeHTML(enfant.fiche_url)}" title="Consulter la fiche">
+                <b>${escapeHTML(enfant.nom_complet)}</b> — ${escapeHTML(enfant.lien_parente ?? '')}
                 <br><span>Matricule : ${escapeHTML(enfant.matricule || 'non renseigné')}</span>
-            </div>
+            </a>
         `).join('')
         : '<p class="table-empty-state">Aucun élève lié à ce tuteur.</p>';
 }

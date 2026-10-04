@@ -692,6 +692,13 @@ button.classe-badge:hover { filter: brightness(0.95); }
 .fiche-parent span { color: var(--ink-muted); font-size: 12px; }
 .fiche-parent-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .fiche-parent-actions .fiche-item-delete-form { margin: 0; }
+/* Liste des tuteurs → "enfants liés" : chaque enfant ouvre sa fiche (eleves.index?fiche={id}). */
+.tuteur-enfant-link {
+    display: block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px;
+    font-size: 13px; color: var(--ink); text-decoration: none; transition: border-color .15s ease, background .15s ease;
+}
+.tuteur-enfant-link span { color: var(--ink-muted); font-size: 12px; }
+.tuteur-enfant-link:hover { border-color: var(--green); background: var(--green-tint); }
 .fiche-doc-item {
     display: flex; align-items: center; gap: 10px; padding: 10px 14px;
     border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; font-size: 13px; grid-column: 1 / -1;
