@@ -11,7 +11,6 @@ use App\Models\AnneeAcademique;
 use App\Models\Examen;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 /**
@@ -71,7 +70,7 @@ class ExamenController extends Controller
             'date_limite_saisie' => $request->validated('date_limite_saisie'),
         ]);
 
-        $dateLimite = Carbon::parse($examen->date_limite_saisie)->format('d/m/Y');
+        $dateLimite = $examen->dateLimiteSaisieLibelle();
 
         return back()->with('toast', "Examen mensuel du système {$systeme->label()} créé — les enseignants ont jusqu'au {$dateLimite} pour saisir les notes.");
     }

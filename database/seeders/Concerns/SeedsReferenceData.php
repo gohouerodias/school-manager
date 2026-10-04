@@ -67,7 +67,7 @@ trait SeedsReferenceData
             'systeme' => SystemeScolaire::Primaire,
             'type' => TypeEvaluation::EvaluationMensuelle,
             'date_examen' => '2025-11-15',
-            'date_limite_saisie' => '2025-11-25',
+            'date_limite_saisie' => '2025-11-25 23:59:00',
         ]);
     }
 

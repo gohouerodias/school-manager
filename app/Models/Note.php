@@ -71,6 +71,6 @@ class Note extends Model
      */
     public function verifierModifiable(): bool
     {
-        return $this->examen !== null && now()->toDateString() <= $this->examen->date_limite_saisie->format('Y-m-d');
+        return $this->examen !== null && ! $this->examen->delaiSaisieDepasse();
     }
 }

@@ -223,7 +223,7 @@ class GenererDemoClassePrimaireCommand extends Command
                 'systeme' => SystemeScolaire::Primaire,
                 'type' => TypeEvaluation::EvaluationMensuelle,
                 'date_examen' => $dateExamen->toDateString(),
-                'date_limite_saisie' => $dateExamen->clone()->addDays(10)->toDateString(),
+                'date_limite_saisie' => $dateExamen->clone()->addDays(10)->setTime(23, 59)->toDateTimeString(),
             ]);
 
             foreach ($eleves as $eleve) {

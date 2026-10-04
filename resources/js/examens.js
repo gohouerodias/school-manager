@@ -69,10 +69,11 @@ function initExamenEdit() {
 
             systemeAnnee.textContent = `${trigger.dataset.editSysteme} — ${trigger.dataset.editAnnee}`;
 
-            [dateInput, dateLimiteInput].forEach((input) => {
-                input.min = trigger.dataset.editMin ?? '';
-                input.max = trigger.dataset.editMax ?? '';
-            });
+            dateInput.min = trigger.dataset.editMin ?? '';
+            dateInput.max = trigger.dataset.editMax ?? '';
+            // <input type="datetime-local"> : bornes au format date + heure.
+            dateLimiteInput.min = trigger.dataset.editMin ? `${trigger.dataset.editMin}T00:00` : '';
+            dateLimiteInput.max = trigger.dataset.editMax ? `${trigger.dataset.editMax}T23:59` : '';
 
             dateInput.value = trigger.dataset.editDateExamen ?? '';
             dateLimiteInput.value = trigger.dataset.editDateLimite ?? '';

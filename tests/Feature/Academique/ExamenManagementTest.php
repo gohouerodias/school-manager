@@ -283,3 +283,50 @@ test('the année académique fiche never shows another année’s examens under 
     $response->assertOk();
     $response->assertDontSee('15/05/2030');
 });
+
+test('the date limite de saisie can carry a time', function () {
+    $admin = User::factory()->administrateur()->create();
+    AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-10-01', 'date_fin' => '2027-07-31']);
+
+    $this->actingAs($admin)->post(route('academique.examens.store'), [
+        'systeme' => 'primaire',
+        'date_examen' => '2026-11-15',
+        'date_limite_saisie' => '2026-11-22T18:00',
+    ])->assertSessionHasNoErrors();
+
+    $examen = Examen::query()->firstOrFail();
+    expect($examen->date_limite_saisie->format('Y-m-d H:i'))->toBe('2026-11-22 18:00')
+        ->and($examen->dateLimiteSaisieLibelle())->toBe('22/11/2026 à 18h00');
+});
+
+test('a date limite without a time still means until the end of that day', function () {
+    $admin = User::factory()->administrateur()->create();
+    AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-10-01', 'date_fin' => '2027-07-31']);
+
+    $this->actingAs($admin)->post(route('academique.examens.store'), [
+        'systeme' => 'primaire',
+        'date_examen' => '2026-11-15',
+        'date_limite_saisie' => '2026-11-22',
+    ])->assertSessionHasNoErrors();
+
+    expect(Examen::query()->firstOrFail()->date_limite_saisie->format('H:i'))->toBe('23:59');
+});
+
+test('a deadline on the last day of the année, with a time, is still inside its period', function () {
+    $admin = User::factory()->administrateur()->create();
+    AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-10-01', 'date_fin' => '2027-07-31']);
+
+    $this->actingAs($admin)->post(route('academique.examens.store'), [
+        'systeme' => 'primaire',
+        'date_examen' => '2027-07-20',
+        'date_limite_saisie' => '2027-07-31T17:00',
+    ])->assertSessionHasNoErrors();
+});
+
+test('the saisie closes at the exact time of the deadline, not at the end of the day', function () {
+    $ouvert = Examen::factory()->create(['date_limite_saisie' => now()->addHour()]);
+    $ferme = Examen::factory()->create(['date_limite_saisie' => now()->subHour()]);
+
+    expect($ouvert->delaiSaisieDepasse())->toBeFalse()
+        ->and($ferme->delaiSaisieDepasse())->toBeTrue();
+});

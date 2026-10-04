@@ -372,7 +372,7 @@
                     <td><span class="chip">{{ $examen->systeme->label() }}</span></td>
                     <td>{{ $examen->type->label() }}</td>
                     <td>{{ $examen->date_examen->format('d/m/Y') }}</td>
-                    <td>{{ $examen->date_limite_saisie->format('d/m/Y') }}</td>
+                    <td>{{ $examen->dateLimiteSaisieLibelle() }}</td>
                     <td>
                         <div class="row-actions-group">
                             <button
@@ -385,7 +385,7 @@
                                 data-edit-systeme="{{ $examen->systeme->label() }}"
                                 data-edit-annee="{{ $anneeAcademique->libelle }}"
                                 data-edit-date-examen="{{ $examen->date_examen->format('Y-m-d') }}"
-                                data-edit-date-limite="{{ $examen->date_limite_saisie->format('Y-m-d') }}"
+                                data-edit-date-limite="{{ $examen->dateLimiteSaisiePourChamp() }}"
                                 data-edit-min="{{ $anneeAcademique->date_debut->format('Y-m-d') }}"
                                 data-edit-max="{{ $anneeAcademique->date_fin->format('Y-m-d') }}"
                             >✎</button>
@@ -537,9 +537,9 @@
             </div>
 
             <div class="field">
-                <label for="new-examen-date-limite">Date limite de saisie des notes</label>
-                <input type="date" id="new-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}"
-                    min="{{ $anneeAcademique->date_debut->format('Y-m-d') }}" max="{{ $anneeAcademique->date_fin->format('Y-m-d') }}">
+                <label for="new-examen-date-limite">Date et heure limites de saisie des notes</label>
+                <input type="datetime-local" id="new-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}"
+                    min="{{ $anneeAcademique->date_debut->format('Y-m-d') }}T00:00" max="{{ $anneeAcademique->date_fin->format('Y-m-d') }}T23:59">
                 <div class="hint">Délai laissé aux enseignants pour saisir les notes de cet examen.</div>
             </div>
         </div>
@@ -577,8 +577,8 @@
         </div>
 
         <div class="field">
-            <label for="edit-examen-date-limite">Date limite de saisie des notes</label>
-            <input type="date" id="edit-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}" required>
+            <label for="edit-examen-date-limite">Date et heure limites de saisie des notes</label>
+            <input type="datetime-local" id="edit-examen-date-limite" name="date_limite_saisie" value="{{ old('date_limite_saisie') }}" required>
             <div class="hint">Délai laissé aux enseignants pour saisir les notes de cet examen.</div>
         </div>
     </form>

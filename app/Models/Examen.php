@@ -39,8 +39,45 @@ class Examen extends Model
             'systeme' => SystemeScolaire::class,
             'type' => TypeEvaluation::class,
             'date_examen' => 'date',
-            'date_limite_saisie' => 'date',
+            'date_limite_saisie' => 'datetime',
         ];
+    }
+
+    /**
+     * True once the « délai de saisie des notes » (day AND time) has passed.
+     */
+    public function delaiSaisieDepasse(): bool
+    {
+        return now()->greaterThan($this->date_limite_saisie);
+    }
+
+    /**
+     * « 22/11/2026 à 18h00 » — the deadline as shown to staff.
+     */
+    public function dateLimiteSaisieLibelle(): string
+    {
+        return $this->date_limite_saisie->format('d/m/Y à H\hi');
+    }
+
+    /**
+     * Value for an <input type="datetime-local">.
+     */
+    public function dateLimiteSaisiePourChamp(): string
+    {
+        return $this->date_limite_saisie->format('Y-m-d\TH:i');
+    }
+
+    /**
+     * A deadline typed without a time (older forms, imports, seeders) keeps
+     * its historical meaning: open until the end of that day.
+     */
+    public static function normaliserDateLimiteSaisie(?string $valeur): ?string
+    {
+        if ($valeur !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $valeur)) {
+            return "{$valeur} 23:59";
+        }
+
+        return $valeur;
     }
 
     /**

@@ -61,7 +61,7 @@
     @if ($saisieFermee)
         <div class="titulaire-lock" style="margin-bottom:12px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>Délai de saisie dépassé ({{ $examenActif->date_limite_saisie->format('d/m/Y') }}) — cette période est en lecture seule.</span>
+            <span>Délai de saisie dépassé ({{ $examenActif->dateLimiteSaisieLibelle() }}) — cette période est en lecture seule.</span>
         </div>
     @endif
 
@@ -146,7 +146,7 @@
         @else
             Cliquez dans une case pour saisir ou modifier une note, videz-la pour la supprimer, puis cliquez sur « Enregistrer les modifications » pour sauvegarder.
             @if ($examenActif)
-                Délai de saisie : {{ $examenActif->date_limite_saisie->format('d/m/Y') }}.
+                Délai de saisie : {{ $examenActif->dateLimiteSaisieLibelle() }}.
             @endif
         @endif
     </p>

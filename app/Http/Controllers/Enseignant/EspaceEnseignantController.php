@@ -760,7 +760,7 @@ class EspaceEnseignantController extends Controller
      */
     private function saisieEstFermee(?Examen $examen): bool
     {
-        return $examen !== null && now()->toDateString() > $examen->date_limite_saisie->format('Y-m-d');
+        return $examen !== null && $examen->delaiSaisieDepasse();
     }
 
     /**

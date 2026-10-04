@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Examen;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -14,6 +15,17 @@ class UpdateExamenRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * A deadline without a time keeps meaning "until the end of that day"
+     * (see Examen::normaliserDateLimiteSaisie()).
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('date_limite_saisie')) {
+            $this->merge(['date_limite_saisie' => Examen::normaliserDateLimiteSaisie((string) $this->input('date_limite_saisie'))]);
+        }
     }
 
     /**
@@ -55,6 +67,9 @@ class UpdateExamenRequest extends FormRequest
                 if (! $value) {
                     continue;
                 }
+
+                // Only the day matters for the année's period (the deadline may carry a time).
+                $value = substr((string) $value, 0, 10);
 
                 if ($value < $anneeAcademique->date_debut->format('Y-m-d') || $value > $anneeAcademique->date_fin->format('Y-m-d')) {
                     $validator->errors()->add($field, "Cette date doit être comprise dans la période de l'année académique « {$anneeAcademique->libelle} » ({$anneeAcademique->date_debut->format('d/m/Y')} – {$anneeAcademique->date_fin->format('d/m/Y')}).");
