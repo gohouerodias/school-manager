@@ -40,7 +40,7 @@
     <div class="alert-error wizard-error-summary">
         <b>Certains champs nécessitent votre attention avant de pouvoir « Terminer » cette fiche :</b>
         <ul>
-            @foreach ($errors->all() as $message)
+            @foreach (array_unique($errors->all()) as $message)
                 <li>{{ $message }}</li>
             @endforeach
         </ul>

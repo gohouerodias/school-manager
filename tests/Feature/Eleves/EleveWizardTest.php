@@ -552,3 +552,20 @@ test('a document over 5 Mo gets a clear french message naming the document', fun
     expect(session('errors')->first("documents.{$photo->id}"))
         ->toContain("« Photo d'identité » est trop volumineux (5 Mo maximum)");
 });
+
+test('the same error message is never listed twice in the wizard error summary', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    // Two types sharing a libellé (as some installs had) both produce the same message.
+    TypeDocument::factory()->count(2)->create(['libelle' => 'Pièce en double', 'obligatoire' => true, 'requis_si_transfert' => false]);
+
+    $response = $this->actingAs($agent)
+        ->from(route('eleves.wizard.create'))
+        ->followingRedirects()
+        ->post(route('eleves.wizard.store'), ['nom' => 'Doublon']);
+
+    $html = $response->getContent();
+    $resume = substr($html, strpos($html, 'wizard-error-summary'));
+    $resume = substr($resume, 0, strpos($resume, '</ul>'));
+
+    expect(substr_count($resume, 'Pièce en double'))->toBe(1);
+});

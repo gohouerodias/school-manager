@@ -188,3 +188,44 @@ test('administrators can toggle and delete a champ personnalisé', function () {
     $this->actingAs($admin)->delete(route('eleves.parametres.champs.destroy', $champ));
     $this->assertDatabaseMissing('champs_personnalises', ['id' => $champ->id]);
 });
+
+test('the transfer documents (bulletin, certificat) are protégés and cannot be deleted', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    foreach (["Bulletin de l'école précédente", 'Certificat de scolarité antérieure'] as $libelle) {
+        $type = TypeDocument::query()->where('libelle', $libelle)->firstOrFail();
+        expect($type->protege)->toBeTrue();
+
+        $this->actingAs($admin)->delete(route('eleves.parametres.types-documents.destroy', $type));
+
+        $this->assertDatabaseHas('types_documents', ['id' => $type->id]);
+    }
+});
+
+test('a type de document cannot be created or renamed with a nom already used', function () {
+    $admin = User::factory()->administrateur()->create();
+    TypeDocument::factory()->create(['libelle' => 'Carnet de vaccination']);
+    $autre = TypeDocument::factory()->create(['libelle' => 'Certificat médical scolaire', 'protege' => false]);
+
+    $this->actingAs($admin)->post(route('eleves.parametres.types-documents.store'), [
+        'libelle' => 'Carnet de vaccination',
+        'formats_acceptes' => ['PDF'],
+    ])->assertSessionHasErrors(['libelle' => 'Un type de document porte déjà ce nom.']);
+
+    $this->actingAs($admin)->patch(route('eleves.parametres.types-documents.update', $autre), [
+        'libelle' => 'Carnet de vaccination',
+        'formats_acceptes' => ['PDF'],
+    ])->assertSessionHasErrors('libelle');
+
+    expect(TypeDocument::query()->where('libelle', 'Carnet de vaccination')->count())->toBe(1);
+});
+
+test('keeping the same nom when editing a type de document is allowed', function () {
+    $admin = User::factory()->administrateur()->create();
+    $type = TypeDocument::factory()->create(['libelle' => 'Carnet de vaccination', 'protege' => false]);
+
+    $this->actingAs($admin)->patch(route('eleves.parametres.types-documents.update', $type), [
+        'libelle' => 'Carnet de vaccination',
+        'formats_acceptes' => ['PDF', 'JPG'],
+    ])->assertSessionHasNoErrors();
+});

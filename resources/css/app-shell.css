@@ -930,10 +930,12 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 .wizard-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .wizard-nav-right { display: flex; align-items: center; gap: 10px; }
 
+/* Orange (pas une erreur, mais bien visible) : « Ce tuteur existe déjà… » */
 .wizard-tuteur-match {
-    background: var(--green-tint); color: var(--green-deep); border: 1px solid var(--green);
-    border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-bottom: 16px;
+    background: var(--gold-tint); color: #8A4B08; border: 1px solid var(--gold); border-left-width: 4px;
+    border-radius: 10px; padding: 12px 14px; font-size: 13px; font-weight: 500; margin-bottom: 16px;
 }
+.wizard-tuteur-match b { color: #6B3A05; }
 .wizard-tuteur-suggestions {
     position: relative; margin-top: 4px; border-radius: 8px; overflow: hidden;
 }
