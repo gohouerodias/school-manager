@@ -81,9 +81,11 @@ class CreerAdminPrincipal extends Command
             'password' => $donnees['password'],
             'profil' => ProfilUtilisateur::Administrateur,
             'statut' => StatutUtilisateur::Actif,
-            'email_verified_at' => now(),
             'doit_changer_mot_de_passe' => true,
         ]);
+
+        // Not mass-assignable on User, so set explicitly.
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $this->components->info("Compte administrateur créé : {$admin->email}");
         $this->components->warn('Ce mot de passe est temporaire — un changement sera exigé à la première connexion.');

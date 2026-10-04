@@ -463,7 +463,7 @@ test('affecting an enseignant to a primaire classe assigns every matière of its
     expect($affectations->every(fn ($affectation) => $affectation->est_professeur_principal === true))->toBeTrue();
 });
 
-test('re-affecting a different enseignant to a primaire classe replaces the previous teacher entirely', function () {
+test('adding a second enseignant to a primaire classe keeps the first one, who stays titulaire', function () {
     $admin = User::factory()->administrateur()->create();
     $ancienEnseignant = User::factory()->enseignant()->create();
     $nouvelEnseignant = User::factory()->enseignant()->create();
@@ -484,8 +484,10 @@ test('re-affecting a different enseignant to a primaire classe replaces the prev
 
     $response->assertRedirect();
     $affectations = AffectationEnseignant::query()->where('classe_id', $classe->id)->get();
-    expect($affectations)->toHaveCount(1);
-    expect($affectations->first()->enseignant_id)->toBe($nouvelEnseignant->id);
+    expect($affectations->pluck('enseignant_id')->unique()->sort()->values()->all())
+        ->toBe(collect([$ancienEnseignant->id, $nouvelEnseignant->id])->sort()->values()->all());
+    expect($affectations->where('enseignant_id', $ancienEnseignant->id)->every->est_professeur_principal)->toBeTrue();
+    expect($affectations->where('enseignant_id', $nouvelEnseignant->id)->contains->est_professeur_principal)->toBeFalse();
 });
 
 test('affecting an enseignant to a maternelle/primaire classe with no programme is rejected', function () {
@@ -676,7 +678,7 @@ test('a non-admin cannot remove an enseignant from a classe', function () {
     $response->assertForbidden();
 });
 
-test('the affectations panel explains why the titulaire dropdown is absent for a maternelle/primaire classe', function () {
+test('the affectations panel explains that several enseignants can share a maternelle/primaire classe', function () {
     $admin = User::factory()->administrateur()->create();
     $anneeAcademique = AnneeAcademique::factory()->create();
     Classe::factory()->create(['annee_academique_id' => $anneeAcademique->id, 'niveau_id' => Niveau::factory()->primaire()]);
@@ -684,7 +686,8 @@ test('the affectations panel explains why the titulaire dropdown is absent for a
     $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
 
     $response->assertOk();
-    $response->assertSee('un seul enseignant enseigne toute la classe');
+    $response->assertSee('Le premier enseignant ajouté à une classe', false);
+    $response->assertSee('seul le titulaire peut valider le bulletin mensuel de la classe', false);
 });
 
 test('removing a matière from a niveau’s programme immediately detaches it from already-created classes and deletes the now-orphaned affectations', function () {

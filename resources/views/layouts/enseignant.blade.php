@@ -35,6 +35,7 @@
             <div class="topbar">
                 <span></span>
                 <div class="profile-wrap">
+                    <x-notifications-menu :user="auth()->user()" />
                     <div class="user-chip">
                         <div class="avatar">{{ auth()->user()->initials() }}</div>
                         {{ auth()->user()->name }} · Enseignant

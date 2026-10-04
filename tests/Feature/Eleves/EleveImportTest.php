@@ -89,3 +89,13 @@ test('the classe column assigns the eleve to the named classe in the active annÃ
     expect($inscription)->not->toBeNull();
     expect($inscription->classe_id)->toBe($classe->id);
 });
+
+test('a file that is not excel or csv is rejected', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    $this->actingAs($admin)
+        ->from(route('eleves.import.create'))
+        ->post(route('eleves.import.store'), ['fichier' => UploadedFile::fake()->createWithContent('notes.txt', "Matricule,Nom\nX,Y\n")])
+        ->assertRedirect(route('eleves.import.create'))
+        ->assertSessionHasErrors('fichier');
+});

@@ -49,3 +49,13 @@ test('fails when a user with that email already exists', function () {
 
     expect(User::count())->toBe(1);
 });
+
+test('rejects an email already used by another account', function () {
+    User::factory()->create(['email' => 'admin@cscmadretrinidad.bj']);
+
+    $this->artisan('admin:creer-principal', [
+        '--email' => 'admin@cscmadretrinidad.bj',
+    ])->assertFailed();
+
+    expect(User::count())->toBe(1);
+});

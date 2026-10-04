@@ -15,6 +15,12 @@
  */
 import './saisie-domaines';
 import './observations-annuelles';
+import { initNotificationsMenu } from './notifications-menu';
+
+// Cloche des notifications ("Notes incomplètes" — voir
+// NotifierNotesIncompletesCommand), dont les enseignants sont les seuls
+// destinataires : même composant <x-notifications-menu> que l'app admin.
+document.addEventListener('DOMContentLoaded', initNotificationsMenu);
 
 document.addEventListener('DOMContentLoaded', () => {
     const dataEl = document.getElementById('espace-enseignant-data');

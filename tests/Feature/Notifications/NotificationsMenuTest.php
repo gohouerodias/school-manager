@@ -13,7 +13,7 @@ test('a teacher sees their own notification and can mark it as read', function (
     $enseignant->notify(new NotesIncompletesNotification($classe, $examen));
     $notification = $enseignant->notifications()->first();
 
-    $response = $this->actingAs($enseignant)->get(route('dashboard'));
+    $response = $this->actingAs($enseignant)->get(route('enseignant.classes.index'));
     $response->assertOk();
     $response->assertSee('Notes incomplètes');
 

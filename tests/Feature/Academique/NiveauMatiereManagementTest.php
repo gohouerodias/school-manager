@@ -69,12 +69,15 @@ test('an administrateur can move a niveau down, swapping ordre with its successo
 
 test('moving the first niveau up does nothing', function () {
     $admin = User::factory()->administrateur()->create();
-    $premier = Niveau::factory()->create(['ordre' => 21]);
-    Niveau::factory()->create(['ordre' => 22]);
+    // Maternelle 1/2 are already inserted by a migration, so "first" is
+    // whichever niveau currently has the lowest ordre.
+    Niveau::factory()->create(['ordre' => (int) Niveau::query()->max('ordre') + 1]);
+    $premier = Niveau::query()->orderBy('ordre')->firstOrFail();
+    $ordreInitial = $premier->ordre;
 
     $this->actingAs($admin)->post(route('academique.niveaux.monter', $premier));
 
-    expect($premier->fresh()->ordre)->toBe(21);
+    expect($premier->fresh()->ordre)->toBe($ordreInitial);
 });
 
 test('a niveau with classes already attached cannot be deleted', function () {
@@ -134,10 +137,11 @@ test('an administrateur can update the seuil de passage', function () {
     $admin = User::factory()->administrateur()->create();
     ParametreSysteme::factory()->create(['seuil_passage' => 10]);
 
-    $response = $this->actingAs($admin)->patch(route('academique.parametres.update'), ['seuil_passage' => 12]);
+    $response = $this->actingAs($admin)->patch(route('academique.parametres.update'), ['seuil_passage' => 12, 'duree_conservation_donnees' => 24]);
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('parametres_systeme', ['seuil_passage' => 12]);
+    $response->assertSessionHasNoErrors();
+    $this->assertDatabaseHas('parametres_systeme', ['seuil_passage' => 12, 'duree_conservation_donnees' => 24]);
 });
 
 test('the seuil de passage must be between 0 and 20', function () {
