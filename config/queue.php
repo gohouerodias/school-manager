@@ -17,6 +17,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Génération des bulletins
+    |--------------------------------------------------------------------------
+    |
+    | false (défaut) : la génération démarre juste après l'envoi de la page,
+    | dans le même processus PHP — aucun worker nécessaire (hébergement
+    | mutualisé / Plesk sans `queue:work`). true : elle passe par la file
+    | d'attente ci-dessus, à réserver aux serveurs où un worker tourne en
+    | permanence (`php artisan queue:work`).
+    |
+    */
+
+    'bulletins_en_file_attente' => (bool) env('BULLETINS_FILE_ATTENTE', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
     |

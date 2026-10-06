@@ -87,7 +87,7 @@ class BulletinAnnuelGenerationController extends Controller
             ]
         );
 
-        GenererBulletinsAnnuelsClasseJob::dispatch($demande);
+        GenererBulletinsAnnuelsClasseJob::lancer($demande);
 
         $toast = $regeneration
             ? "Régénération du bulletin annuel de {$classe->nom} démarrée — suivez la progression ci-dessous."

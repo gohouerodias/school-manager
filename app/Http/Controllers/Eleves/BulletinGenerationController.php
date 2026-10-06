@@ -161,7 +161,7 @@ class BulletinGenerationController extends Controller
             ]
         );
 
-        GenererBulletinsClasseJob::dispatch($demande);
+        GenererBulletinsClasseJob::lancer($demande);
 
         $toast = $regeneration
             ? "Régénération des bulletins de {$classe->nom} démarrée — suivez la progression ci-dessous."

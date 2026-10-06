@@ -88,10 +88,14 @@
                 @php
                     $lignes = $anneeAcademique->niveauMatieres->where('niveau_id', $niveau->id);
                     $lignesDomaines = $anneeAcademique->niveauDomaines->where('niveau_id', $niveau->id);
+                    $niveauMaternelle = $niveau->cycle === \App\Enums\CycleNiveau::Maternelle;
                 @endphp
                 <tr>
                     <td><b>{{ $niveau->libelle }}</b></td>
                     <td>
+                        @if ($niveauMaternelle && $lignes->isNotEmpty())
+                            <div class="hint" style="color:#8A4B08; margin-bottom:6px;">⚠ Ces matières ne sont pas utilisées en maternelle : retirez-les et ajoutez plutôt des domaines d'évaluation.</div>
+                        @endif
                         <div class="chips">
                             @forelse ($lignes as $ligne)
                                 <span class="chip">
@@ -117,7 +121,7 @@
                                     </form>
                                 </span>
                             @empty
-                                <span class="table-empty-state">Aucune matière au programme.</span>
+                                <span class="table-empty-state">{{ $niveauMaternelle ? '— (maternelle : voir les domaines)' : 'Aucune matière au programme.' }}</span>
                             @endforelse
                         </div>
                     </td>
@@ -136,7 +140,7 @@
                                     </form>
                                 </span>
                             @empty
-                                <span class="table-empty-state">—</span>
+                                <span class="table-empty-state">{{ $niveauMaternelle ? 'Aucun domaine — ajoutez-en avec « Ajouter des domaines (maternelle) » pour pouvoir affecter un enseignant.' : '—' }}</span>
                             @endforelse
                         </div>
                     </td>
@@ -608,7 +612,8 @@
             <label for="new-niveau-matiere-niveau">Niveau</label>
             <select class="role-select" id="new-niveau-matiere-niveau" name="niveau_id" required>
                 <option value="">— Sélectionner —</option>
-                @foreach ($niveaux as $niveau)
+                {{-- Maternelle exclue : son programme se compose de domaines (panneau « Ajouter des domaines »). --}}
+                @foreach ($niveaux->reject(fn ($niveau) => $niveau->cycle === \App\Enums\CycleNiveau::Maternelle) as $niveau)
                     <option value="{{ $niveau->id }}" @selected((string) old('niveau_id') === (string) $niveau->id)>{{ $niveau->libelle }}</option>
                 @endforeach
             </select>
@@ -662,7 +667,7 @@
             <label for="new-niveau-domaine-niveau">Niveau (maternelle)</label>
             <select class="role-select" id="new-niveau-domaine-niveau" name="niveau_id" required>
                 <option value="">— Sélectionner —</option>
-                @foreach ($niveaux as $niveau)
+                @foreach ($niveaux->filter(fn ($niveau) => $niveau->cycle === \App\Enums\CycleNiveau::Maternelle) as $niveau)
                     <option value="{{ $niveau->id }}" @selected((string) old('niveau_id') === (string) $niveau->id)>{{ $niveau->libelle }}</option>
                 @endforeach
             </select>

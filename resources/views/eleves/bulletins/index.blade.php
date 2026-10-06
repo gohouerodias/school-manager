@@ -50,7 +50,7 @@
             @elseif ($demande->aEchoue())
                 ✕ La génération a échoué : {{ $demande->erreur }}
             @elseif ($demande->estCoinceeSansWorker())
-                ⚠ La génération semble bloquée depuis plus de 2 minutes — aucun worker de file d'attente ne semble actif (voir <code>php artisan queue:work</code> ou <code>composer run dev</code>). Vous pouvez relancer la génération ci-dessous.
+                ⚠ La génération n'a pas démarré ou a été interrompue par le serveur (aucune progression depuis plus de 2 minutes). Relancez-la ci-dessous ; si le problème persiste, contactez l'administrateur technique.
             @else
                 <div class="generation-progress-row">
                     <span class="spinner" aria-hidden="true"></span>
@@ -178,7 +178,7 @@
                     @elseif ($demandeAnnuel->aEchoue())
                         ✕ La génération a échoué : {{ $demandeAnnuel->erreur }}
                     @elseif ($demandeAnnuel->estCoinceeSansWorker())
-                        ⚠ La génération semble bloquée depuis plus de 2 minutes — aucun worker de file d'attente ne semble actif (voir <code>php artisan queue:work</code> ou <code>composer run dev</code>). Vous pouvez relancer la génération ci-dessous.
+                        ⚠ La génération n'a pas démarré ou a été interrompue par le serveur (aucune progression depuis plus de 2 minutes). Relancez-la ci-dessous ; si le problème persiste, contactez l'administrateur technique.
                     @else
                         <div class="generation-progress-row">
                             <span class="spinner" aria-hidden="true"></span>

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CycleNiveau;
+use App\Models\Niveau;
 use App\Models\NiveauMatiere;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -44,6 +46,15 @@ class StoreNiveauMatiereRequest extends FormRequest
 
             if ($matiereIds->duplicates()->isNotEmpty()) {
                 $validator->errors()->add('matieres', 'Une même matière ne peut pas être ajoutée deux fois à la fois.');
+            }
+
+            // Une classe de maternelle n'utilise que des domaines d'évaluation
+            // (voir Classe::domaines()) : des matières ajoutées à son niveau
+            // n'apparaîtraient nulle part et bloqueraient l'affectation d'un
+            // enseignant (programme de domaines toujours vide).
+            $niveau = Niveau::find($this->input('niveau_id'));
+            if ($niveau && $niveau->cycle === CycleNiveau::Maternelle) {
+                $validator->errors()->add('niveau_id', "« {$niveau->libelle} » est un niveau de maternelle : son programme se compose de domaines d'évaluation, pas de matières. Utilisez « Ajouter des domaines (maternelle) ».");
             }
 
             $anneeAcademiqueId = $this->route('anneeAcademique')?->id;

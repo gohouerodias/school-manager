@@ -34,8 +34,29 @@ class GenererBulletinsClasseJob implements ShouldQueue
 
     public function __construct(public DemandeGenerationBulletin $demande) {}
 
+    /**
+     * Starts the generation: right after the HTTP response by default (no
+     * queue worker needed — shared hosting), or through the queue when
+     * config('queue.bulletins_en_file_attente') is on.
+     */
+    public static function lancer(DemandeGenerationBulletin $demande): void
+    {
+        if (config('queue.bulletins_en_file_attente')) {
+            self::dispatch($demande);
+
+            return;
+        }
+
+        self::dispatchAfterResponse($demande);
+    }
+
     public function handle(BulletinGenerationService $service): void
     {
+        // Run after the response (no worker): don't let PHP's default
+        // max_execution_time or a closed browser tab cut a long class short.
+        @set_time_limit($this->timeout);
+        ignore_user_abort(true);
+
         $this->demande->update(['statut' => StatutGenerationBulletin::EnCours, 'erreur' => null]);
 
         try {

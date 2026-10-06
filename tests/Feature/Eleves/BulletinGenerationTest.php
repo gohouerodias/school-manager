@@ -183,7 +183,7 @@ test('an EnAttente demande stuck for more than 2 minutes without a worker no lon
     // L'écran ne doit plus afficher le bouton comme désactivé, et doit
     // signaler le blocage plutôt que de rester silencieusement sur le spinner.
     $indexResponse = $this->actingAs($admin)->get(route('eleves.bulletins.index', ['classe_id' => $classe->id, 'examen_id' => $examen->id]));
-    $indexResponse->assertSee('semble bloquée depuis plus de 2 minutes', false);
+    $indexResponse->assertSee('aucune progression depuis plus de 2 minutes', false);
     expect($indexResponse->getContent())->not->toMatch('/id="generate-bulletins-btn"[^>]*disabled/');
 
     $response = $this->actingAs($admin)->post(route('eleves.bulletins.demander'), [
@@ -415,4 +415,23 @@ test('the failed() safety-net marks the demande as échec if the job is killed b
     $demande->refresh();
     expect($demande->statut)->toBe(StatutGenerationBulletin::Echec);
     expect($demande->erreur)->toBe('Worker tué.');
+});
+
+test('without any queue worker, the requested bulletins are actually generated once the page is sent', function () {
+    config(['queue.bulletins_en_file_attente' => false]);
+    Storage::fake('local');
+
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();
+    completerLesNotesPour($classe, $examen, $inscriptions);
+
+    $this->actingAs($admin)->post(route('eleves.bulletins.demander'), [
+        'classe_id' => $classe->id,
+        'examen_id' => $examen->id,
+    ])->assertRedirect();
+
+    $demande = DemandeGenerationBulletin::where('classe_id', $classe->id)->where('examen_id', $examen->id)->firstOrFail();
+
+    expect($demande->statut)->toBe(StatutGenerationBulletin::Termine)
+        ->and($demande->chemin_pdf)->not->toBeNull();
 });

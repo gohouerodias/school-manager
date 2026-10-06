@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CycleNiveau;
+use App\Models\Niveau;
 use App\Models\NiveauDomaine;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -35,6 +37,13 @@ class StoreNiveauDomaineRequest extends FormRequest
 
             if ($domaineIds->duplicates()->isNotEmpty()) {
                 $validator->errors()->add('domaines', 'Un même domaine ne peut pas être ajouté deux fois à la fois.');
+            }
+
+            // Les domaines d'évaluation ne servent qu'à la maternelle : un
+            // niveau du primaire/secondaire s'évalue par matières.
+            $niveau = Niveau::find($this->input('niveau_id'));
+            if ($niveau && $niveau->cycle !== CycleNiveau::Maternelle) {
+                $validator->errors()->add('niveau_id', "« {$niveau->libelle} » n'est pas un niveau de maternelle : ajoutez-lui des matières avec « Ajouter une matière au programme ».");
             }
 
             $anneeAcademiqueId = $this->route('anneeAcademique')?->id;
