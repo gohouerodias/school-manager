@@ -73,6 +73,16 @@ class Classe extends Model
     }
 
     /**
+     * Au primaire, chaque note est saisie en deux critères (minimal /18 +
+     * perfectionnement /2, voir Note::totalDesCriteres()) ; au collège, une
+     * seule note /20.
+     */
+    public function notesParCriteres(): bool
+    {
+        return $this->niveau->cycle === CycleNiveau::Primaire;
+    }
+
+    /**
      * @return HasMany<Inscription, $this>
      */
     public function inscriptions(): HasMany

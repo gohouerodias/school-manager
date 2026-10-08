@@ -58,7 +58,12 @@
         </div>
     </div>
 
-    @if ($saisieFermee)
+    @if ($lectureSeuleTitulaire ?? false)
+        <div class="titulaire-lock" style="margin-bottom:12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Consultation uniquement : dans cette classe, seul le titulaire{{ $titulaire ? ' ('.$titulaire->name.')' : '' }} peut saisir les notes.</span>
+        </div>
+    @elseif ($saisieFermee)
         <div class="titulaire-lock" style="margin-bottom:12px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Délai de saisie dépassé ({{ $examenActif->dateLimiteSaisieLibelle() }}) — cette période est en lecture seule.</span>
@@ -66,14 +71,19 @@
     @endif
 
     <div class="sheet-wrap @if($saisieFermee) sheet-locked @endif">
-        <table class="sheet" id="sheetTable">
+        @php
+            // Primaire : chaque note = critère minimal (/18) + critère de
+            // perfectionnement (/2), total /20 (séance du 07/10/2026).
+            $parCriteres = $classe->notesParCriteres();
+        @endphp
+        <table @class(['sheet', 'sheet-criteres' => $parCriteres]) id="sheetTable">
             <thead>
                 <tr>
                     <th class="col-student">Apprenant</th>
                     @foreach ($matieres as $matiere)
                         @php $editable = $matiereIdsEditables->contains($matiere->id); @endphp
                         <th @class(['col-readonly' => ! $editable])>
-                            {{ $matiere->nom }}<span class="sub">/20 · Coef {{ rtrim(rtrim(number_format($matiere->pivot->coefficient, 1), '0'), '.') }}</span>
+                            {{ $matiere->nom }}<span class="sub">@if ($parCriteres)Min. /18 + Perf. /2 = /20 @else /20 @endif· Coef {{ rtrim(rtrim(number_format($matiere->pivot->coefficient, 1), '0'), '.') }}</span>
                             @unless ($editable)
                                 <span class="sub" title="Lecture seule — vous n'enseignez pas cette matière">🔒</span>
                             @endunless
@@ -120,7 +130,17 @@
                                 $editable = $matiereIdsEditables->contains($matiere->id);
                             @endphp
                             <td class="note-cell @if($val !== null) @if($val < 10) low @elseif($val >= 16) high @endif @endif @unless($editable) readonly-cell @endunless" data-matiere-id="{{ $matiere->id }}" data-editable="{{ $editable ? '1' : '0' }}">
-                                <input type="number" min="0" max="20" step="0.5" value="{{ $val ?? '' }}" placeholder="—" @disabled($saisieFermee || ! $editable) title="{{ $editable ? '' : "Lecture seule — vous n'enseignez pas cette matière" }}">
+                                @if ($parCriteres)
+                                    @php $criteres = $student['criteres'][$matiere->id] ?? []; @endphp
+                                    <div class="criteres-cell">
+                                        <input type="number" data-critere="minimal" min="0" max="18" step="0.5" value="{{ $criteres['minimal'] ?? '' }}" placeholder="Min." aria-label="Critère minimal sur 18" title="Critère minimal (/18)" @disabled($saisieFermee || ! $editable)>
+                                        <span class="criteres-plus">+</span>
+                                        <input type="number" data-critere="perfectionnement" min="0" max="2" step="0.5" value="{{ $criteres['perfectionnement'] ?? '' }}" placeholder="Perf." aria-label="Critère de perfectionnement sur 2" title="Critère de perfectionnement (/2)" @disabled($saisieFermee || ! $editable)>
+                                        <span class="criteres-total" data-role="total">{{ $val !== null ? rtrim(rtrim(number_format($val, 2, '.', ''), '0'), '.') : '—' }}</span>
+                                    </div>
+                                @else
+                                    <input type="number" min="0" max="20" step="0.5" value="{{ $val ?? '' }}" placeholder="—" @disabled($saisieFermee || ! $editable) title="{{ $editable ? '' : "Lecture seule — vous n'enseignez pas cette matière" }}">
+                                @endif
                             </td>
                         @endforeach
                         @if ($isTitulaire)
@@ -141,7 +161,9 @@
         </table>
     </div>
     <p class="hint" style="margin-top:12px;">
-        @if ($saisieFermee)
+        @if ($lectureSeuleTitulaire ?? false)
+            Consultation uniquement — seul le titulaire de la classe saisit les notes.
+        @elseif ($saisieFermee)
             Cette période n'accepte plus de nouvelles notes.
         @else
             Cliquez dans une case pour saisir ou modifier une note, videz-la pour la supprimer, puis cliquez sur « Enregistrer les modifications » pour sauvegarder.
@@ -237,6 +259,8 @@
         'titulaireNom' => $titulaire?->name,
         'matieres' => $matieres->map(fn ($m) => ['id' => $m->id, 'nom' => $m->nom, 'coefficient' => (float) $m->pivot->coefficient])->values(),
         'matiereIdsEditables' => $matiereIdsEditables->values(),
+        'parCriteres' => $classe->notesParCriteres(),
+        'baremes' => ['minimal' => \App\Models\Note::CRITERE_MINIMAL_MAX, 'perfectionnement' => \App\Models\Note::CRITERE_PERFECTIONNEMENT_MAX],
         'students' => $students,
         'saisieFermee' => $saisieFermee,
         'urls' => [

@@ -44,6 +44,11 @@ class SaveEleveWizardRequest extends FormRequest
             'prenom' => ['required', 'string', 'max:100'],
             'sexe' => ['required', Rule::in(['M', 'F'])],
             'date_naissance' => ['required', 'date', 'before:today'],
+            // after:date_naissance only when it's given (a brouillon may not have it yet).
+            'date_debut_scolarite' => array_values(array_filter([
+                'nullable', 'date', 'before_or_equal:today',
+                $this->filled('date_naissance') ? 'after:date_naissance' : null,
+            ])),
             'champs' => ['array'],
 
             'tuteurs' => ['array'],
@@ -103,6 +108,8 @@ class SaveEleveWizardRequest extends FormRequest
             'prenom.required' => 'Le prénom est obligatoire.',
             'sexe.required' => 'Le sexe est obligatoire.',
             'date_naissance.required' => 'La date de naissance est obligatoire.',
+            'date_debut_scolarite.before_or_equal' => 'La date de début de scolarité ne peut pas être dans le futur.',
+            'date_debut_scolarite.after' => 'La date de début de scolarité doit être postérieure à la date de naissance.',
             'matricule.unique' => 'Ce matricule est déjà attribué à un autre élève.',
         ];
 

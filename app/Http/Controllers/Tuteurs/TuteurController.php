@@ -51,11 +51,11 @@ class TuteurController extends Controller
         return view('tuteurs.index', [
             'tuteurs' => $tuteurs,
             'search' => $search,
-            'subtitle' => sprintf('%d tuteurs/parents enregistrés', ParentTuteur::query()->count()),
+            'subtitle' => sprintf('%d parents/tuteurs enregistrés', ParentTuteur::query()->count()),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
                 'Dossier élève et documents' => null,
-                'Liste des tuteurs' => null,
+                'Liste des parents' => null,
             ],
         ]);
     }

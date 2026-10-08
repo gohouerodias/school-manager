@@ -14,7 +14,7 @@ use Database\Seeders\DatabaseSeeder;
 test('seeds only reference data, no user accounts and no fake demo data', function () {
     $this->seed(DatabaseSeeder::class);
 
-    expect(Niveau::count())->toBe(12)
+    expect(Niveau::count())->toBe(13) // dont Pré-maternelle (migration du 08/10/2026)
         ->and(AnneeAcademique::count())->toBe(1)
         ->and(Examen::count())->toBe(1)
         ->and(TypeDocument::count())->toBe(7)

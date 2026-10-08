@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Enseignant;
 
+use App\Enums\CycleNiveau;
 use App\Enums\StatutBulletin;
 use App\Enums\TypeEvaluation;
 use App\Exports\NotesClasseExport;
@@ -132,6 +133,13 @@ class EspaceEnseignantController extends Controller
         $matieres = $isTitulaire ? $classe->matieres()->orderBy('nom')->get() : $matieresEnseignant;
         $matiereIdsEditables = $matieresEnseignant->pluck('id');
 
+        // Maternelle/primaire : seul le titulaire saisit, les autres
+        // enseignants de la classe consultent (séance du 07/10/2026).
+        $lectureSeuleTitulaire = $this->saisieReserveeAuTitulaire($classe) && ! $isTitulaire;
+        if ($lectureSeuleTitulaire) {
+            $matiereIdsEditables = collect();
+        }
+
         $examens = $this->examensPour($classe, $anneeActive);
         $examenId = (int) $request->query('examen_id', (string) $examens->first()?->id);
         $examenActif = $examens->firstWhere('id', $examenId) ?? $examens->first();
@@ -147,7 +155,8 @@ class EspaceEnseignantController extends Controller
             'examens' => $examens,
             'examenActif' => $examenActif,
             'students' => $studentsPayload,
-            'saisieFermee' => $this->saisieEstFermee($examenActif),
+            'saisieFermee' => $this->saisieEstFermee($examenActif) || $lectureSeuleTitulaire,
+            'lectureSeuleTitulaire' => $lectureSeuleTitulaire,
             'observationsAnnuelles' => $this->observationsAnnuellesPayload($classe),
         ]);
     }
@@ -166,6 +175,7 @@ class EspaceEnseignantController extends Controller
         $user = $request->user();
         $titulaire = $classe->titulairePour($anneeActive);
         $isTitulaire = $titulaire?->is($user) ?? false;
+        $lectureSeuleTitulaire = ! $isTitulaire;
 
         $domaines = $classe->domaines()->orderBy('nom')->get();
 
@@ -183,7 +193,8 @@ class EspaceEnseignantController extends Controller
             'examens' => $examens,
             'examenActif' => $examenActif,
             'students' => $studentsPayload,
-            'saisieFermee' => $this->saisieEstFermee($examenActif),
+            'saisieFermee' => $this->saisieEstFermee($examenActif) || $lectureSeuleTitulaire,
+            'lectureSeuleTitulaire' => $lectureSeuleTitulaire,
             'observationsAnnuelles' => $this->observationsAnnuellesPayload($classe),
         ]);
     }
@@ -343,13 +354,19 @@ class EspaceEnseignantController extends Controller
         return $inscriptions->map(function (Inscription $inscription) use ($matieres, $classeMatieres, $notes, $commentaires, $bulletins) {
             $eleve = $inscription->eleve;
             $noteValeurs = [];
+            $criteres = [];
             $subjectComments = [];
 
             foreach ($matieres as $matiere) {
                 $classeMatiere = $classeMatieres->get($matiere->id);
                 $cle = "{$eleve->id}-{$classeMatiere?->id}";
 
-                $noteValeurs[$matiere->id] = $notes->get($cle)?->first()?->valeur;
+                $note = $notes->get($cle)?->first();
+                $noteValeurs[$matiere->id] = $note?->valeur;
+                $criteres[$matiere->id] = [
+                    'minimal' => $note?->critere_minimal,
+                    'perfectionnement' => $note?->critere_perfectionnement,
+                ];
 
                 $commentaire = $commentaires->get($cle)?->first()?->commentaire;
                 if ($commentaire) {
@@ -366,6 +383,7 @@ class EspaceEnseignantController extends Controller
                 'prenom' => $eleve->prenom,
                 'matricule' => $eleve->matricule,
                 'notes' => $noteValeurs,
+                'criteres' => $criteres,
                 'subjectComments' => $subjectComments,
                 'bulletin' => $bulletin ? [
                     'resultat' => $bulletin->resultat_global?->value,
@@ -390,6 +408,7 @@ class EspaceEnseignantController extends Controller
 
         $matiereId = (int) $request->validated('matiere_id');
         $this->assureAffectation($classe, $user, $matiereId, $anneeActive);
+        $this->assureSaisieAutorisee($classe, $user, $anneeActive);
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
         $classeMatiere = ClasseMatiere::query()->where('classe_id', $classe->id)->where('matiere_id', $matiereId)->firstOrFail();
@@ -406,9 +425,10 @@ class EspaceEnseignantController extends Controller
             return response()->json(['message' => 'Le bulletin de cet apprenant pour cette période est déjà validé — dévalidez-le pour modifier ses notes.'], 422);
         }
 
-        $valeur = $request->validated('valeur');
+        $donnees = $this->donneesNote($request->validated(), $classe);
+        $valeur = $donnees['valeur'];
 
-        if ($valeur === null || $valeur === '') {
+        if ($valeur === null) {
             Note::query()
                 ->where('eleve_id', $eleveId)
                 ->where('classe_matiere_id', $classeMatiere->id)
@@ -422,14 +442,19 @@ class EspaceEnseignantController extends Controller
             ['eleve_id' => $eleveId, 'classe_matiere_id' => $classeMatiere->id, 'examen_id' => $examen->id],
             [
                 'enseignant_id' => $user->id,
-                'valeur' => $valeur,
+                ...$donnees,
                 'type' => TypeEvaluation::EvaluationMensuelle,
                 'numero' => 1,
                 'date_saisie' => now()->toDateString(),
             ]
         );
 
-        return response()->json(['ok' => true, 'valeur' => $note->valeur]);
+        return response()->json([
+            'ok' => true,
+            'valeur' => $note->valeur,
+            'critere_minimal' => $note->critere_minimal,
+            'critere_perfectionnement' => $note->critere_perfectionnement,
+        ]);
     }
 
     /**
@@ -445,6 +470,8 @@ class EspaceEnseignantController extends Controller
         $user = $request->user();
         $anneeActive = AnneeAcademique::query()->where('est_active', true)->first();
         abort_unless($anneeActive && $classe->annee_academique_id === $anneeActive->id, 404);
+
+        $this->assureSaisieAutorisee($classe, $user, $anneeActive);
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
 
@@ -480,9 +507,9 @@ class EspaceEnseignantController extends Controller
                 continue;
             }
 
-            $valeur = $entree['valeur'] ?? null;
+            $donnees = $this->donneesNote($entree, $classe);
 
-            if ($valeur === null || $valeur === '') {
+            if ($donnees['valeur'] === null) {
                 Note::query()
                     ->where('eleve_id', $eleveId)
                     ->where('classe_matiere_id', $classeMatiere->id)
@@ -493,7 +520,7 @@ class EspaceEnseignantController extends Controller
                     ['eleve_id' => $eleveId, 'classe_matiere_id' => $classeMatiere->id, 'examen_id' => $examen->id],
                     [
                         'enseignant_id' => $user->id,
-                        'valeur' => $valeur,
+                        ...$donnees,
                         'type' => TypeEvaluation::EvaluationMensuelle,
                         'numero' => 1,
                         'date_saisie' => now()->toDateString(),
@@ -522,6 +549,7 @@ class EspaceEnseignantController extends Controller
         $anneeActive = AnneeAcademique::query()->where('est_active', true)->first();
         abort_unless($anneeActive && $classe->annee_academique_id === $anneeActive->id, 404);
         $this->assureAffectation($classe, $user, null, $anneeActive);
+        $this->assureSaisieAutorisee($classe, $user, $anneeActive);
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
 
@@ -585,6 +613,7 @@ class EspaceEnseignantController extends Controller
 
         $matiereId = (int) $request->validated('matiere_id');
         $this->assureAffectation($classe, $user, $matiereId, $anneeActive);
+        $this->assureSaisieAutorisee($classe, $user, $anneeActive);
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
         $classeMatiere = ClasseMatiere::query()->where('classe_id', $classe->id)->where('matiere_id', $matiereId)->firstOrFail();
@@ -802,6 +831,58 @@ class EspaceEnseignantController extends Controller
             ->count();
 
         return $notesRenseignees === $classeMatiereIds->count();
+    }
+
+    /**
+     * Ce qui est enregistré pour une note saisie : au primaire, les deux
+     * critères (minimal /18 + perfectionnement /2) et leur total en
+     * `valeur` ; ailleurs, la note /20 seule. Une case vide donne
+     * `valeur` null (la note est alors supprimée).
+     *
+     * @param  array<string, mixed>  $entree
+     * @return array{valeur: ?float, critere_minimal: ?float, critere_perfectionnement: ?float}
+     */
+    private function donneesNote(array $entree, Classe $classe): array
+    {
+        $nombre = fn (mixed $v): ?float => ($v === null || $v === '') ? null : (float) $v;
+
+        if ($classe->notesParCriteres() && (array_key_exists('critere_minimal', $entree) || array_key_exists('critere_perfectionnement', $entree))) {
+            $critereMinimal = $nombre($entree['critere_minimal'] ?? null);
+            $criterePerfectionnement = $nombre($entree['critere_perfectionnement'] ?? null);
+
+            return [
+                'valeur' => Note::totalDesCriteres($critereMinimal, $criterePerfectionnement),
+                'critere_minimal' => $critereMinimal,
+                'critere_perfectionnement' => $criterePerfectionnement,
+            ];
+        }
+
+        return [
+            'valeur' => $nombre($entree['valeur'] ?? null),
+            'critere_minimal' => null,
+            'critere_perfectionnement' => null,
+        ];
+    }
+
+    /**
+     * Maternelle/primaire : plusieurs enseignants peuvent partager la classe,
+     * mais seul le titulaire saisit les notes/évaluations (séance du
+     * 07/10/2026). Au collège, chaque enseignant saisit sa propre matière.
+     */
+    private function saisieReserveeAuTitulaire(Classe $classe): bool
+    {
+        return in_array($classe->niveau->cycle, [CycleNiveau::Maternelle, CycleNiveau::Primaire], true);
+    }
+
+    private function assureSaisieAutorisee(Classe $classe, User $user, AnneeAcademique $anneeActive): void
+    {
+        if (! $this->saisieReserveeAuTitulaire($classe)) {
+            return;
+        }
+
+        $titulaire = $classe->titulairePour($anneeActive);
+
+        abort_unless($titulaire && $titulaire->is($user), 403, 'Seul le titulaire de la classe peut saisir les notes ; vous pouvez uniquement les consulter.');
     }
 
     /**

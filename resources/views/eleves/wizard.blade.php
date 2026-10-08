@@ -17,7 +17,7 @@
 
         if ($errors->has('niveau_souhaite_id')) {
             $activeStep = 1;
-        } elseif ($errors->has('nom') || $errors->has('prenom') || $errors->has('sexe') || $errors->has('date_naissance') || $errors->has('matricule') || $champErrors) {
+        } elseif ($errors->has('nom') || $errors->has('prenom') || $errors->has('sexe') || $errors->has('date_naissance') || $errors->has('date_debut_scolarite') || $errors->has('matricule') || $champErrors) {
             $activeStep = 2;
         } elseif ($tuteurErrors) {
             $activeStep = 3;
@@ -119,9 +119,9 @@
                     <div class="error">{{ $message }}</div>
                 @enderror
                 <div class="hint">
-                    Si la classe désirée est « Maternelle 1 » ou « Maternelle 2 », aucun bulletin ni certificat
-                    d'une école antérieure ne sera demandé à l'étape « Documents ». Pour toute autre classe, ces
-                    documents seront requis pour terminer la fiche.
+                    Si la classe désirée est « Pré-maternelle », « Maternelle 1 » ou « Maternelle 2 », aucun bulletin
+                    d'une école antérieure ne sera demandé à l'étape « Documents ». Pour toute autre classe, le bulletin
+                    de l'école précédente sera requis pour terminer la fiche.
                 </div>
             </div>
         </div>
@@ -168,6 +168,15 @@
                 <label for="wizard-date-naissance">Date de naissance *</label>
                 <input type="date" id="wizard-date-naissance" name="date_naissance" value="{{ old('date_naissance', $eleve?->date_naissance?->format('Y-m-d')) }}">
                 @error('date_naissance')
+                    <div class="error">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="field @error('date_debut_scolarite') invalid @enderror">
+                <label for="wizard-date-debut-scolarite">Date de début de scolarité</label>
+                <input type="date" id="wizard-date-debut-scolarite" name="date_debut_scolarite" value="{{ old('date_debut_scolarite', $eleve?->date_debut_scolarite?->format('Y-m-d')) }}">
+                <div class="hint">Facultatif : date à laquelle l'apprenant a commencé l'école (ici ou ailleurs).</div>
+                @error('date_debut_scolarite')
                     <div class="error">{{ $message }}</div>
                 @enderror
             </div>
@@ -321,8 +330,8 @@
 
     <div class="wizard-info-content" data-wizard-info="1" style="@if ($activeStep !== 1) display:none; @endif">
         <p>La classe désirée détermine les documents demandés à l'étape « Documents ».</p>
-        <p>Si vous choisissez <b>Maternelle 1</b> ou <b>Maternelle 2</b>, aucun bulletin ni certificat d'une école antérieure ne sera demandé : ces classes marquent le début de la scolarisation.</p>
-        <p>Pour toute autre classe, ces documents seront requis pour terminer la fiche.</p>
+        <p>Si vous choisissez <b>Pré-maternelle</b>, <b>Maternelle 1</b> ou <b>Maternelle 2</b>, aucun bulletin d'une école antérieure ne sera demandé : ces classes marquent le début de la scolarisation.</p>
+        <p>Pour toute autre classe, le bulletin de l'école précédente sera requis pour terminer la fiche.</p>
     </div>
 
     <div class="wizard-info-content" data-wizard-info="2" style="@if ($activeStep !== 2) display:none; @endif">
@@ -338,7 +347,7 @@
     <div class="wizard-info-content" data-wizard-info="4" style="@if ($activeStep !== 4) display:none; @endif">
         <p>Les documents marqués d'un <b>*</b> sont obligatoires pour « Terminer » la fiche.</p>
         <p>Chaque fichier doit peser <b>{{ \App\Support\LimitesEnvoi::enMo(\App\Support\LimitesEnvoi::octetsMaxParFichier()) }} maximum</b>. Un fichier trop lourd est refusé dès qu'il est déposé.</p>
-        <p>Le bulletin et le certificat de l'école précédente ne sont demandés que si la classe désirée choisie à l'étape 1 n'est pas Maternelle 1 ou 2.</p>
+        <p>Documents obligatoires : la <b>photo d'identité</b>, l'<b>acte de naissance</b> et, si l'apprenant vient d'une autre école, le <b>bulletin de l'école précédente</b>. Le certificat de scolarité est facultatif.</p>
         <p>Un document déjà fourni lors d'un enregistrement précédent reste conservé : ne choisissez un fichier que pour le remplacer.</p>
     </div>
 </aside>

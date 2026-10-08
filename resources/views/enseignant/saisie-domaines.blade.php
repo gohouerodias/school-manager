@@ -51,7 +51,12 @@
         </div>
     </div>
 
-    @if ($saisieFermee)
+    @if ($lectureSeuleTitulaire ?? false)
+        <div class="titulaire-lock" style="margin-bottom:12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Consultation uniquement : dans cette classe, seul le titulaire{{ $titulaire ? ' ('.$titulaire->name.')' : '' }} peut saisir les notes.</span>
+        </div>
+    @elseif ($saisieFermee)
         <div class="titulaire-lock" style="margin-bottom:12px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Délai de saisie dépassé ({{ $examenActif->dateLimiteSaisieLibelle() }}) — cette période est en lecture seule.</span>
@@ -106,7 +111,9 @@
         </table>
     </div>
     <p class="hint" style="margin-top:12px;">
-        @if ($saisieFermee)
+        @if ($lectureSeuleTitulaire ?? false)
+            Consultation uniquement — seul le titulaire de la classe saisit les évaluations.
+        @elseif ($saisieFermee)
             Cette période n'accepte plus de nouvelles évaluations.
         @else
             Cliquez sur TS / S / PS pour évaluer un domaine (TS = très satisfaisant, S = satisfaisant, PS = peu satisfaisant), puis sur « Enregistrer les modifications » pour sauvegarder. L'observation par domaine est facultative — cliquez sur l'icône « Appréciation » pour l'ajouter.

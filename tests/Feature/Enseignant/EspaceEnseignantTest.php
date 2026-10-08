@@ -603,7 +603,8 @@ test('the titulaire sees every matière of the classe, including ones they do no
 
     $response->assertOk();
     $response->assertSee('Mathématiques');
-    $response->assertSee('value="17"', false);
+    // Note saisie avant les critères (primaire) : affichée comme total.
+    $response->assertSee('data-role="total">17</span>', false);
 });
 
 test('the titulaire’s note input for a matière they do not teach is disabled', function () {
@@ -733,4 +734,151 @@ test('the titulaire can validate a bulletin once every matière has been noted',
     // Inscription::calculerMoyenneAnnuelle() ignorerait silencieusement ce
     // mois (moyenne_generale resterait null malgré un bulletin Validé).
     $this->assertDatabaseHas('bulletins', ['examen_id' => $examen->id, 'statut' => StatutBulletin::Valide->value, 'moyenne_generale' => 11.57]);
+});
+
+/**
+ * Ajoute à la classe primaire du contexte un second enseignant, non titulaire,
+ * avec les mêmes droits de consultation (mêmes affectations par matière).
+ */
+function ajouterEnseignantNonTitulaire(array $contexte): User
+{
+    $autre = User::factory()->enseignant()->create();
+    AffectationEnseignant::create([
+        'enseignant_id' => $autre->id,
+        'classe_id' => $contexte['classe']->id,
+        'matiere_id' => $contexte['matiere']->id,
+        'annee_academique_id' => $contexte['anneeActive']->id,
+        'est_professeur_principal' => false,
+    ]);
+
+    return $autre;
+}
+
+test('in a primaire classe, a non-titulaire teacher cannot save notes', function () {
+    $contexte = creerContexteEnseignant();
+    $autre = ajouterEnseignantNonTitulaire($contexte);
+
+    $this->actingAs($autre)->patchJson(route('enseignant.classes.notes.update', $contexte['classe']), [
+        'eleve_id' => $contexte['eleve']->id,
+        'matiere_id' => $contexte['matiere']->id,
+        'examen_id' => $contexte['examen']->id,
+        'valeur' => 12,
+    ])->assertForbidden();
+
+    $this->assertDatabaseMissing('notes', ['eleve_id' => $contexte['eleve']->id]);
+});
+
+test('in a primaire classe, a non-titulaire teacher sees the sheet read-only with an explanation', function () {
+    $contexte = creerContexteEnseignant();
+    $autre = ajouterEnseignantNonTitulaire($contexte);
+
+    $this->actingAs($autre)->get(route('enseignant.classes.show', $contexte['classe']))
+        ->assertOk()
+        ->assertSee('seul le titulaire', false)
+        ->assertSee('Consultation uniquement', false);
+});
+
+test('in a primaire classe, the titulaire can still save notes', function () {
+    $contexte = creerContexteEnseignant();
+    ajouterEnseignantNonTitulaire($contexte);
+
+    $this->actingAs($contexte['enseignant'])->patchJson(route('enseignant.classes.notes.update', $contexte['classe']), [
+        'eleve_id' => $contexte['eleve']->id,
+        'matiere_id' => $contexte['matiere']->id,
+        'examen_id' => $contexte['examen']->id,
+        'valeur' => 12,
+    ])->assertOk();
+});
+
+test('in a collège classe, each teacher still saves the notes of their own matière', function () {
+    $contexte = creerContexteEnseignant();
+    $contexte['niveau']->update(['cycle' => CycleNiveau::College]);
+    $contexte['examen']->update(['systeme' => SystemeScolaire::Secondaire]);
+    $autre = ajouterEnseignantNonTitulaire($contexte);
+
+    $this->actingAs($autre)->patchJson(route('enseignant.classes.notes.update', $contexte['classe']), [
+        'eleve_id' => $contexte['eleve']->id,
+        'matiere_id' => $contexte['matiere']->id,
+        'examen_id' => $contexte['examen']->id,
+        'valeur' => 12,
+    ])->assertOk();
+});
+
+test('in primaire, a note is saved as critère minimal + critère de perfectionnement, the total being the note', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.notes.update', $classe), [
+        'eleve_id' => $eleve->id,
+        'matiere_id' => $matiere->id,
+        'examen_id' => $examen->id,
+        'critere_minimal' => 15,
+        'critere_perfectionnement' => 2,
+    ])->assertOk()->assertJson(['valeur' => 17, 'critere_minimal' => 15, 'critere_perfectionnement' => 2]);
+
+    $this->assertDatabaseHas('notes', [
+        'eleve_id' => $eleve->id,
+        'valeur' => 17,
+        'critere_minimal' => 15,
+        'critere_perfectionnement' => 2,
+    ]);
+});
+
+test('the batch save also takes the two critères, and empty critères delete the note', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.notes.batch-update', $classe), [
+        'examen_id' => $examen->id,
+        'notes' => [['eleve_id' => $eleve->id, 'matiere_id' => $matiere->id, 'critere_minimal' => 12, 'critere_perfectionnement' => 1]],
+    ])->assertOk();
+
+    expect(Note::query()->where('eleve_id', $eleve->id)->firstOrFail()->valeur)->toBe(13.0);
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.notes.batch-update', $classe), [
+        'examen_id' => $examen->id,
+        'notes' => [['eleve_id' => $eleve->id, 'matiere_id' => $matiere->id, 'critere_minimal' => null, 'critere_perfectionnement' => null]],
+    ])->assertOk();
+
+    $this->assertDatabaseMissing('notes', ['eleve_id' => $eleve->id]);
+});
+
+test('the critères cannot exceed 18 and 2', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.notes.update', $classe), [
+        'eleve_id' => $eleve->id,
+        'matiere_id' => $matiere->id,
+        'examen_id' => $examen->id,
+        'critere_minimal' => 19,
+        'critere_perfectionnement' => 3,
+    ])->assertUnprocessable()->assertJsonValidationErrors(['critere_minimal', 'critere_perfectionnement']);
+});
+
+test('the primaire grid shows two inputs per matière (min /18, perf /2) with the saved values', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+    $classeMatiere = ClasseMatiere::query()->where('classe_id', $classe->id)->firstOrFail();
+    Note::create([
+        'eleve_id' => $eleve->id, 'classe_matiere_id' => $classeMatiere->id, 'examen_id' => $examen->id,
+        'enseignant_id' => $enseignant->id, 'valeur' => 16, 'critere_minimal' => 14, 'critere_perfectionnement' => 2,
+        'type' => TypeEvaluation::EvaluationMensuelle, 'numero' => 1, 'date_saisie' => now()->toDateString(),
+    ]);
+
+    $this->actingAs($enseignant)->get(route('enseignant.classes.show', ['classe' => $classe, 'examen_id' => $examen->id]))
+        ->assertOk()
+        ->assertSee('Min. /18 + Perf. /2 = /20', false)
+        ->assertSee('data-critere="minimal" min="0" max="18" step="0.5" value="14"', false)
+        ->assertSee('data-critere="perfectionnement" min="0" max="2" step="0.5" value="2"', false);
+});
+
+test('in collège, a note is still a single value out of 20', function () {
+    $contexte = creerContexteEnseignant();
+    $contexte['niveau']->update(['cycle' => CycleNiveau::College]);
+    $contexte['examen']->update(['systeme' => SystemeScolaire::Secondaire]);
+
+    $this->actingAs($contexte['enseignant'])->patchJson(route('enseignant.classes.notes.update', $contexte['classe']), [
+        'eleve_id' => $contexte['eleve']->id,
+        'matiere_id' => $contexte['matiere']->id,
+        'examen_id' => $contexte['examen']->id,
+        'valeur' => 14,
+        'critere_minimal' => 10,
+    ])->assertOk()->assertJson(['valeur' => 14, 'critere_minimal' => null]);
 });

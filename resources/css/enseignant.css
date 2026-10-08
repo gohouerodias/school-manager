@@ -283,3 +283,14 @@ td.domaine-cell.dirty:after{content:'';position:absolute;top:4px;right:4px;width
 .notif-item-date { font-size: 11px; color: var(--ink-muted); }
 .notif-mark-all { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .notif-mark-all .btn { width: 100%; justify-content: center; }
+
+/* Primaire : note = critère minimal (/18) + critère de perfectionnement (/2) = total /20 */
+.sheet-criteres td.note-cell { min-width: 150px; }
+.criteres-cell { display: flex; align-items: center; justify-content: center; gap: 3px; padding: 0 4px; }
+td.note-cell .criteres-cell input { width: 44px; min-width: 0; padding: 6px 2px; font-size: 13px; text-align: center; }
+td.note-cell .criteres-cell input[data-critere="perfectionnement"] { width: 34px; }
+.criteres-plus { color: var(--ink-muted); font-size: 12px; }
+.criteres-total { min-width: 34px; font-weight: 700; font-size: 13px; text-align: center; color: var(--ink); }
+.criteres-total::before { content: '= '; font-weight: 400; color: var(--ink-muted); }
+td.note-cell.low .criteres-total { color: var(--red); }
+td.note-cell.high .criteres-total { color: var(--green); }

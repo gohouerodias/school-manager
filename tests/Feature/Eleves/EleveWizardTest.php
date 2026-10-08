@@ -569,3 +569,31 @@ test('the same error message is never listed twice in the wizard error summary',
 
     expect(substr_count($resume, 'Pièce en double'))->toBe(1);
 });
+
+test('the date de début de scolarité is optional and saved when given', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $niveau = Niveau::factory()->maternelle()->create();
+
+    $this->actingAs($agent)->post(route('eleves.wizard.store'), [
+        'niveau_souhaite_id' => $niveau->id,
+        'nom' => 'Debut',
+        'prenom' => 'Ecole',
+        'sexe' => 'F',
+        'date_naissance' => '2020-03-01',
+        'date_debut_scolarite' => '2023-09-18',
+    ])->assertSessionHasNoErrors();
+
+    expect(Eleve::query()->where('nom', 'Debut')->firstOrFail()->date_debut_scolarite->format('Y-m-d'))->toBe('2023-09-18');
+});
+
+test('the date de début de scolarité cannot be before the date de naissance nor in the future', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    $niveau = Niveau::factory()->maternelle()->create();
+    $base = ['niveau_souhaite_id' => $niveau->id, 'nom' => 'Debut', 'prenom' => 'Ecole', 'sexe' => 'F', 'date_naissance' => '2020-03-01'];
+
+    $this->actingAs($agent)->post(route('eleves.wizard.store'), $base + ['date_debut_scolarite' => '2019-01-01'])
+        ->assertSessionHasErrors('date_debut_scolarite');
+
+    $this->actingAs($agent)->post(route('eleves.wizard.store'), $base + ['date_debut_scolarite' => now()->addMonth()->toDateString()])
+        ->assertSessionHasErrors('date_debut_scolarite');
+});

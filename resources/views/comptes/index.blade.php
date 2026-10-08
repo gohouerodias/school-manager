@@ -18,7 +18,7 @@
 
     <x-filter-select name="profil" :selected="$profilFilter" placeholder="Tous les profils" :options="[
         'administrateur' => 'Administrateur',
-        'agent_scolarite' => 'Agent de scolarité',
+        'agent_scolarite' => 'Secrétariat',
         'enseignant' => 'Enseignant',
         'direction' => 'Direction',
     ]" />

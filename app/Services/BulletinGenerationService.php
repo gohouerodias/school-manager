@@ -239,6 +239,9 @@ class BulletinGenerationService
             ->map(fn (ClasseMatiere $cm) => [
                 'nom' => $cm->matiere->nom,
                 'note' => $notes->get($cm->id)?->valeur,
+                // Primaire : détail critère minimal (/18) + perfectionnement (/2).
+                'critere_minimal' => $notes->get($cm->id)?->critere_minimal,
+                'critere_perfectionnement' => $notes->get($cm->id)?->critere_perfectionnement,
             ])
             ->values();
     }

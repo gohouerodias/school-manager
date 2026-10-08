@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Liste des tuteurs')
+@section('title', 'Liste des parents')
 
 @section('content')
-<x-page-header title="Liste des tuteurs" :subtitle="$subtitle" />
+<x-page-header title="Liste des parents" :subtitle="$subtitle" />
 
 <form method="GET" action="{{ route('tuteurs.index') }}" class="toolbar">
     <x-toolbar-search
@@ -70,7 +70,7 @@
 {{-- Voir les enfants liés à ce tuteur --}}
 <x-fiche-modal id="tuteur-enfants">
     <div class="fiche-breadcrumb-row">
-        <span class="fiche-breadcrumb-text">Dossier élève et documents / Liste des tuteurs</span>
+        <span class="fiche-breadcrumb-text">Dossier élève et documents / Liste des parents</span>
         <button type="button" class="panel-close" data-panel-close="tuteur-enfants">✕</button>
     </div>
 

@@ -94,6 +94,40 @@
     @method('PATCH')
 </form>
 
+{{-- Archiver : le motif est demandé avant d'archiver (eleve-statut-assign.js
+     ouvre ce panneau à la place de la simple confirmation). --}}
+<x-slide-panel id="archive-motif" title="Archiver la fiche">
+    <form method="POST" action="" id="archive-motif-form">
+        @csrf
+        @method('PATCH')
+
+        <p id="archive-motif-intro" style="margin-top:0;"></p>
+
+        <div class="field">
+            <label for="archive-motif-input">Motif de l'archivage <span class="required-star">*</span></label>
+            <input type="text" id="archive-motif-input" name="motif" maxlength="255" list="archive-motif-suggestions"
+                   placeholder="Ex. : Départ vers une autre école" required>
+            <datalist id="archive-motif-suggestions">
+                <option value="Départ vers une autre école">
+                <option value="Déménagement de la famille">
+                <option value="Abandon de la scolarité">
+                <option value="Fin de cycle">
+                <option value="Exclusion">
+            </datalist>
+            <div class="hint">La fiche restera consultable, mais ne pourra plus être modifiée tant qu'elle n'est pas désarchivée.</div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="archive-motif">Annuler</button>
+        <button type="submit" form="archive-motif-form" class="btn danger">Archiver</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+@error('motif')
+    <div class="alert-error">{{ $message }}</div>
+@enderror
+
 {{-- Fiche apprenant (consultation) --}}
 <x-fiche-modal
     id="fiche"

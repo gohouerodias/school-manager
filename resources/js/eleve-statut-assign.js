@@ -1,5 +1,6 @@
 import { askConfirmation } from './confirm-modal';
 import { refreshDropdownSelect } from './dropdown-select';
+import { togglePanel } from './slide-panel';
 
 /**
  * Same pattern as eleve-classe-assign.js, applied to the "Statut" column:
@@ -16,6 +17,7 @@ import { refreshDropdownSelect } from './dropdown-select';
  */
 export function initEleveStatutAssign() {
     markStatutAssignSelects(document);
+    initArchiveMotifCancel();
 
     document.addEventListener('change', (event) => {
         const select = event.target.closest('.statut-assign-select');
@@ -32,6 +34,13 @@ export function initEleveStatutAssign() {
 
         const eleveNom = select.dataset.eleveNom ?? 'cet apprenant';
         const isArchiving = newValue === 'archive';
+
+        // Archiver demande un motif : panneau dédié plutôt que la simple
+        // confirmation (voir <x-slide-panel id="archive-motif">).
+        if (isArchiving && document.getElementById('archive-motif-form')) {
+            openArchiveMotifPanel(select, eleveNom, previousValue);
+            return;
+        }
 
         askConfirmation({
             title: isArchiving ? 'Archiver la fiche' : 'Désarchiver la fiche',
@@ -57,6 +66,51 @@ export function initEleveStatutAssign() {
 export function markStatutAssignSelects(container = document) {
     container.querySelectorAll('.statut-assign-select').forEach((select) => {
         select.dataset.confirmedValue = select.value;
+    });
+}
+
+let pendingArchiveSelect = null;
+
+function openArchiveMotifPanel(select, eleveNom, previousValue) {
+    const form = document.getElementById('archive-motif-form');
+    const input = document.getElementById('archive-motif-input');
+    const intro = document.getElementById('archive-motif-intro');
+
+    form.action = select.dataset.archiverUrl;
+    input.value = '';
+    if (intro) {
+        intro.textContent = `Pourquoi archiver la fiche de ${eleveNom} ?`;
+    }
+
+    pendingArchiveSelect = { select, previousValue };
+    togglePanel('archive-motif', true);
+    setTimeout(() => input.focus(), 50);
+}
+
+/**
+ * Fermer le panneau sans archiver (Annuler, ✕, clic sur le fond) remet le
+ * statut affiché à sa valeur précédente.
+ */
+function initArchiveMotifCancel() {
+    const form = document.getElementById('archive-motif-form');
+    if (!form) {
+        return;
+    }
+
+    let envoi = false;
+    form.addEventListener('submit', () => {
+        envoi = true;
+    });
+
+    document.querySelectorAll('[data-panel-close="archive-motif"], [data-panel-overlay="archive-motif"]').forEach((el) => {
+        el.addEventListener('click', () => {
+            if (envoi || !pendingArchiveSelect) {
+                return;
+            }
+            pendingArchiveSelect.select.value = pendingArchiveSelect.previousValue;
+            refreshDropdownSelect(pendingArchiveSelect.select);
+            pendingArchiveSelect = null;
+        });
     });
 }
 

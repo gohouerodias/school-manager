@@ -114,7 +114,12 @@ function renderFiche(data) {
         const fixedFields = [
             ['Sexe', identite.sexe === 'F' ? 'Féminin' : 'Masculin'],
             ['Date de naissance', identite.date_naissance],
+            ['Début de scolarité', identite.date_debut_scolarite || 'Non renseignée'],
         ];
+        if (identite.statut === 'archive') {
+            fixedFields.push(['Archivée le', identite.date_archivage || '—']);
+            fixedFields.push(["Motif de l'archivage", identite.motif_archivage || 'Non renseigné']);
+        }
         // "Classe désirée" (niveau souhaité) is only shown while the élève
         // has no fixed classe yet — once a real Inscription exists, the
         // niveau souhaité is no longer relevant.

@@ -13,7 +13,7 @@ enum ProfilUtilisateur: string
     {
         return match ($this) {
             self::Administrateur => 'Administrateur',
-            self::AgentScolarite => 'Agent de scolarité',
+            self::AgentScolarite => 'Secrétariat',
             self::Enseignant => 'Enseignant',
             self::Direction => 'Direction',
         };

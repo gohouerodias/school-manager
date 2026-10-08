@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Eleves;
 
 use App\Enums\StatutEleve;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ArchiverEleveRequest;
 use App\Http\Requests\StoreEleveRequest;
 use App\Http\Requests\UpdateEleveRequest;
 use App\Models\ChampPersonnalise;
@@ -172,9 +173,9 @@ class EleveController extends Controller
         return back()->with('toast', "La fiche de {$eleve->nomComplet()} a été mise à jour.");
     }
 
-    public function archiver(Eleve $eleve): RedirectResponse
+    public function archiver(ArchiverEleveRequest $request, Eleve $eleve): RedirectResponse
     {
-        $eleve->archiver();
+        $eleve->archiver($request->validated('motif'));
 
         return back()->with('toast', "La fiche de {$eleve->nomComplet()} a été archivée.");
     }
@@ -221,7 +222,10 @@ class EleveController extends Controller
                 // (see eleve-fiche.js's renderFiche()).
                 'date_naissance_iso' => $eleve->date_naissance?->format('Y-m-d'),
                 'date_creation' => $eleve->created_at->format('d/m/Y'),
+                'date_debut_scolarite' => $eleve->date_debut_scolarite?->format('d/m/Y'),
                 'statut' => $eleve->statut->value,
+                'date_archivage' => $eleve->date_archivage?->format('d/m/Y'),
+                'motif_archivage' => $eleve->motif_archivage,
                 'classe' => $inscriptionActuelle?->classe
                     ? "{$inscriptionActuelle->classe->niveau->libelle} — {$inscriptionActuelle->classe->nom}"
                     : null,

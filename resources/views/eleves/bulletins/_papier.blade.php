@@ -72,15 +72,34 @@
         <div class="row"><span>Assiduité</span><b>{{ $bulletin?->assiduite ?? '—' }}</b></div>
     </div>
 @else
+    @php
+        // Primaire (séance du 07/10/2026) : détail critère minimal /18 +
+        // critère de perfectionnement /2 = total /20, comme sur le carnet.
+        $avecCriteres = collect($matieres)->contains(fn ($m) => ($m['critere_minimal'] ?? null) !== null || ($m['critere_perfectionnement'] ?? null) !== null);
+        $formatCritere = fn ($v) => $v !== null ? rtrim(rtrim(number_format($v, 2), '0'), '.') : '—';
+    @endphp
     <table class="bulletin-table">
         <thead>
-            <tr><th>Matière</th><th style="text-align:center;">Note / 20</th></tr>
+            @if ($avecCriteres)
+                <tr><th>Matière</th><th style="text-align:center;">Crit. minimal / 18</th><th style="text-align:center;">Crit. perf. / 2</th><th style="text-align:center;">Total / 20</th></tr>
+            @else
+                <tr><th>Matière</th><th style="text-align:center;">Note / 20</th></tr>
+            @endif
         </thead>
         <tbody>
             @foreach ($matieres as $matiere)
-                <tr><td>{{ $matiere['nom'] }}</td><td class="num">{{ $matiere['note'] !== null ? number_format($matiere['note'], 2) : '—' }}</td></tr>
+                @if ($avecCriteres)
+                    <tr>
+                        <td>{{ $matiere['nom'] }}</td>
+                        <td class="num">{{ $formatCritere($matiere['critere_minimal'] ?? null) }}</td>
+                        <td class="num">{{ $formatCritere($matiere['critere_perfectionnement'] ?? null) }}</td>
+                        <td class="num">{{ $matiere['note'] !== null ? number_format($matiere['note'], 2) : '—' }}</td>
+                    </tr>
+                @else
+                    <tr><td>{{ $matiere['nom'] }}</td><td class="num">{{ $matiere['note'] !== null ? number_format($matiere['note'], 2) : '—' }}</td></tr>
+                @endif
             @endforeach
-            <tr class="total-row"><td>Moyenne</td><td class="num">{{ $moyenne !== null ? number_format($moyenne, 2) : '—' }}</td></tr>
+            <tr class="total-row"><td @if ($avecCriteres) colspan="3" @endif>Moyenne</td><td class="num">{{ $moyenne !== null ? number_format($moyenne, 2) : '—' }}</td></tr>
         </tbody>
     </table>
 

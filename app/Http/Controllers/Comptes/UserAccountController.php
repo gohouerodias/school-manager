@@ -38,7 +38,7 @@ class UserAccountController extends Controller
         $users = $query->paginate(self::PER_PAGE)->withQueryString();
 
         $subtitle = sprintf(
-            '%d comptes · %d administrateurs, %d agents de scolarité, %d enseignants, %d direction',
+            '%d comptes · %d administrateurs, %d secrétariat, %d enseignants, %d direction',
             User::query()->count(),
             User::query()->where('profil', ProfilUtilisateur::Administrateur)->count(),
             User::query()->where('profil', ProfilUtilisateur::AgentScolarite)->count(),

@@ -57,6 +57,43 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('input', () => onNoteInput(input));
         });
 
+        /**
+         * Primaire (config.parCriteres) : une case = critère minimal (/18) +
+         * critère de perfectionnement (/2), total /20 calculé en direct —
+         * même calcul que Note::totalDesCriteres() côté serveur. Ailleurs :
+         * une seule note /20.
+         */
+        function lireCellule(td) {
+            const lire = (el, max) => {
+                const raw = el?.value.trim() ?? '';
+                return raw === '' ? null : Math.max(0, Math.min(max, Number(raw)));
+            };
+            const minEl = td.querySelector('[data-critere="minimal"]');
+            if (!minEl) {
+                const valeur = lire(td.querySelector('input'), 20);
+                return { valeur, signature: String(valeur ?? '') };
+            }
+            const minimal = lire(minEl, config.baremes.minimal);
+            const perfectionnement = lire(td.querySelector('[data-critere="perfectionnement"]'), config.baremes.perfectionnement);
+            const valeur = (minimal === null && perfectionnement === null)
+                ? null
+                : Math.round(((minimal ?? 0) + (perfectionnement ?? 0)) * 100) / 100;
+            return { minimal, perfectionnement, valeur, signature: `${minimal ?? ''}|${perfectionnement ?? ''}` };
+        }
+
+        function signatureEnregistree(student, matiereId) {
+            if (!config.parCriteres) {
+                return String(student?.notes?.[matiereId] ?? '');
+            }
+            const criteres = student?.criteres?.[matiereId] ?? {};
+            return `${criteres.minimal ?? ''}|${criteres.perfectionnement ?? ''}`;
+        }
+
+        function afficherTotal(td, valeur) {
+            const total = td.querySelector('[data-role="total"]');
+            if (total) total.textContent = valeur === null ? '—' : String(valeur);
+        }
+
         document.querySelectorAll('#sheetTable tbody tr').forEach((row) => {
             applyRowLockState(row.dataset.studentId);
         });
@@ -77,11 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const matiereId = td.dataset.matiereId;
             const key = `${eleveId}:${matiereId}`;
             const student = studentsById.get(eleveId);
-            const original = student?.notes?.[matiereId];
-            const raw = input.value.trim();
-            const current = raw === '' ? null : Number(raw);
-            const estModifiee = String(current ?? '') !== String(original ?? '');
+            const cellule = lireCellule(td);
+            const estModifiee = cellule.signature !== signatureEnregistree(student, matiereId);
 
+            afficherTotal(td, cellule.valeur);
             td.classList.toggle('dirty', estModifiee);
 
             if (estModifiee) {
@@ -105,7 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
             dirtyCells.forEach(({ input, td, eleveId, matiereId }) => {
                 const student = studentsById.get(eleveId);
                 const original = student?.notes?.[matiereId];
-                input.value = original ?? '';
+                if (config.parCriteres) {
+                    const criteres = student?.criteres?.[matiereId] ?? {};
+                    td.querySelector('[data-critere="minimal"]').value = criteres.minimal ?? '';
+                    td.querySelector('[data-critere="perfectionnement"]').value = criteres.perfectionnement ?? '';
+                    afficherTotal(td, original ?? null);
+                } else {
+                    input.value = original ?? '';
+                }
                 td.classList.remove('dirty');
             });
             dirtyCells.clear();
@@ -116,11 +159,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dirtyCells.size === 0) return;
 
             const entries = Array.from(dirtyCells.values());
-            const notes = entries.map(({ input, eleveId, matiereId }) => {
-                const raw = input.value.trim();
-                const valeur = raw === '' ? null : Math.max(0, Math.min(20, Number(raw)));
-                if (valeur !== null) input.value = valeur;
-                return { eleve_id: eleveId, matiere_id: matiereId, valeur };
+            const notes = entries.map(({ td, eleveId, matiereId }) => {
+                const cellule = lireCellule(td);
+                if (config.parCriteres) {
+                    return {
+                        eleve_id: eleveId,
+                        matiere_id: matiereId,
+                        critere_minimal: cellule.minimal,
+                        critere_perfectionnement: cellule.perfectionnement,
+                    };
+                }
+                const input = td.querySelector('input');
+                if (cellule.valeur !== null) input.value = cellule.valeur;
+                return { eleve_id: eleveId, matiere_id: matiereId, valeur: cellule.valeur };
             });
 
             saveBarBtn.disabled = true;
@@ -131,16 +182,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                entries.forEach(({ input, td, eleveId, matiereId }) => {
-                    const raw = input.value.trim();
-                    const valeur = raw === '' ? null : Number(raw);
+                entries.forEach(({ td, eleveId, matiereId }) => {
+                    const cellule = lireCellule(td);
+                    const valeur = cellule.valeur;
                     const row = td.closest('tr');
 
                     const student = studentsById.get(eleveId);
                     if (student) {
                         student.notes[matiereId] = valeur;
+                        if (config.parCriteres) {
+                            student.criteres = student.criteres ?? {};
+                            student.criteres[matiereId] = { minimal: cellule.minimal, perfectionnement: cellule.perfectionnement };
+                        }
                         updateMoyenne(row, student);
                     }
+                    afficherTotal(td, valeur);
 
                     td.classList.remove('dirty', 'low', 'high');
                     if (valeur !== null) {
@@ -171,13 +227,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const estValide = student.bulletin?.statut === 'valide';
         row.querySelectorAll('td.note-cell').forEach((td) => {
-            const input = td.querySelector('input');
-            if (!input) return;
             const editable = td.dataset.editable !== '0';
-            input.disabled = estValide || !editable;
-            input.title = !editable
-                ? "Lecture seule — vous n'enseignez pas cette matière"
-                : (estValide ? 'Bulletin validé — dévalidez-le pour modifier les notes.' : '');
+            td.querySelectorAll('input').forEach((input) => {
+                // config.saisieFermee : délai dépassé, ou enseignant non
+                // titulaire en maternelle/primaire (consultation seule).
+                input.disabled = estValide || !editable || config.saisieFermee;
+                if (!editable) {
+                    input.title = "Lecture seule — vous n'enseignez pas cette matière";
+                } else if (estValide) {
+                    input.title = 'Bulletin validé — dévalidez-le pour modifier les notes.';
+                }
+            });
         });
         row.classList.toggle('bulletin-valide', estValide);
     }

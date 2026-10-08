@@ -293,11 +293,46 @@ test('administrators can archive and desarchiver a fiche élève', function () {
     $admin = User::factory()->administrateur()->create();
     $eleve = Eleve::factory()->create();
 
-    $this->actingAs($admin)->patch(route('eleves.archiver', $eleve));
-    expect($eleve->fresh()->statut)->toBe(StatutEleve::Archive);
+    $this->actingAs($admin)->patch(route('eleves.archiver', $eleve), ['motif' => 'Départ vers une autre école']);
+    expect($eleve->fresh()->statut)->toBe(StatutEleve::Archive)
+        ->and($eleve->fresh()->motif_archivage)->toBe('Départ vers une autre école');
 
     $this->actingAs($admin)->patch(route('eleves.desarchiver', $eleve));
+    expect($eleve->fresh()->statut)->toBe(StatutEleve::Actif)
+        ->and($eleve->fresh()->motif_archivage)->toBeNull();
+});
+
+test('archiving a fiche élève requires a motif', function () {
+    $admin = User::factory()->administrateur()->create();
+    $eleve = Eleve::factory()->create();
+
+    $this->actingAs($admin)->from(route('eleves.index'))
+        ->patch(route('eleves.archiver', $eleve), ['motif' => '   '])
+        ->assertSessionHasErrors(['motif' => "Indiquez le motif de l'archivage."]);
+
     expect($eleve->fresh()->statut)->toBe(StatutEleve::Actif);
+});
+
+test('the fiche shows the archive date and motif, and the date de début de scolarité', function () {
+    $admin = User::factory()->administrateur()->create();
+    $eleve = Eleve::factory()->create(['date_debut_scolarite' => '2022-09-15']);
+    $eleve->archiver('Déménagement de la famille');
+
+    $this->actingAs($admin)->getJson(route('eleves.fiche', $eleve))
+        ->assertOk()
+        ->assertJsonPath('identite.motif_archivage', 'Déménagement de la famille')
+        ->assertJsonPath('identite.date_archivage', now()->format('d/m/Y'))
+        ->assertJsonPath('identite.date_debut_scolarite', '15/09/2022');
+});
+
+test('the élèves list offers a motif panel for archiving', function () {
+    $admin = User::factory()->administrateur()->create();
+    Eleve::factory()->create();
+
+    $this->actingAs($admin)->get(route('eleves.index'))
+        ->assertOk()
+        ->assertSee('id="archive-motif-form"', false)
+        ->assertSee('name="motif"', false);
 });
 
 test('the eleve list renders the statut column as an editable select', function () {

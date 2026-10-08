@@ -435,3 +435,37 @@ test('without any queue worker, the requested bulletins are actually generated o
     expect($demande->statut)->toBe(StatutGenerationBulletin::Termine)
         ->and($demande->chemin_pdf)->not->toBeNull();
 });
+
+test('the bulletin mensuel shows critère minimal, critère de perfectionnement and total for each matière', function () {
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();
+    $classeMatiere = ClasseMatiere::where('classe_id', $classe->id)->firstOrFail();
+
+    Note::factory()->create([
+        'eleve_id' => $inscriptions[0]->eleve_id,
+        'classe_matiere_id' => $classeMatiere->id,
+        'examen_id' => $examen->id,
+        'valeur' => 17,
+        'critere_minimal' => 15,
+        'critere_perfectionnement' => 2,
+    ]);
+
+    $this->actingAs($admin)->get(route('eleves.bulletins.apercu', [
+        'classe' => $classe, 'examen' => $examen, 'inscription' => $inscriptions[0],
+    ]))
+        ->assertOk()
+        ->assertSeeInOrder(['Crit. minimal / 18', 'Crit. perf. / 2', 'Total / 20'])
+        ->assertSeeInOrder(['Mathématiques', '15', '2', '17.00']);
+});
+
+test('a bulletin with notes entered before the critères keeps the single « Note / 20 » column', function () {
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();
+
+    $this->actingAs($admin)->get(route('eleves.bulletins.apercu', [
+        'classe' => $classe, 'examen' => $examen, 'inscription' => $inscriptions[0],
+    ]))
+        ->assertOk()
+        ->assertSee('Note / 20')
+        ->assertDontSee('Crit. minimal / 18');
+});

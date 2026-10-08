@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Note;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -31,6 +32,9 @@ class StoreNotesBatchRequest extends FormRequest
             'notes.*.eleve_id' => ['required', 'exists:eleves,id'],
             'notes.*.matiere_id' => ['required', 'exists:matieres,id'],
             'notes.*.valeur' => ['nullable', 'numeric', 'min:0', 'max:20'],
+            // Primaire : la note est la somme des deux critères (voir Note::totalDesCriteres()).
+            'notes.*.critere_minimal' => ['nullable', 'numeric', 'min:0', 'max:'.Note::CRITERE_MINIMAL_MAX],
+            'notes.*.critere_perfectionnement' => ['nullable', 'numeric', 'min:0', 'max:'.Note::CRITERE_PERFECTIONNEMENT_MAX],
         ];
     }
 

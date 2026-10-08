@@ -19,16 +19,19 @@ class Eleve extends Model
         'nom',
         'prenom',
         'date_naissance',
+        'date_debut_scolarite',
         'sexe',
         'niveau_souhaite_id',
         'statut',
         'date_archivage',
+        'motif_archivage',
     ];
 
     protected function casts(): array
     {
         return [
             'date_naissance' => 'date',
+            'date_debut_scolarite' => 'date',
             'date_archivage' => 'date',
             'statut' => StatutEleve::class,
         ];
@@ -144,13 +147,17 @@ class Eleve extends Model
             ->first(fn (Inscription $inscription) => $inscription->classe?->anneeAcademique?->est_active === true);
     }
 
-    public function archiver(): void
+    public function archiver(string $motif): void
     {
-        $this->update(['statut' => StatutEleve::Archive, 'date_archivage' => now()->toDateString()]);
+        $this->update([
+            'statut' => StatutEleve::Archive,
+            'date_archivage' => now()->toDateString(),
+            'motif_archivage' => $motif,
+        ]);
     }
 
     public function desarchiver(): void
     {
-        $this->update(['statut' => StatutEleve::Actif, 'date_archivage' => null]);
+        $this->update(['statut' => StatutEleve::Actif, 'date_archivage' => null, 'motif_archivage' => null]);
     }
 }

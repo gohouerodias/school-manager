@@ -112,6 +112,7 @@ class EleveWizardController extends Controller
             'prenom' => $validated['prenom'] ?? null,
             'sexe' => $validated['sexe'] ?? null,
             'date_naissance' => $validated['date_naissance'] ?? null,
+            'date_debut_scolarite' => $validated['date_debut_scolarite'] ?? null,
             'niveau_souhaite_id' => $validated['niveau_souhaite_id'] ?? null,
         ];
 

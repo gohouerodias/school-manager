@@ -9,7 +9,7 @@ const roleDescriptions = {
         text: 'Accès complet : gestion des comptes, des classes, des documents et de tous les dossiers élèves.',
     },
     agent_scolarite: {
-        title: 'Agent de scolarité',
+        title: 'Secrétariat',
         text: "Gère les fiches élèves, les documents, les inscriptions et génère les bulletins. Pas d'accès à la gestion des comptes.",
     },
     enseignant: {

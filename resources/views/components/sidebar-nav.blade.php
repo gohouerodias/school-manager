@@ -78,7 +78,7 @@
 
                     <div class="nav-submenu" data-nav-submenu @if ($dossiersOpen) style="display:block;" @endif>
                         <a href="{{ route('eleves.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.index')])>Liste des apprenants</a>
-                        <a href="{{ route('tuteurs.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('tuteurs.*')])>Liste des tuteurs</a>
+                        <a href="{{ route('tuteurs.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('tuteurs.*')])>Liste des parents</a>
                         <a href="{{ route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.bulletins.*')])>Bulletins</a>
                         @if ($isAdmin)
                             <a href="{{ route('eleves.parametres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.parametres.*')])>Paramètres des dossiers</a>

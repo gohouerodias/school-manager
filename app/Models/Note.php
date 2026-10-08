@@ -17,16 +17,38 @@ class Note extends Model
         'examen_id',
         'enseignant_id',
         'valeur',
+        'critere_minimal',
+        'critere_perfectionnement',
         'commentaire',
         'type',
         'numero',
         'date_saisie',
     ];
 
+    /** Barème du primaire (séance du 07/10/2026) : critère minimal /18 + perfectionnement /2 = /20. */
+    public const CRITERE_MINIMAL_MAX = 18;
+
+    public const CRITERE_PERFECTIONNEMENT_MAX = 2;
+
+    /**
+     * Note totale (/20) à partir des deux critères ; null quand aucun des
+     * deux n'est renseigné (la case est vide).
+     */
+    public static function totalDesCriteres(?float $critereMinimal, ?float $criterePerfectionnement): ?float
+    {
+        if ($critereMinimal === null && $criterePerfectionnement === null) {
+            return null;
+        }
+
+        return round(($critereMinimal ?? 0) + ($criterePerfectionnement ?? 0), 2);
+    }
+
     protected function casts(): array
     {
         return [
             'valeur' => 'float',
+            'critere_minimal' => 'float',
+            'critere_perfectionnement' => 'float',
             'type' => TypeEvaluation::class,
             'date_saisie' => 'date',
         ];
