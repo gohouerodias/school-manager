@@ -101,3 +101,15 @@
     width: 64px; height: 4px; border-radius: 2px; margin: 0 auto 14px;
     background: linear-gradient(90deg, var(--green) 33%, var(--gold) 33%, var(--gold) 66%, var(--red) 66%);
 }
+
+/* Téléphone : en-tête compact, options « Se souvenir / Mot de passe oublié »
+   sans retour à la ligne au milieu des mots. */
+@media (max-width: 480px) {
+    .auth-topbar { gap: 10px; }
+    .auth-topbar .brand { gap: 8px; min-width: 0; }
+    .auth-topbar .brand .logo-slot { height: 38px; }
+    .auth-topbar .brand .name { font-size: 13px; }
+    .help-link { white-space: nowrap; font-size: 12.5px; }
+    .row-between { flex-wrap: wrap; gap: 8px; }
+    .row-between .remember, .forgot { white-space: nowrap; }
+}

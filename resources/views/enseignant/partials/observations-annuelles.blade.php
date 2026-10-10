@@ -9,12 +9,12 @@
     (collection de ['eleveId' => int, 'nom' => string, 'prenom' => string,
     'matricule' => string, 'observation' => ?string]).
 --}}
-<div class="grade-topbar" style="margin-top:36px;">
+<div class="grade-topbar" style="margin-top:4px;">
     <div class="grade-title-row">
         <h2 style="margin:0;font-size:19px;">Bulletin annuel — Observations</h2>
     </div>
 </div>
-<p class="hint" style="margin-bottom:14px;">
+<p class="hint hint-orange" style="margin-bottom:14px;">
     Cette observation apparaît sur le bulletin annuel de fin d'année de chaque apprenant, indépendamment du mois sélectionné ci-dessus.
     @unless ($isTitulaire)
         Réservée au titulaire de la classe{{ $titulaire ? " — {$titulaire->name}" : '' }} : vous pouvez la consulter, mais pas la modifier.

@@ -54,7 +54,7 @@ class TuteurController extends Controller
             'subtitle' => sprintf('%d parents/tuteurs enregistrés', ParentTuteur::query()->count()),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Dossier élève et documents' => null,
+                'Dossier élève et documents' => route('eleves.index'),
                 'Liste des parents' => null,
             ],
         ]);

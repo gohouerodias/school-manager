@@ -4,6 +4,7 @@ use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Classe;
 use App\Models\DomaineEvaluation;
+use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\User;
 
@@ -62,7 +63,7 @@ test('the first teacher affected to an empty primaire classe becomes titulaire a
     $admin = User::factory()->administrateur()->create();
     $anneeAcademique = AnneeAcademique::factory()->create();
     $classe = Classe::factory()->create(['niveau_id' => Niveau::factory()->primaire(), 'annee_academique_id' => $anneeAcademique->id]);
-    $matiere = \App\Models\Matiere::factory()->create();
+    $matiere = Matiere::factory()->create();
     $classe->matieres()->attach($matiere->id, ['coefficient' => 1]);
     $enseignant = User::factory()->enseignant()->create();
 

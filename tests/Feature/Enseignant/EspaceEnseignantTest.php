@@ -882,3 +882,38 @@ test('in collège, a note is still a single value out of 20', function () {
         'critere_minimal' => 10,
     ])->assertOk()->assertJson(['valeur' => 14, 'critere_minimal' => null]);
 });
+
+test('the sheet offers « Notes du mois » and « Bulletin annuel — Observations » as tabs at the top, with the help text above the table', function () {
+    ['classe' => $classe, 'enseignant' => $enseignant, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->get(route('enseignant.classes.show', ['classe' => $classe, 'examen_id' => $examen->id]))
+        ->assertOk()
+        ->assertSeeInOrder([
+            'data-sheet-tab-btn="notes"',
+            'data-sheet-tab-btn="observations"',
+            'Cliquez dans une case pour saisir',
+            'id="sheetTable"',
+            '<div data-sheet-tab-panel="observations" hidden>',
+            'hint hint-orange',
+        ], false);
+});
+
+test('the teacher space has the same header as the admin one: school logo, and a ☰ button opening the menu on phones', function () {
+    ['enseignant' => $enseignant] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->get(route('enseignant.classes.index'))
+        ->assertOk()
+        ->assertSee('class="sidebar-logo"', false)
+        ->assertSee('class="logo-slot"', false)
+        ->assertSee('data-sidebar-open', false)
+        ->assertSee('data-sidebar-backdrop', false)
+        ->assertSee('Complexe Scolaire Catholique');
+});
+
+test('the sheet help text sits in orange right under the search bar, above the table', function () {
+    ['classe' => $classe, 'enseignant' => $enseignant, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->get(route('enseignant.classes.show', ['classe' => $classe, 'examen_id' => $examen->id]))
+        ->assertOk()
+        ->assertSeeInOrder(['id="studentSearch"', 'class="hint hint-orange"', 'Cliquez dans une case pour saisir', 'id="sheetTable"'], false);
+});

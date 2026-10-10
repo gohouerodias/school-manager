@@ -35,19 +35,19 @@ function initGenerationStatus({ statusId, generateBtnId, unite }) {
         status.classList.toggle('error', data.echec || data.coinceeSansWorker);
 
         if (data.genere) {
-            status.innerHTML = `✓ Bulletins générés le ${data.genereAt} (${data.nbBulletinsGeneres} ${unite}(s)).`
-                + (data.telechargerUrl ? ` <a href="${data.telechargerUrl}">Télécharger le PDF groupé</a>` : '');
+            status.innerHTML = `✓ Bulletins générés le ${escapeHTML(data.genereAt)} (${escapeHTML(data.nbBulletinsGeneres)} ${unite}(s)).`
+                + (data.telechargerUrl ? ` <a href="${escapeHTML(data.telechargerUrl)}" data-no-loader>Télécharger le PDF groupé</a>` : '');
         } else if (data.echec) {
-            status.innerHTML = `✕ La génération a échoué : ${data.erreur ?? 'erreur inconnue.'}`;
+            status.innerHTML = `✕ La génération a échoué : ${escapeHTML(data.erreur ?? 'erreur inconnue.')}`;
         } else if (data.coinceeSansWorker) {
-            status.innerHTML = '⚠ La génération semble bloquée depuis plus de 2 minutes — aucun worker de file d\'attente ne semble actif (voir <code>php artisan queue:work</code> ou <code>composer run dev</code>). Vous pouvez relancer la génération ci-dessous.';
+            status.textContent = "⚠ La génération n'a pas démarré ou a été interrompue par le serveur (aucune progression depuis plus de 2 minutes). Relancez-la ci-dessous ; si le problème persiste, contactez l'administrateur technique.";
         } else {
             status.innerHTML = `
                 <div class="generation-progress-row">
                     <span class="spinner" aria-hidden="true"></span>
-                    <span class="generation-progress-text">${data.label} — ${data.traites} / ${data.total} ${unite}(s) traité(s)</span>
+                    <span class="generation-progress-text">${escapeHTML(data.label)} — ${Number(data.traites)} / ${Number(data.total)} ${unite}(s) traité(s)</span>
                 </div>
-                <div class="progress-track"><div class="progress-fill" style="width:${data.pourcentage}%;"></div></div>
+                <div class="progress-track"><div class="progress-fill" style="width:${Number(data.pourcentage) || 0}%;"></div></div>
             `;
         }
 
@@ -91,4 +91,10 @@ export function initBulletinsGeneration() {
 
 export function initBulletinsAnnuelsGeneration() {
     initGenerationStatus({ statusId: 'generation-status-annuel', generateBtnId: 'generate-bulletins-annuel-btn', unite: 'bulletin' });
+}
+
+function escapeHTML(value) {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
 }

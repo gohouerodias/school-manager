@@ -10,10 +10,13 @@
 </head>
 <body>
 
+{{-- Même structure que l'espace administrateur (layouts/app.blade.php) :
+     logo dans le menu et la barre du haut ; sur téléphone, le menu devient
+     un tiroir ouvert par le bouton ☰ (voir resources/js/sidebar.js). --}}
 <div class="shell">
-    <aside class="sidebar">
+    <aside class="sidebar" data-sidebar>
         <div class="sidebar-header">
-            <div class="sidebar-logo">CSCMT</div>
+            <img src="{{ asset('logo-cscmt.jpg') }}" alt="Complexe Scolaire Catholique Madre Trinidad" class="sidebar-logo">
             <span class="sidebar-wordmark">Registre CSCMT</span>
         </div>
         <div class="sidebar-inner">
@@ -28,21 +31,31 @@
             <div class="role">Enseignant</div>
         </div>
     </aside>
+    <div class="sidebar-backdrop" data-sidebar-backdrop></div>
 
     <div class="main">
         <div class="app">
 
             <div class="topbar">
-                <span></span>
+                <div class="brand">
+                    <button type="button" class="mobile-nav-toggle" data-sidebar-open aria-label="Ouvrir le menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <img src="{{ asset('logo-cscmt.jpg') }}" alt="Complexe Scolaire Catholique Madre Trinidad" class="logo-slot">
+                    <div class="name">Complexe Scolaire Catholique<small>Madre Trinidad — Registre numérique</small></div>
+                </div>
                 <div class="profile-wrap">
                     <x-notifications-menu :user="auth()->user()" />
-                    <div class="user-chip">
+                    <div class="user-chip" title="{{ auth()->user()->name }} · Enseignant">
                         <div class="avatar">{{ auth()->user()->initials() }}</div>
-                        {{ auth()->user()->name }} · Enseignant
+                        <span class="user-chip-name">{{ auth()->user()->name }} · Enseignant</span>
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="btn ghost">Se déconnecter</button>
+                        <button type="submit" class="btn ghost logout-btn" title="Se déconnecter" aria-label="Se déconnecter">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                            <span class="logout-label">Se déconnecter</span>
+                        </button>
                     </form>
                 </div>
             </div>

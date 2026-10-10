@@ -47,6 +47,7 @@ class ExamenController extends Controller
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
                 'Académique' => null,
+                'Années académiques' => route('academique.annees.index'),
                 'Examens' => null,
             ],
         ]);

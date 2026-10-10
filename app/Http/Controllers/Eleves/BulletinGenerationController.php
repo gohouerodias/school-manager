@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ProfilUtilisateur;
 use App\Enums\StatutGenerationBulletin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DemanderGenerationBulletinRequest;
@@ -82,11 +83,7 @@ class BulletinGenerationController extends Controller
             'demande' => $demande,
             'payloadAnnuel' => $payloadAnnuel,
             'demandeAnnuel' => $demandeAnnuel,
-            'breadcrumbs' => [
-                'Tableau de bord' => route('dashboard'),
-                'Dossier élève' => route('eleves.index'),
-                'Bulletins' => null,
-            ],
+            'breadcrumbs' => $this->filAriane($request),
         ]);
     }
 
@@ -168,6 +165,36 @@ class BulletinGenerationController extends Controller
             : "Génération des bulletins de {$classe->nom} démarrée — suivez la progression ci-dessous.";
 
         return $redirectBack->with('toast', $toast);
+    }
+
+    /**
+     * Administrateur : les bulletins se rattachent à l'année académique en
+     * cours (Académique / Années académiques / 2025-2026 / Bulletins), comme
+     * les examens. Secrétariat (sans accès au menu Académique) : sous
+     * « Dossier élève et documents ».
+     *
+     * @return array<string, ?string>
+     */
+    private function filAriane(Request $request): array
+    {
+        $annee = AnneeAcademique::query()->where('est_active', true)->first()
+            ?? AnneeAcademique::query()->orderByDesc('date_debut')->first();
+
+        if ($request->user()->profil === ProfilUtilisateur::Administrateur && $annee) {
+            return [
+                'Tableau de bord' => route('dashboard'),
+                'Académique' => null,
+                'Années académiques' => route('academique.annees.index'),
+                $annee->libelle => route('academique.annees.show', $annee).'?onglet=bulletins',
+                'Bulletins' => null,
+            ];
+        }
+
+        return [
+            'Tableau de bord' => route('dashboard'),
+            'Dossier élève et documents' => route('eleves.index'),
+            'Bulletins' => null,
+        ];
     }
 
     /**

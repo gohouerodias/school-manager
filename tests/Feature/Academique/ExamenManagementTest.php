@@ -330,3 +330,16 @@ test('the saisie closes at the exact time of the deadline, not at the end of the
     expect($ouvert->delaiSaisieDepasse())->toBeFalse()
         ->and($ferme->delaiSaisieDepasse())->toBeTrue();
 });
+
+test('the « Examens » menu opens the Examens tab of the current année, so the breadcrumb leads back to it', function () {
+    $admin = User::factory()->administrateur()->create();
+    $anneeActive = AnneeAcademique::factory()->create(['est_active' => true, 'libelle' => '2026-2027']);
+
+    $this->actingAs($admin)->get(route('academique.niveaux-matieres.index'))
+        ->assertOk()
+        ->assertSee(route('academique.annees.show', $anneeActive).'?onglet=examens', false);
+
+    $this->actingAs($admin)->get(route('academique.annees.show', $anneeActive).'?onglet=examens')
+        ->assertOk()
+        ->assertSeeInOrder(['Années académiques</a>', 'breadcrumb-sep', '2026-2027'], false);
+});

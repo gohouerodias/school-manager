@@ -26,7 +26,7 @@ class PasswordResetLinkController extends Controller
 
         return back()->with(
             'status',
-            "Si un compte existe pour cette adresse, un lien de réinitialisation vient de lui être envoyé."
+            'Si un compte existe pour cette adresse, un lien de réinitialisation vient de lui être envoyé.'
         );
     }
 }

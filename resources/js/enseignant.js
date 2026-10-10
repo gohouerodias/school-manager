@@ -16,6 +16,48 @@
 import './saisie-domaines';
 import './observations-annuelles';
 import { initNotificationsMenu } from './notifications-menu';
+import { initSidebar } from './sidebar';
+
+/**
+ * Onglets « Notes du mois » / « Bulletin annuel — Observations » des
+ * feuilles de saisie (saisie-notes / saisie-domaines). L'onglet ouvert est
+ * mémorisé par page : après un rechargement (changement de mois…), on
+ * revient au même onglet.
+ */
+function initSheetTabs() {
+    const boutons = document.querySelectorAll('[data-sheet-tab-btn]');
+    if (!boutons.length) return;
+
+    const cle = `onglet-feuille:${window.location.pathname}`;
+
+    function ouvrir(onglet) {
+        boutons.forEach((btn) => btn.classList.toggle('active', btn.dataset.sheetTabBtn === onglet));
+        document.querySelectorAll('[data-sheet-tab-panel]').forEach((panel) => {
+            panel.hidden = panel.dataset.sheetTabPanel !== onglet;
+        });
+        try {
+            sessionStorage.setItem(cle, onglet);
+        } catch {
+            // Stockage indisponible : sans conséquence.
+        }
+    }
+
+    boutons.forEach((btn) => btn.addEventListener('click', () => ouvrir(btn.dataset.sheetTabBtn)));
+
+    let memorise = null;
+    try {
+        memorise = sessionStorage.getItem(cle);
+    } catch {
+        memorise = null;
+    }
+    if (memorise && document.querySelector(`[data-sheet-tab-btn="${memorise}"]`)) {
+        ouvrir(memorise);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initSheetTabs);
+// Menu en tiroir sur téléphone (même script que l'espace administrateur).
+document.addEventListener('DOMContentLoaded', initSidebar);
 
 // Cloche des notifications ("Notes incomplètes" — voir
 // NotifierNotesIncompletesCommand), dont les enseignants sont les seuls
@@ -310,7 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('commentPanelSave')?.addEventListener('click', () => saveComment(currentEleveId));
-        document.getElementById('bulletinValiderBtn')?.addEventListener('click', () => validerOuDevalider(currentEleveId, true));
+        // « Valider et signer » enregistre d'abord ce qui est saisi dans le
+        // panneau (commentaire, appréciation…), puis valide : sinon le serveur
+        // ne voit que l'ancienne version et refuse la validation.
+        document.getElementById('bulletinValiderBtn')?.addEventListener('click', () => saveComment(currentEleveId, { puisValider: true }));
         document.getElementById('bulletinDevaliderBtn')?.addEventListener('click', () => validerOuDevalider(currentEleveId, false));
 
         function openPanel(eleveId) {
@@ -426,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).catch(() => showToast("Échec de l'enregistrement — vérifiez votre connexion."));
         }
 
-        function saveComment(eleveId) {
+        function saveComment(eleveId, { puisValider = false } = {}) {
             if (!eleveId) return;
             const student = studentsById.get(eleveId);
             if (!student) return;
@@ -505,6 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const hasContent = Object.keys(student.subjectComments || {}).length > 0
                     || !!student.bulletin?.appreciation || !!student.bulletin?.resultat;
                 btn?.classList.toggle('filled', hasContent);
+
+                if (puisValider) {
+                    validerOuDevalider(eleveId, true);
+                    return;
+                }
 
                 closePanel();
                 showToast('✓ Commentaire(s) enregistré(s)');

@@ -23,15 +23,16 @@ test('creates the principal administrator account with the given options', funct
         ->and(Hash::check('un-mot-de-passe-temporaire', $admin->password))->toBeTrue();
 });
 
-test('defaults name to Administrateur and password to "password" when omitted', function () {
+test('defaults name to Administrateur and generates a random password (never "password") when omitted', function () {
     $this->artisan('admin:creer-principal', [
         '--email' => 'admin@cscmadretrinidad.bj',
-    ])->assertSuccessful();
+    ])->expectsOutputToContain('Mot de passe temporaire généré')->assertSuccessful();
 
     $admin = User::where('email', 'admin@cscmadretrinidad.bj')->first();
 
     expect($admin->name)->toBe('Administrateur')
-        ->and(Hash::check('password', $admin->password))->toBeTrue();
+        ->and(Hash::check('password', $admin->password))->toBeFalse()
+        ->and($admin->doit_changer_mot_de_passe)->toBeTrue();
 });
 
 test('fails without an email', function () {
@@ -59,3 +60,11 @@ test('rejects an email already used by another account', function () {
 
     expect(User::count())->toBe(1);
 });
+
+test('the demo commands refuse to run in production', function (string $commande) {
+    app()->detectEnvironment(fn () => 'production');
+
+    $this->artisan($commande)->assertFailed();
+
+    expect(User::count())->toBe(0);
+})->with(['demo:classe-primaire', 'test-data:parcours-scolaire']);

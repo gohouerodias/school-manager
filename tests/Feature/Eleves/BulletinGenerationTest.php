@@ -469,3 +469,24 @@ test('a bulletin with notes entered before the critères keeps the single « Not
         ->assertSee('Note / 20')
         ->assertDontSee('Crit. minimal / 18');
 });
+
+test('for the administrateur, « Bulletins » sits under Académique and its path leads back to the current année', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create(['est_active' => true, 'libelle' => '2031-2032']);
+
+    $this->actingAs($admin)->get(route('eleves.bulletins.index'))
+        ->assertOk()
+        ->assertSee(route('academique.annees.show', $annee).'?onglet=bulletins', false)
+        ->assertSeeInOrder(['Années académiques</a>', 'breadcrumb-sep', '2031-2032</a>', 'breadcrumb-sep', 'Bulletins'], false)
+        ->assertDontSee('href="'.route('eleves.bulletins.index').'" class="nav-subitem', false);
+});
+
+test('the secrétariat, who has no Académique menu, still finds « Bulletins » under Dossier élève et documents', function () {
+    $agent = User::factory()->agentScolarite()->create();
+    AnneeAcademique::factory()->create(['est_active' => true]);
+
+    $this->actingAs($agent)->get(route('eleves.bulletins.index'))
+        ->assertOk()
+        ->assertSee(route('eleves.bulletins.index'), false)
+        ->assertSeeInOrder(['Dossier élève et documents</a>', 'breadcrumb-sep', 'Bulletins'], false);
+});

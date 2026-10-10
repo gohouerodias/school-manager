@@ -38,6 +38,15 @@
     </div>
 </div>
 
+{{-- Deux onglets en haut de page : les notes du mois, et les observations
+     du bulletin annuel (auparavant tout en bas, hors de vue avec une
+     classe de 50 apprenants). Voir initSheetTabs() dans enseignant.js. --}}
+<div class="sheet-tabs" role="tablist">
+    <button type="button" class="sheet-tab active" data-sheet-tab-btn="notes" role="tab">Notes du mois</button>
+    <button type="button" class="sheet-tab" data-sheet-tab-btn="observations" role="tab">Bulletin annuel — Observations</button>
+</div>
+
+<div data-sheet-tab-panel="notes">
 @if ($examens->isEmpty())
     <div class="hint">Aucun examen disponible pour cette classe pour l'instant — ils sont créés depuis Académique &gt; Examens.</div>
 @elseif ($matieres->isEmpty())
@@ -69,6 +78,19 @@
             <span>Délai de saisie dépassé ({{ $examenActif->dateLimiteSaisieLibelle() }}) — cette période est en lecture seule.</span>
         </div>
     @endif
+
+    <p class="hint hint-orange" style="margin-bottom:12px;">
+        @if ($lectureSeuleTitulaire ?? false)
+            Consultation uniquement — seul le titulaire de la classe saisit les notes.
+        @elseif ($saisieFermee)
+            Cette période n'accepte plus de nouvelles notes.
+        @else
+            Cliquez dans une case pour saisir ou modifier une note, videz-la pour la supprimer, puis cliquez sur « Enregistrer les modifications » pour sauvegarder.
+            @if ($examenActif)
+                Délai de saisie : {{ $examenActif->dateLimiteSaisieLibelle() }}.
+            @endif
+        @endif
+    </p>
 
     <div class="sheet-wrap @if($saisieFermee) sheet-locked @endif">
         @php
@@ -160,19 +182,8 @@
             </tbody>
         </table>
     </div>
-    <p class="hint" style="margin-top:12px;">
-        @if ($lectureSeuleTitulaire ?? false)
-            Consultation uniquement — seul le titulaire de la classe saisit les notes.
-        @elseif ($saisieFermee)
-            Cette période n'accepte plus de nouvelles notes.
-        @else
-            Cliquez dans une case pour saisir ou modifier une note, videz-la pour la supprimer, puis cliquez sur « Enregistrer les modifications » pour sauvegarder.
-            @if ($examenActif)
-                Délai de saisie : {{ $examenActif->dateLimiteSaisieLibelle() }}.
-            @endif
-        @endif
-    </p>
 @endif
+</div>
 
 <div class="save-bar" id="saveBar">
     <span id="saveBarCount"></span>
@@ -180,7 +191,9 @@
     <button type="button" class="btn dark" id="saveBarBtn">Enregistrer les modifications</button>
 </div>
 
-@include('enseignant.partials.observations-annuelles')
+<div data-sheet-tab-panel="observations" hidden>
+    @include('enseignant.partials.observations-annuelles')
+</div>
 
 <div class="overlay" id="overlay"></div>
 

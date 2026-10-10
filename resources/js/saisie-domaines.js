@@ -212,7 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('commentPanelSave')?.addEventListener('click', () => saveComment(currentEleveId));
-        document.getElementById('bulletinValiderBtn')?.addEventListener('click', () => validerOuDevalider(currentEleveId, true));
+        // « Valider et signer » enregistre d'abord ce qui est saisi dans le
+        // panneau (commentaire, appréciation…), puis valide : sinon le serveur
+        // ne voit que l'ancienne version et refuse la validation.
+        document.getElementById('bulletinValiderBtn')?.addEventListener('click', () => saveComment(currentEleveId, { puisValider: true }));
         document.getElementById('bulletinDevaliderBtn')?.addEventListener('click', () => validerOuDevalider(currentEleveId, false));
 
         function openPanel(eleveId) {
@@ -323,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).catch(() => showToast("Échec de l'enregistrement — vérifiez votre connexion."));
         }
 
-        function saveComment(eleveId) {
+        function saveComment(eleveId, { puisValider = false } = {}) {
             if (!eleveId) return;
             const student = studentsById.get(eleveId);
             if (!student) return;
@@ -403,6 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const hasContent = Object.keys(student.observations || {}).length > 0
                     || !!student.bulletin?.appreciation || !!student.bulletin?.resultat;
                 btn?.classList.toggle('filled', hasContent);
+
+                if (puisValider) {
+                    validerOuDevalider(eleveId, true);
+                    return;
+                }
 
                 closePanel();
                 showToast('✓ Appréciation(s) enregistrée(s)');

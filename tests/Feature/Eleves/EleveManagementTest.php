@@ -566,3 +566,17 @@ test('every page renders the singleton image lightbox used to view the fiche pho
     $response->assertSee('data-panel="image-lightbox"', false);
     $response->assertSee('id="image-lightbox-img"', false);
 });
+
+test('filtered on a classe, the eleve list shows the whole classe on a single page', function () {
+    $admin = User::factory()->administrateur()->create();
+    $classe = Classe::factory()->create();
+    Eleve::factory()->count(60)->create()->each(
+        fn (Eleve $eleve) => Inscription::factory()->create(['eleve_id' => $eleve->id, 'classe_id' => $classe->id])
+    );
+
+    $paginator = $this->actingAs($admin)->get(route('eleves.index', ['classe' => $classe->id]))->viewData('eleves');
+
+    expect($paginator->total())->toBe(60)
+        ->and($paginator->count())->toBe(60)
+        ->and($paginator->hasPages())->toBeFalse();
+});

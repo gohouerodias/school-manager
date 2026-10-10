@@ -2,6 +2,8 @@
 
 use App\Enums\TypeChampPersonnalise;
 use App\Models\ChampPersonnalise;
+use App\Models\DocumentNumerique;
+use App\Models\Eleve;
 use App\Models\TypeDocument;
 use App\Models\User;
 
@@ -228,4 +230,49 @@ test('keeping the same nom when editing a type de document is allowed', function
         'libelle' => 'Carnet de vaccination',
         'formats_acceptes' => ['PDF', 'JPG'],
     ])->assertSessionHasNoErrors();
+});
+
+test('a type de document already uploaded for some apprenants cannot be deleted, with a clear message instead of a server error', function () {
+    $admin = User::factory()->administrateur()->create();
+    $type = TypeDocument::factory()->create(['libelle' => 'Carnet de santé', 'protege' => false]);
+    $eleves = Eleve::factory()->count(2)->create();
+    foreach ($eleves as $eleve) {
+        DocumentNumerique::create([
+            'eleve_id' => $eleve->id, 'type_document_id' => $type->id, 'televerse_par' => $admin->id,
+            'chemin_fichier' => 'documents-eleves/x.pdf', 'date_ajout' => now()->toDateString(),
+        ]);
+    }
+
+    $this->actingAs($admin)->from(route('eleves.parametres.index'))
+        ->delete(route('eleves.parametres.types-documents.destroy', $type))
+        ->assertRedirect(route('eleves.parametres.index'))
+        ->assertSessionHas('toast', fn (string $toast) => str_contains($toast, 'déjà été déposé pour 2 apprenant(s)'));
+
+    $this->assertDatabaseHas('types_documents', ['id' => $type->id]);
+    expect(DocumentNumerique::query()->where('type_document_id', $type->id)->count())->toBe(2);
+});
+
+test('the parametres page greys out the delete button of a type already uploaded for apprenants', function () {
+    $admin = User::factory()->administrateur()->create();
+    $utilise = TypeDocument::factory()->create(['libelle' => 'Carnet utilisé', 'protege' => false]);
+    $libre = TypeDocument::factory()->create(['libelle' => 'Carnet libre', 'protege' => false]);
+    DocumentNumerique::create([
+        'eleve_id' => Eleve::factory()->create()->id, 'type_document_id' => $utilise->id, 'televerse_par' => $admin->id,
+        'chemin_fichier' => 'documents-eleves/x.pdf', 'date_ajout' => now()->toDateString(),
+    ]);
+
+    $this->actingAs($admin)->get(route('eleves.parametres.index'))
+        ->assertOk()
+        ->assertSee('déjà déposé pour 1 apprenant(s)', false)
+        ->assertSee('Supprimer le type de document « Carnet libre »', false)
+        ->assertDontSee('Supprimer le type de document « Carnet utilisé »', false);
+});
+
+test('« Dossier élève et documents » is a link in the breadcrumb, followed by a separator', function () {
+    $admin = User::factory()->administrateur()->create();
+
+    $this->actingAs($admin)->get(route('eleves.parametres.index'))
+        ->assertOk()
+        ->assertSee('<a href="'.route('eleves.index').'">Dossier élève et documents</a>', false)
+        ->assertSeeInOrder(['Dossier élève et documents</a>', 'breadcrumb-sep', 'Paramètres des dossiers'], false);
 });

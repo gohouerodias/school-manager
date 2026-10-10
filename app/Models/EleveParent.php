@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class EleveParent extends Pivot
@@ -14,12 +15,12 @@ class EleveParent extends Pivot
         'lien_parente',
     ];
 
-    public function eleve(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function eleve(): BelongsTo
     {
         return $this->belongsTo(Eleve::class);
     }
 
-    public function parentTuteur(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function parentTuteur(): BelongsTo
     {
         return $this->belongsTo(ParentTuteur::class);
     }

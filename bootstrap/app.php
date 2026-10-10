@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AjouterEntetesSecurite;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\EnsureTwoFactorVerified;
@@ -18,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [AjouterEntetesSecurite::class]);
+
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
             '2fa' => EnsureTwoFactorVerified::class,

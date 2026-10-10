@@ -50,6 +50,14 @@ class TypeDocumentController extends Controller
             return back()->with('toast', "« {$typeDocument->libelle} » est un type de document protégé et ne peut pas être supprimé.");
         }
 
+        // Les documents déjà déposés ne sont jamais effacés par ricochet
+        // (la base l'interdit d'ailleurs) : on refuse avec une explication
+        // plutôt qu'une erreur serveur.
+        $nbApprenants = $typeDocument->documents()->distinct()->count('eleve_id');
+        if ($nbApprenants > 0) {
+            return back()->with('toast', "Impossible de supprimer « {$typeDocument->libelle} » : il a déjà été déposé pour {$nbApprenants} apprenant(s). Décochez « Obligatoire » si vous ne voulez plus l'exiger.");
+        }
+
         $typeDocument->delete();
 
         return back()->with('toast', 'Type de document supprimé.');

@@ -126,6 +126,7 @@
 .breadcrumbs a:hover { color: var(--green-deep); text-decoration: underline; }
 .breadcrumb-sep { color: var(--line); }
 .breadcrumb-current { color: var(--ink); font-weight: 600; }
+.breadcrumb-section { color: var(--ink-muted); }
 
 .user-chip { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-muted); }
 button.user-chip { cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; padding: 4px; border-radius: 8px; }
@@ -152,7 +153,8 @@ button.user-chip:hover { background: var(--green-tint); }
     font-weight: 700; font-size: 12px; flex-shrink: 0; overflow: hidden;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
-.profile-wrap .logout-btn { padding: 6px 12px; font-size: 12px; }
+.profile-wrap .logout-btn { padding: 6px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.profile-wrap .logout-btn svg { display: none; }
 
 .topbar-actions { display: flex; align-items: center; gap: 14px; }
 
@@ -529,6 +531,8 @@ button.classe-badge:hover { filter: brightness(0.95); }
     color: var(--ink-muted); display: flex; align-items: center; justify-content: center; font-size: 13px;
 }
 .row-edit:hover { background: var(--green-tint); color: var(--green-deep); }
+.row-delete.disabled { opacity: .35; cursor: not-allowed; }
+.row-delete.disabled:hover { background: none; color: inherit; }
 .row-edit.disabled { cursor: default; font-size: 19px; }
 .row-edit.disabled:hover { background: none; color: var(--ink-muted); }
 
@@ -1119,7 +1123,37 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
     .main { width: 100%; }
     .app-shell-inner { padding: 18px 16px 60px; }
 
-    .app-shell-topbar { flex-wrap: wrap; gap: 10px; }
+    /* Barre du haut sur une seule ligne : avatar seul (le nom reste dans le
+       menu « Mon profil ») et déconnexion en icône. */
+    .app-shell-topbar { flex-wrap: nowrap; gap: 8px; }
+    .app-shell-topbar .brand { min-width: 0; gap: 8px; }
+    .app-shell-topbar .brand .logo-slot { height: 34px; }
+    .topbar-actions { gap: 4px; flex-shrink: 0; }
+    .profile-wrap { gap: 4px; }
+    .user-chip-name, .logout-label { display: none; }
+    .profile-wrap .logout-btn { padding: 8px 10px; }
+    .profile-wrap .logout-btn svg { display: block; }
+    .notif-menu { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; }
+
+    /* Fil d'Ariane : retour à la ligne entre les éléments, jamais au milieu. */
+    .breadcrumbs { flex-wrap: wrap; row-gap: 2px; font-size: 12px; }
+    .breadcrumbs > * { white-space: nowrap; }
+
+    /* Nom de l'apprenant lisible dans les tableaux qui défilent. */
+    .table-scroll .name-cell { min-width: 190px; }
+
+    /* En-têtes de section avec plusieurs boutons (ex. Programme par niveau). */
+    .config-section-head { flex-direction: column; align-items: stretch; gap: 10px; }
+    .config-section-head .content-head-actions { flex-wrap: wrap; }
+    .config-section-head .content-head-actions .btn { flex: 1 1 auto; justify-content: center; }
+
+    /* Assistant « Nouvelle fiche élève » : jamais plus large que l'écran. */
+    .wizard-layout { grid-template-columns: minmax(0, 1fr); }
+    .wizard-steps { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    .wizard-step { flex-shrink: 0; }
+    .wizard-step-content { max-width: 100%; }
+    .wizard-nav { flex-wrap: wrap; }
+    .wizard-nav-right { flex-wrap: wrap; justify-content: flex-end; }
     .brand .name { font-size: 13px; }
     .brand .name small { font-size: 9px; }
 
@@ -1149,4 +1183,9 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
     .content-head h1 { font-size: 20px; }
     thead th, tbody td { padding: 12px 14px; }
     .guide-wrap { display: none; }
+}
+
+@media (max-width: 420px) {
+    /* Très petit écran : le logo suffit, le nom complet prend trop de place. */
+    .app-shell-topbar .brand .name { display: none; }
 }

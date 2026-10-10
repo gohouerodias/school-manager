@@ -9,12 +9,15 @@
 <div class="profile-wrap" data-profile-menu>
     <button type="button" class="user-chip" data-profile-menu-trigger>
         <x-avatar :name="$user->name" :profil="$user->profil" />
-        <span>{{ $user->name }} · {{ $user->profil?->label() }}</span>
+        <span class="user-chip-name">{{ $user->name }} · {{ $user->profil?->label() }}</span>
     </button>
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button type="submit" class="btn ghost logout-btn">Se déconnecter</button>
+        <button type="submit" class="btn ghost logout-btn" title="Se déconnecter" aria-label="Se déconnecter">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            <span class="logout-label">Se déconnecter</span>
+        </button>
     </form>
 
     <div class="profile-menu" data-profile-menu-panel>

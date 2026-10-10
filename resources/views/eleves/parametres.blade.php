@@ -75,14 +75,19 @@
                                 data-edit-formats="{{ implode(',', $type->formats_acceptes ?? []) }}"
                                 data-edit-obligatoire="{{ $type->obligatoire ? '1' : '0' }}"
                             >✎</button>
-                            <form method="POST" action="{{ route('eleves.parametres.types-documents.destroy', $type) }}"
-                                  data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
-                                  data-confirm-title="Supprimer ce type de document"
-                                  data-confirm-message="Supprimer le type de document « {{ $type->libelle }} » ?">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="row-delete" title="Supprimer">🗑</button>
-                            </form>
+                            @if ($type->nb_apprenants > 0)
+                                {{-- Déjà déposé pour des apprenants : jamais supprimé (voir TypeDocumentController::destroy()). --}}
+                                <span class="row-delete disabled" title="Impossible de supprimer : déjà déposé pour {{ $type->nb_apprenants }} apprenant(s). Décochez « Obligatoire » pour ne plus l'exiger.">🗑</span>
+                            @else
+                                <form method="POST" action="{{ route('eleves.parametres.types-documents.destroy', $type) }}"
+                                      data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                                      data-confirm-title="Supprimer ce type de document"
+                                      data-confirm-message="Supprimer le type de document « {{ $type->libelle }} » ? Aucun apprenant ne l'a encore déposé : il disparaîtra simplement du formulaire apprenant.">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="row-delete" title="Supprimer">🗑</button>
+                                </form>
+                            @endif
                         </div>
                     @endif
                 </td>

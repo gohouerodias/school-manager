@@ -53,7 +53,10 @@ class EleveController extends Controller
 
         EleveFilters::apply($query, $request);
 
-        $eleves = $query->paginate(self::PER_PAGE)->withQueryString();
+        // Filtrée sur une classe (rarement plus de 50 apprenants) : toute la
+        // classe sur une seule page. Toute l'école : 50 par page.
+        $parPage = $classeFilter !== '' ? max(1, (clone $query)->count()) : self::PER_PAGE;
+        $eleves = $query->paginate($parPage)->withQueryString();
 
         $obligatoireTypeIds = TypeDocument::query()->where('obligatoire', true)->pluck('id');
 
@@ -101,7 +104,7 @@ class EleveController extends Controller
             ),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Dossier élève et documents' => null,
+                'Dossier élève et documents' => route('eleves.index'),
                 'Liste des apprenants' => null,
             ],
         ]);

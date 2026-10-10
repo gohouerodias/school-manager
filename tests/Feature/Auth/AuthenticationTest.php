@@ -142,3 +142,37 @@ test('users can log out', function () {
     $this->assertGuest();
     $response->assertRedirect(route('login'));
 });
+
+test('login attempts are limited to protect against password guessing', function () {
+    $user = User::factory()->create(['password' => bcrypt('mot-de-passe-secret')]);
+
+    foreach (range(1, 5) as $tentative) {
+        $this->from(route('login'))->post(route('login'), ['email' => $user->email, 'password' => 'mauvais']);
+    }
+
+    // 6e tentative dans la minute : refusée même avec le bon mot de passe.
+    $response = $this->from(route('login'))->post(route('login'), ['email' => $user->email, 'password' => 'mot-de-passe-secret']);
+
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHasErrors('email');
+    expect(session('errors')->first('email'))->toContain('Trop de tentatives');
+    $this->assertGuest();
+});
+
+test('forgot-password requests are limited too', function () {
+    foreach (range(1, 6) as $tentative) {
+        $this->from(route('password.request'))->post(route('password.email'), ['email' => 'inconnu@exemple.bj']);
+    }
+
+    $this->from(route('password.request'))->post(route('password.email'), ['email' => 'inconnu@exemple.bj'])
+        ->assertSessionHasErrors('email');
+    expect(session('errors')->first('email'))->toContain('Trop de tentatives');
+});
+
+test('every page is sent with the security headers', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+        ->assertHeader('X-Content-Type-Options', 'nosniff')
+        ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+});

@@ -75,6 +75,14 @@ class GenererParcoursScolaireTestCommand extends Command
 
     public function handle(BulletinGenerationService $service): int
     {
+        // Données fictives + comptes enseignants au mot de passe « password » :
+        // jamais sur le serveur réel.
+        if (app()->isProduction()) {
+            $this->components->error('Commande de démonstration désactivée en production (APP_ENV=production).');
+
+            return self::FAILURE;
+        }
+
         if ($this->option('supprimer')) {
             return $this->supprimer();
         }

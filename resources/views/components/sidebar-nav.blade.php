@@ -3,8 +3,13 @@
     $isAdmin = $profil === \App\Enums\ProfilUtilisateur::Administrateur->value;
     $isDirection = $profil === \App\Enums\ProfilUtilisateur::Direction->value;
     $canSeeDossiers = in_array($profil, ['administrateur', 'agent_scolarite'], true);
-    $dossiersOpen = request()->routeIs('eleves.*') || request()->routeIs('tuteurs.*');
-    $academiqueOpen = request()->routeIs('academique.*');
+    // Administrateur : « Bulletins » se trouve sous Académique (onglet
+    // Bulletins de l'année en cours) ; Secrétariat (sans menu Académique) :
+    // sous « Dossier élève et documents ».
+    $bulletinsSousAcademique = $isAdmin;
+    $dossiersOpen = (request()->routeIs('eleves.*') && ! ($bulletinsSousAcademique && request()->routeIs('eleves.bulletins.*')))
+        || request()->routeIs('tuteurs.*');
+    $academiqueOpen = request()->routeIs('academique.*') || ($bulletinsSousAcademique && request()->routeIs('eleves.bulletins.*'));
 
     // Shortcut straight to the "Affectations enseignants" tab (see
     // annee-academique-show.js's initTabs() ?onglet= deep-link support) of
@@ -16,6 +21,12 @@
             ?? \App\Models\AnneeAcademique::query()->orderByDesc('date_debut')->first()
         : null;
     $affectationsActive = request()->routeIs('academique.annees.show') && request()->query('onglet') === 'affectations';
+    // « Examens » ouvre de la même façon l'onglet Examens de l'année en cours,
+    // pour pouvoir revenir facilement à cette année (fil d'Ariane).
+    $examensActive = request()->routeIs('academique.examens.*')
+        || (request()->routeIs('academique.annees.show') && request()->query('onglet') === 'examens');
+    $bulletinsActive = request()->routeIs('eleves.bulletins.*')
+        || (request()->routeIs('academique.annees.show') && request()->query('onglet') === 'bulletins');
 
     // Each entry mirrors a zone of the app (see the class/use-case diagrams).
     // "Gestion de compte", "Dossier élève et documents" and "Académique"
@@ -79,7 +90,9 @@
                     <div class="nav-submenu" data-nav-submenu @if ($dossiersOpen) style="display:block;" @endif>
                         <a href="{{ route('eleves.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.index')])>Liste des apprenants</a>
                         <a href="{{ route('tuteurs.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('tuteurs.*')])>Liste des parents</a>
-                        <a href="{{ route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.bulletins.*')])>Bulletins</a>
+                        @unless ($bulletinsSousAcademique)
+                            <a href="{{ route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.bulletins.*')])>Bulletins</a>
+                        @endunless
                         @if ($isAdmin)
                             <a href="{{ route('eleves.parametres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.parametres.*')])>Paramètres des dossiers</a>
                         @endif
@@ -117,10 +130,10 @@
                     </button>
 
                     <div class="nav-submenu" data-nav-submenu @if ($academiqueOpen) style="display:block;" @endif>
-                        <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*') && ! $affectationsActive])>Années académiques</a>
+                        <a href="{{ route('academique.annees.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.annees.*') && ! $affectationsActive && ! $examensActive && ! $bulletinsActive])>Années académiques</a>
                         <a href="{{ route('academique.niveaux-matieres.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.niveaux-matieres.*')])>Niveaux &amp; matières</a>
-                        <a href="{{ route('academique.examens.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('academique.examens.*')])>Examens</a>
-                        <a href="{{ route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => request()->routeIs('eleves.bulletins.*')])>Bulletins</a>
+                        <a href="{{ $anneeAffectations ? route('academique.annees.show', $anneeAffectations).'?onglet=examens' : route('academique.examens.index') }}" @class(['nav-subitem', 'active' => $examensActive])>Examens</a>
+                        <a href="{{ $anneeAffectations ? route('academique.annees.show', $anneeAffectations).'?onglet=bulletins' : route('eleves.bulletins.index') }}" @class(['nav-subitem', 'active' => $bulletinsActive])>Bulletins</a>
                         @if ($anneeAffectations)
                             <a href="{{ route('academique.annees.show', $anneeAffectations) }}?onglet=affectations" @class(['nav-subitem', 'active' => $affectationsActive])>Affectation des enseignants</a>
                         @else

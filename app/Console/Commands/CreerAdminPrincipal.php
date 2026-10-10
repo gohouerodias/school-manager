@@ -7,6 +7,7 @@ use App\Enums\StatutUtilisateur;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 /**
  * Crée le tout premier compte (profil Administrateur) d'une instance en
@@ -32,7 +33,7 @@ class CreerAdminPrincipal extends Command
         {--email= : Adresse e-mail du compte administrateur}
         {--name=Administrateur : Nom complet affiché dans l\'application}
         {--telephone= : Numéro de téléphone (optionnel)}
-        {--password=password : Mot de passe initial — à changer à la première connexion}';
+        {--password= : Mot de passe initial (8 caractères min.) — si omis, un mot de passe aléatoire est généré et affiché une seule fois}';
 
     /**
      * @var string
@@ -43,12 +44,17 @@ class CreerAdminPrincipal extends Command
     {
         $email = (string) $this->option('email');
 
+        // Jamais de mot de passe par défaut connu de tous (« password ») sur
+        // un compte administrateur : à défaut, un mot de passe aléatoire.
+        $motDePasseGenere = blank($this->option('password'));
+        $motDePasse = $motDePasseGenere ? Str::password(14, symbols: false) : (string) $this->option('password');
+
         $validator = Validator::make(
             [
                 'email' => $email,
                 'name' => $this->option('name'),
                 'telephone' => $this->option('telephone'),
-                'password' => $this->option('password'),
+                'password' => $motDePasse,
             ],
             [
                 'email' => ['required', 'email', 'unique:users,email'],
@@ -88,6 +94,11 @@ class CreerAdminPrincipal extends Command
         $admin->forceFill(['email_verified_at' => now()])->save();
 
         $this->components->info("Compte administrateur créé : {$admin->email}");
+        if ($motDePasseGenere) {
+            $this->components->twoColumnDetail('Mot de passe temporaire généré', $motDePasse);
+            $this->components->warn('Notez-le maintenant : il ne sera plus affiché.');
+        }
+
         $this->components->warn('Ce mot de passe est temporaire — un changement sera exigé à la première connexion.');
 
         if ($administrateursExistants > 0) {

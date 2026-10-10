@@ -54,14 +54,14 @@
      panel-error-reopen.js qui bascule automatiquement sur le bon onglet si
      une erreur de validation ramène ici depuis l'un de ces formulaires). --}}
 <div class="tabs-nav" data-tabs>
-    <button type="button" class="tab-btn active" data-tab-btn="programme">Programme par niveau</button>
-    <button type="button" class="tab-btn" data-tab-btn="classes">Classes</button>
+    <button type="button" class="tab-btn active" data-tab-btn="classes">Classes</button>
+    <button type="button" class="tab-btn" data-tab-btn="programme">Programme par niveau</button>
     <button type="button" class="tab-btn" data-tab-btn="affectations">Affectations enseignants</button>
     <button type="button" class="tab-btn" data-tab-btn="examens">Examens</button>
     <button type="button" class="tab-btn" data-tab-btn="bulletins">Bulletins</button>
 </div>
 
-<div data-tab-panel="programme">
+<div data-tab-panel="programme" style="display:none;">
     <section class="config-section">
         <div class="config-section-head">
             <h2>Programme par niveau</h2>
@@ -154,7 +154,7 @@
     </section>
 </div>
 
-<div data-tab-panel="classes" style="display:none;">
+<div data-tab-panel="classes">
     <section class="config-section">
         <div class="config-section-head">
             <h2>Classes</h2>
@@ -875,8 +875,8 @@
         </form>
     </div>
 
-    <script type="application/json" id="gerer-affectation-matieres-map">{!! $matieres->pluck('nom', 'id')->toJson() !!}</script>
-    <script type="application/json" id="gerer-affectation-old-matiere-ids">{!! json_encode(array_map('strval', (array) old('matiere_ids', []))) !!}</script>
+    <script type="application/json" id="gerer-affectation-matieres-map">{!! json_encode($matieres->pluck('nom', 'id'), JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
+    <script type="application/json" id="gerer-affectation-old-matiere-ids">{!! json_encode(array_map('strval', (array) old('matiere_ids', [])), JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
 
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="gerer-affectation">Fermer</button>
