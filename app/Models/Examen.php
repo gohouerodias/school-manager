@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Un examen "campagne" créé depuis la page de gestion des examens (voir
@@ -41,6 +42,50 @@ class Examen extends Model
             'date_examen' => 'date',
             'date_limite_saisie' => 'datetime',
         ];
+    }
+
+    /**
+     * « Examen mensuel — octobre 2026 » : le nom de la période d'évaluation,
+     * tel qu'affiché dans le sélecteur de la feuille de saisie et repris
+     * dans l'export Excel des notes.
+     */
+    public function libellePeriode(): string
+    {
+        return 'Examen mensuel — '.$this->date_examen->translatedFormat('F Y');
+    }
+
+    /**
+     * Une seule évaluation mensuelle par mois et par système, sur une année
+     * académique : deux examens du même mois donneraient deux bulletins
+     * « octobre » et compteraient deux fois dans la moyenne annuelle.
+     * Retourne l'examen déjà présent sur ce mois (hors $saufExamenId), s'il
+     * y en a un.
+     */
+    public static function dejaPresentCeMois(int $anneeAcademiqueId, SystemeScolaire $systeme, string $dateExamen, ?int $saufExamenId = null): ?self
+    {
+        $date = Carbon::parse($dateExamen);
+
+        return self::query()
+            ->where('annee_academique_id', $anneeAcademiqueId)
+            ->where('systeme', $systeme)
+            ->whereYear('date_examen', $date->year)
+            ->whereMonth('date_examen', $date->month)
+            ->when($saufExamenId, fn ($query) => $query->whereKeyNot($saufExamenId))
+            ->first();
+    }
+
+    /**
+     * Message affiché quand on tente de créer/déplacer un examen sur un mois
+     * qui en a déjà un (voir dejaPresentCeMois()).
+     */
+    public function messageDoublonMois(): string
+    {
+        return sprintf(
+            "Un examen mensuel existe déjà pour le système %s en %s (examen du %s). Modifiez-le plutôt que d'en créer un second.",
+            mb_strtolower($this->systeme->label()),
+            $this->date_examen->translatedFormat('F Y'),
+            $this->date_examen->format('d/m/Y'),
+        );
     }
 
     /**

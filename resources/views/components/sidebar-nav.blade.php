@@ -55,8 +55,12 @@
         <button type="button" class="rail-burger" data-sidebar-toggle title="Réduire/agrandir le menu">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <img src="{{ asset('logo-cscmt.jpg') }}" alt="Complexe Scolaire Catholique Madre Trinidad" class="sidebar-logo">
-        <span class="sidebar-wordmark">Registre CSCMT</span>
+        {{-- Menu latéral : logo ESSEd Internacional (séance du 07/10/2026) ;
+             celui de Madre Trinidad reste dans la barre du haut. --}}
+        <div class="sidebar-brand">
+            <img src="{{ asset('logo-essed.png') }}" alt="ESSEd Internacional" class="sidebar-logo">
+            <span class="sidebar-wordmark">Registre CSCMT</span>
+        </div>
     </div>
 
     <div class="sidebar-inner">

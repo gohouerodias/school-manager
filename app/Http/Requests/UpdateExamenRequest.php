@@ -61,6 +61,13 @@ class UpdateExamenRequest extends FormRequest
                 return;
             }
 
+            if ($examen && $this->filled('date_examen') && strtotime((string) $this->input('date_examen'))) {
+                $existant = Examen::dejaPresentCeMois($anneeAcademique->id, $examen->systeme, (string) $this->input('date_examen'), $examen->id);
+                if ($existant) {
+                    $validator->errors()->add('date_examen', $existant->messageDoublonMois());
+                }
+            }
+
             foreach (['date_examen', 'date_limite_saisie'] as $field) {
                 $value = $this->input($field);
 

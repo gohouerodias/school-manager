@@ -343,3 +343,48 @@ test('the « Examens » menu opens the Examens tab of the current année, so the
         ->assertOk()
         ->assertSeeInOrder(['Années académiques</a>', 'breadcrumb-sep', '2026-2027'], false);
 });
+
+test('a second monthly examen in the same month for the same système is refused', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-09-01', 'date_fin' => '2027-07-31']);
+    Examen::factory()->create(['annee_academique_id' => $annee->id, 'systeme' => SystemeScolaire::Primaire, 'date_examen' => '2026-10-05', 'date_limite_saisie' => '2026-10-12 23:59']);
+
+    $this->actingAs($admin)->post(route('academique.examens.store'), [
+        'systeme' => 'primaire',
+        'date_examen' => '2026-10-20',
+        'date_limite_saisie' => '2026-10-27',
+    ])->assertSessionHasErrors(['date_examen' => "Un examen mensuel existe déjà pour le système primaire en octobre 2026 (examen du 05/10/2026). Modifiez-le plutôt que d'en créer un second."]);
+
+    expect(Examen::query()->count())->toBe(1);
+});
+
+test('the same month is still allowed for another système, and another month for the same système', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-09-01', 'date_fin' => '2027-07-31']);
+    Examen::factory()->create(['annee_academique_id' => $annee->id, 'systeme' => SystemeScolaire::Primaire, 'date_examen' => '2026-10-05', 'date_limite_saisie' => '2026-10-12 23:59']);
+
+    $this->actingAs($admin)->post(route('academique.examens.store'), [
+        'systeme' => 'maternelle', 'date_examen' => '2026-10-20', 'date_limite_saisie' => '2026-10-27',
+    ])->assertSessionHasNoErrors();
+
+    $this->actingAs($admin)->post(route('academique.examens.store'), [
+        'systeme' => 'primaire', 'date_examen' => '2026-11-05', 'date_limite_saisie' => '2026-11-12',
+    ])->assertSessionHasNoErrors();
+
+    expect(Examen::query()->count())->toBe(3);
+});
+
+test('an examen cannot be moved onto a month that already has one, but can be edited within its own month', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-09-01', 'date_fin' => '2027-07-31']);
+    Examen::factory()->create(['annee_academique_id' => $annee->id, 'systeme' => SystemeScolaire::Primaire, 'date_examen' => '2026-10-05', 'date_limite_saisie' => '2026-10-12 23:59']);
+    $novembre = Examen::factory()->create(['annee_academique_id' => $annee->id, 'systeme' => SystemeScolaire::Primaire, 'date_examen' => '2026-11-05', 'date_limite_saisie' => '2026-11-12 23:59']);
+
+    $this->actingAs($admin)->patch(route('academique.examens.update', $novembre), [
+        'date_examen' => '2026-10-25', 'date_limite_saisie' => '2026-10-30',
+    ])->assertSessionHasErrors('date_examen');
+
+    $this->actingAs($admin)->patch(route('academique.examens.update', $novembre), [
+        'date_examen' => '2026-11-09', 'date_limite_saisie' => '2026-11-16T18:00',
+    ])->assertSessionHasNoErrors();
+});

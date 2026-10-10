@@ -302,10 +302,11 @@ class EspaceEnseignantController extends Controller
 
         $studentsPayload = $this->studentsPayloadPour($classe, $matieres, $examenActif);
 
-        $nomFichier = 'notes-'.Str::slug($classe->nom).($examenActif ? '-'.$examenActif->date_examen->format('Y-m') : '').'.xlsx';
+        // Le nom du fichier porte la période d'évaluation, comme son en-tête.
+        $nomFichier = 'notes-'.Str::slug($classe->nom).($examenActif ? '-'.Str::slug($examenActif->libellePeriode()) : '').'.xlsx';
 
         return Excel::download(
-            new NotesClasseExport($matieres, $studentsPayload),
+            new NotesClasseExport($matieres, $studentsPayload, $classe, $examenActif),
             $nomFichier
         );
     }
@@ -616,6 +617,12 @@ class EspaceEnseignantController extends Controller
         $this->assureSaisieAutorisee($classe, $user, $anneeActive);
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
+
+        // Délai de saisie dépassé : tout le mois est en lecture seule
+        // (commentaires, bulletin, validation), pas seulement les notes.
+        if ($this->saisieEstFermee($examen)) {
+            return $this->reponsePeriodeFermee();
+        }
         $classeMatiere = ClasseMatiere::query()->where('classe_id', $classe->id)->where('matiere_id', $matiereId)->firstOrFail();
         $eleveId = (int) $request->validated('eleve_id');
 
@@ -656,6 +663,12 @@ class EspaceEnseignantController extends Controller
         abort_unless($titulaire && $titulaire->is($user), 403, 'Seul le titulaire de la classe peut modifier le bulletin mensuel.');
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
+
+        // Délai de saisie dépassé : tout le mois est en lecture seule
+        // (commentaires, bulletin, validation), pas seulement les notes.
+        if ($this->saisieEstFermee($examen)) {
+            return $this->reponsePeriodeFermee();
+        }
         $eleveId = (int) $request->validated('eleve_id');
         $inscription = Inscription::query()->where('classe_id', $classe->id)->where('eleve_id', $eleveId)->firstOrFail();
 
@@ -720,6 +733,12 @@ class EspaceEnseignantController extends Controller
         abort_unless($titulaire && $titulaire->is($user), 403, 'Seul le titulaire de la classe peut valider le bulletin mensuel.');
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
+
+        // Délai de saisie dépassé : tout le mois est en lecture seule
+        // (commentaires, bulletin, validation), pas seulement les notes.
+        if ($this->saisieEstFermee($examen)) {
+            return $this->reponsePeriodeFermee();
+        }
         $eleveId = (int) $request->validated('eleve_id');
         $inscription = Inscription::query()->where('classe_id', $classe->id)->where('eleve_id', $eleveId)->firstOrFail();
 
@@ -769,6 +788,12 @@ class EspaceEnseignantController extends Controller
         abort_unless($titulaire && $titulaire->is($user), 403, 'Seul le titulaire de la classe peut dévalider le bulletin mensuel.');
 
         $examen = Examen::query()->where('id', $request->validated('examen_id'))->where('annee_academique_id', $anneeActive->id)->firstOrFail();
+
+        // Délai de saisie dépassé : tout le mois est en lecture seule
+        // (commentaires, bulletin, validation), pas seulement les notes.
+        if ($this->saisieEstFermee($examen)) {
+            return $this->reponsePeriodeFermee();
+        }
         $eleveId = (int) $request->validated('eleve_id');
         $inscription = Inscription::query()->where('classe_id', $classe->id)->where('eleve_id', $eleveId)->firstOrFail();
 
@@ -779,6 +804,11 @@ class EspaceEnseignantController extends Controller
         }
 
         return response()->json(['ok' => true, 'statut' => StatutBulletin::Brouillon->value]);
+    }
+
+    private function reponsePeriodeFermee(): JsonResponse
+    {
+        return response()->json(['message' => 'Le délai de saisie de cet examen est dépassé : cette période est en lecture seule.'], 422);
     }
 
     /**

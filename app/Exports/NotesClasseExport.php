@@ -2,12 +2,15 @@
 
 namespace App\Exports;
 
+use App\Models\Classe;
+use App\Models\Examen;
 use App\Models\Matiere;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithTitle;
 
 /**
  * US B.4 — export Excel de la feuille de saisie d'une classe, telle
@@ -21,7 +24,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
  * Classe::matieresPourEnseignant()) : ce n'est alors pas la moyenne
  * officielle de l'apprenant, seulement celle des matières visibles ici.
  */
-class NotesClasseExport implements FromCollection, WithHeadings, WithMapping
+class NotesClasseExport implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
     /**
      * @param  EloquentCollection<int, Matiere>  $matieres
@@ -29,8 +32,18 @@ class NotesClasseExport implements FromCollection, WithHeadings, WithMapping
      */
     public function __construct(
         private readonly EloquentCollection $matieres,
-        private readonly Collection $students
+        private readonly Collection $students,
+        private readonly Classe $classe,
+        private readonly ?Examen $examen = null,
     ) {}
+
+    /**
+     * Nom de l'onglet Excel : la période (31 caractères max. côté Excel).
+     */
+    public function title(): string
+    {
+        return mb_substr($this->examen?->date_examen->translatedFormat('F Y') ?? 'Notes', 0, 31);
+    }
 
     public function collection(): Collection
     {
@@ -38,15 +51,33 @@ class NotesClasseExport implements FromCollection, WithHeadings, WithMapping
     }
 
     /**
-     * @return array<int, string>
+     * En-tête du fichier : la classe et la période d'évaluation (sinon rien
+     * n'indique de quel mois proviennent les notes), puis les colonnes.
+     *
+     * @return array<int, array<int, string>>
      */
     public function headings(): array
     {
-        return array_merge(
-            ['Matricule', 'Nom', 'Prénom'],
-            $this->matieres->pluck('nom')->all(),
-            ['Moyenne']
-        );
+        $periode = $this->examen?->libellePeriode() ?? 'Aucune période';
+        $details = $this->examen
+            ? sprintf(
+                'Année académique %s · Examen du %s · Délai de saisie : %s',
+                $this->examen->anneeAcademique?->libelle ?? '—',
+                $this->examen->date_examen->format('d/m/Y'),
+                $this->examen->dateLimiteSaisieLibelle(),
+            )
+            : '';
+
+        return [
+            ["{$this->classe->nom} — {$periode}"],
+            [$details],
+            [],
+            array_merge(
+                ['Matricule', 'Nom', 'Prénom'],
+                $this->matieres->pluck('nom')->all(),
+                ['Moyenne']
+            ),
+        ];
     }
 
     /**

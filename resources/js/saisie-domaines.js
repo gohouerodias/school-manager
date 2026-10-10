@@ -224,23 +224,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!student) return;
 
             document.getElementById('commentStudentName').textContent = `${student.nom.toUpperCase()} ${student.prenom}`;
-            document.getElementById('commentPeriodLabel').textContent = '';
+            document.getElementById('commentPeriodLabel').textContent = 'Évaluations du mois rappelées à côté de chaque domaine';
 
             const estValide = student.bulletin?.statut === 'valide';
 
             const wrap = document.getElementById('subjectCommentsWrap');
             wrap.innerHTML = config.domaines.map((d) => {
-                const locked = estValide;
+                const locked = estValide || config.saisieFermee;
                 return `
                 <div class="subject-comment-field">
-                    <label>Observation — ${escapeHTML(d.nom)}</label>
+                    <label class="subject-comment-label">
+                        <span>Observation — ${escapeHTML(d.nom)}</span>
+                        <span class="note-rappel ${student.valeurs?.[d.id] ? '' : 'vide'}">${escapeHTML(LIBELLES_QUALITATIFS[student.valeurs?.[d.id]] ?? 'Non évalué')}</span>
+                    </label>
                     <textarea data-domaine-id="${d.id}" ${locked ? 'readonly' : ''} placeholder="Facultatif — observation pour ${escapeHTML(d.nom)} ce mois-ci...">${escapeHTML(student.observations?.[d.id] ?? '')}</textarea>
                 </div>
             `;
             }).join('');
 
             const isTitulaire = config.isTitulaire;
-            const bulletinLocked = !isTitulaire || estValide;
+            // Délai dépassé (config.saisieFermee) : tout le mois en lecture seule,
+            // comme côté serveur (EspaceEnseignantController::reponsePeriodeFermee()).
+            const bulletinLocked = !isTitulaire || estValide || config.saisieFermee;
             document.getElementById('titulaireLockNote').style.display = isTitulaire ? 'none' : 'flex';
             document.getElementById('titulaireLockName').textContent = config.titulaireNom ?? '';
             document.getElementById('bulletinValideLock').style.display = (isTitulaire && estValide) ? 'flex' : 'none';
@@ -278,11 +283,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const validerBtn = document.getElementById('bulletinValiderBtn');
             const complet = domainesCompletes(student);
-            validerBtn.style.display = (isTitulaire && !estValide) ? 'inline-flex' : 'none';
+            validerBtn.style.display = (isTitulaire && !estValide && !config.saisieFermee) ? 'inline-flex' : 'none';
             validerBtn.disabled = !complet;
             validerBtn.title = complet ? '' : "Tous les domaines n'ont pas encore été évalués pour cet apprenant — validation impossible.";
-            document.getElementById('bulletinDevaliderBtn').style.display = (isTitulaire && estValide) ? 'inline-flex' : 'none';
-            document.getElementById('commentPanelSave').style.display = estValide ? 'none' : 'inline-flex';
+            document.getElementById('bulletinDevaliderBtn').style.display = (isTitulaire && estValide && !config.saisieFermee) ? 'inline-flex' : 'none';
+            document.getElementById('commentPanelSave').style.display = (estValide || config.saisieFermee) ? 'none' : 'inline-flex';
 
             panel.classList.add('show');
             overlay.classList.add('show');

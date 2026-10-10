@@ -364,25 +364,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!student) return;
 
             document.getElementById('commentStudentName').textContent = `${student.nom.toUpperCase()} ${student.prenom}`;
-            document.getElementById('commentPeriodLabel').textContent = '';
+            // Le panneau couvre la grille : on rappelle ici la moyenne et,
+            // à côté de chaque matière, la note de l'apprenant, pour pouvoir
+            // rédiger le commentaire sans refermer le panneau.
+            document.getElementById('commentPeriodLabel').textContent = libelleMoyenne(student);
 
             const estValide = student.bulletin?.statut === 'valide';
 
             const wrap = document.getElementById('subjectCommentsWrap');
             wrap.innerHTML = config.matieres.map((m) => {
                 const editable = config.matiereIdsEditables.includes(m.id);
-                const locked = estValide || !editable;
+                const locked = estValide || !editable || config.saisieFermee;
                 const lockHint = !editable ? " — lecture seule, vous n'enseignez pas cette matière" : '';
                 return `
                 <div class="subject-comment-field">
-                    <label>Commentaire — ${escapeHTML(m.nom)}${lockHint}</label>
+                    <label class="subject-comment-label">
+                        <span>Commentaire — ${escapeHTML(m.nom)}${lockHint}</span>
+                        <span class="note-rappel ${classeNote(student.notes?.[m.id])}">${escapeHTML(libelleNote(student, m.id))}</span>
+                    </label>
                     <textarea data-matiere-id="${m.id}" ${locked ? 'readonly' : ''} placeholder="Votre observation pour ${escapeHTML(m.nom)} ce mois-ci...">${escapeHTML(student.subjectComments?.[m.id] ?? '')}</textarea>
                 </div>
             `;
             }).join('');
 
             const isTitulaire = config.isTitulaire;
-            const bulletinLocked = !isTitulaire || estValide;
+            // Délai dépassé (config.saisieFermee) : tout le mois en lecture seule,
+            // comme côté serveur (EspaceEnseignantController::reponsePeriodeFermee()).
+            const bulletinLocked = !isTitulaire || estValide || config.saisieFermee;
             document.getElementById('titulaireLockNote').style.display = isTitulaire ? 'none' : 'flex';
             document.getElementById('titulaireLockName').textContent = config.titulaireNom ?? '';
             document.getElementById('bulletinValideLock').style.display = (isTitulaire && estValide) ? 'flex' : 'none';
@@ -423,14 +431,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const validerBtn = document.getElementById('bulletinValiderBtn');
             const complet = notesCompletes(student);
-            validerBtn.style.display = (isTitulaire && !estValide) ? 'inline-flex' : 'none';
+            validerBtn.style.display = (isTitulaire && !estValide && !config.saisieFermee) ? 'inline-flex' : 'none';
             validerBtn.disabled = !complet;
             validerBtn.title = complet ? '' : "Toutes les matières n'ont pas encore été notées pour cet apprenant — validation impossible.";
-            document.getElementById('bulletinDevaliderBtn').style.display = (isTitulaire && estValide) ? 'inline-flex' : 'none';
-            document.getElementById('commentPanelSave').style.display = estValide ? 'none' : 'inline-flex';
+            document.getElementById('bulletinDevaliderBtn').style.display = (isTitulaire && estValide && !config.saisieFermee) ? 'inline-flex' : 'none';
+            document.getElementById('commentPanelSave').style.display = (estValide || config.saisieFermee) ? 'none' : 'inline-flex';
 
             panel.classList.add('show');
             overlay.classList.add('show');
+        }
+
+        /** « 15 + 2 = 17 /20 » au primaire (critères), « 13,5 /20 » sinon. */
+        function libelleNote(student, matiereId) {
+            const note = student.notes?.[matiereId];
+            if (note === null || note === undefined) return 'Non notée';
+            const fr = (v) => String(v).replace('.', ',');
+            const criteres = student.criteres?.[matiereId];
+            if (config.parCriteres && criteres && (criteres.minimal !== null || criteres.perfectionnement !== null)) {
+                return `${fr(criteres.minimal ?? 0)} + ${fr(criteres.perfectionnement ?? 0)} = ${fr(note)} /20`;
+            }
+            return `${fr(note)} /20`;
+        }
+
+        function classeNote(note) {
+            if (note === null || note === undefined) return 'vide';
+            if (note < 10) return 'basse';
+            return note >= 16 ? 'haute' : '';
+        }
+
+        /** Même calcul pondéré que la colonne « Moyenne » (voir updateMoyenne()). */
+        function libelleMoyenne(student) {
+            if (!notesCompletes(student)) return "Moyenne : en attente (toutes les matières ne sont pas encore notées)";
+            const totalCoefficients = config.matieres.reduce((sum, m) => sum + Number(m.coefficient), 0);
+            const somme = config.matieres.reduce((sum, m) => sum + Number(student.notes[m.id] ?? 0) * Number(m.coefficient), 0);
+            const moyenne = totalCoefficients > 0 ? somme / totalCoefficients : 0;
+            return `Moyenne du mois : ${moyenne.toFixed(2).replace('.', ',')} /20`;
         }
 
         /**

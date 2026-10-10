@@ -73,7 +73,7 @@
 }
 .rail-burger:hover { background: rgba(255, 255, 255, .18); }
 .sidebar-logo {
-    height: 28px; width: auto; max-width: 90px; border-radius: 5px; background: #fff; flex-shrink: 0;
+    height: 30px; width: auto; max-width: 110px; border-radius: 5px; background: #fff; flex-shrink: 0;
     padding: 2px 4px; box-sizing: border-box; object-fit: contain; display: block;
 }
 .sidebar.collapsed .sidebar-logo, .sidebar.collapsed .sidebar-wordmark { display: none; }
@@ -1189,3 +1189,10 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
     /* Très petit écran : le logo suffit, le nom complet prend trop de place. */
     .app-shell-topbar .brand .name { display: none; }
 }
+
+/* Menu latéral : logo ESSEd (plus large) avec « Registre CSCMT » dessous,
+   pour tenir dans les 250 px du menu à côté du bouton ☰. */
+.sidebar-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
+.sidebar-brand .sidebar-logo { height: 32px; max-width: 150px; }
+.sidebar-brand .sidebar-wordmark { font-size: 12.5px; }
+.sidebar.collapsed .sidebar-brand { display: none; }

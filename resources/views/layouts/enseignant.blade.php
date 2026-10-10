@@ -16,8 +16,12 @@
 <div class="shell">
     <aside class="sidebar" data-sidebar>
         <div class="sidebar-header">
-            <img src="{{ asset('logo-cscmt.jpg') }}" alt="Complexe Scolaire Catholique Madre Trinidad" class="sidebar-logo">
-            <span class="sidebar-wordmark">Registre CSCMT</span>
+            {{-- Menu latéral : logo ESSEd Internacional (séance du 07/10/2026) ;
+                 celui de Madre Trinidad reste dans la barre du haut. --}}
+            <div class="sidebar-brand">
+                <img src="{{ asset('logo-essed.png') }}" alt="ESSEd Internacional" class="sidebar-logo">
+                <span class="sidebar-wordmark">Registre CSCMT</span>
+            </div>
         </div>
         <div class="sidebar-inner">
             <div class="sidebar-label">Navigation</div>

@@ -5,6 +5,7 @@ use App\Enums\ResultatMensuel;
 use App\Enums\StatutBulletin;
 use App\Enums\SystemeScolaire;
 use App\Enums\TypeEvaluation;
+use App\Exports\NotesClasseExport;
 use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Bulletin;
@@ -17,6 +18,7 @@ use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\Note;
 use App\Models\User;
+use Maatwebsite\Excel\Facades\Excel;
 
 function creerContexteEnseignant(): array
 {
@@ -916,4 +918,60 @@ test('the sheet help text sits in orange right under the search bar, above the t
     $this->actingAs($enseignant)->get(route('enseignant.classes.show', ['classe' => $classe, 'examen_id' => $examen->id]))
         ->assertOk()
         ->assertSeeInOrder(['id="studentSearch"', 'class="hint hint-orange"', 'Cliquez dans une case pour saisir', 'id="sheetTable"'], false);
+});
+
+test('once the deadline has passed, the whole month is read-only: comments, bulletin and validation are refused', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+    $examen->update(['date_limite_saisie' => now()->subHour()]);
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.commentaires-matiere.update', $classe), [
+        'eleve_id' => $eleve->id, 'matiere_id' => $matiere->id, 'examen_id' => $examen->id, 'commentaire' => 'Trop tard',
+    ])->assertUnprocessable()->assertJsonFragment(['message' => 'Le délai de saisie de cet examen est dépassé : cette période est en lecture seule.']);
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.bulletins.update', $classe), [
+        'eleve_id' => $eleve->id, 'examen_id' => $examen->id, 'appreciation' => 'Trop tard',
+    ])->assertUnprocessable();
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.bulletins.valider', $classe), [
+        'eleve_id' => $eleve->id, 'examen_id' => $examen->id,
+    ])->assertUnprocessable();
+
+    $this->assertDatabaseMissing('commentaires_matiere', ['eleve_id' => $eleve->id]);
+    $this->assertDatabaseMissing('bulletins', ['appreciation' => 'Trop tard']);
+});
+
+test('before the deadline, a comment per matière can still be saved', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.commentaires-matiere.update', $classe), [
+        'eleve_id' => $eleve->id, 'matiere_id' => $matiere->id, 'examen_id' => $examen->id, 'commentaire' => 'Bon travail',
+    ])->assertOk();
+});
+
+test('the Excel export names the evaluation period in its file name, first row and sheet title', function () {
+    Excel::fake();
+    ['classe' => $classe, 'enseignant' => $enseignant, 'examen' => $examen] = creerContexteEnseignant();
+    $classe->update(['nom' => 'CI A']);
+    $examen->update(['date_examen' => '2026-10-05']);
+    $examen->refresh();
+
+    $this->actingAs($enseignant)->get(route('enseignant.classes.notes.export', ['classe' => $classe, 'examen_id' => $examen->id]))->assertOk();
+
+    Excel::assertDownloaded('notes-ci-a-examen-mensuel-octobre-2026.xlsx', function (NotesClasseExport $export) {
+        return $export->headings()[0] === ['CI A — Examen mensuel — octobre 2026']
+            && str_contains($export->headings()[1][0], 'Examen du 05/10/2026')
+            && $export->title() === 'octobre 2026';
+    });
+});
+
+test('the side menu shows the ESSEd Internacional logo, the top bar keeps the Madre Trinidad one', function () {
+    ['enseignant' => $enseignant] = creerContexteEnseignant();
+    $admin = User::factory()->administrateur()->create();
+
+    foreach ([[$enseignant, route('enseignant.classes.index')], [$admin, route('eleves.index')]] as [$utilisateur, $url]) {
+        $this->actingAs($utilisateur)->get($url)
+            ->assertOk()
+            ->assertSee('src="'.asset('logo-essed.png').'" alt="ESSEd Internacional" class="sidebar-logo"', false)
+            ->assertSee('src="'.asset('logo-cscmt.jpg').'" alt="Complexe Scolaire Catholique Madre Trinidad" class="logo-slot"', false);
+    }
 });
