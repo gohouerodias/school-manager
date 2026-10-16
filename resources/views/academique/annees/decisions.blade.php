@@ -19,11 +19,24 @@
     </x-slot:actions>
 </x-page-header>
 
-@if ($lignes->isNotEmpty())
-    <div class="search" style="max-width:360px; margin-bottom:14px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" placeholder="Rechercher un apprenant ou une classe..." data-table-filter-for="decisions-table">
-    </div>
+@if ($classes->isNotEmpty())
+    <form method="GET" action="{{ route('academique.annees.decisions.index', $anneeAcademique) }}" class="toolbar" style="margin-bottom:14px;">
+        <div class="search" style="max-width:360px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" placeholder="Rechercher un apprenant..." data-table-filter-for="decisions-table">
+        </div>
+
+        <x-filter-select
+            name="classe_id"
+            :selected="$classeFiltre ? (string) $classeFiltre->id : ''"
+            placeholder="Toutes les classes"
+            :options="$classes->mapWithKeys(fn ($classe) => [(string) $classe->id => $classe->niveau->libelle.' — '.$classe->nom])->all()"
+        />
+
+        @if ($classeFiltre)
+            <a href="{{ route('academique.annees.decisions.index', $anneeAcademique) }}" class="btn ghost">Réinitialiser</a>
+        @endif
+    </form>
 @endif
 
 <x-data-table id="decisions-table">

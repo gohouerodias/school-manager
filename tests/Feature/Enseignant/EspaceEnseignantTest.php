@@ -975,3 +975,11 @@ test('the side menu shows the ESSEd Internacional logo, the top bar keeps the Ma
             ->assertSee('src="'.asset('logo-cscmt.jpg').'" alt="Complexe Scolaire Catholique Madre Trinidad" class="logo-slot"', false);
     }
 });
+
+test('the side menu shows only the ESSEd logo, without the « Registre CSCMT » text', function () {
+    ['enseignant' => $enseignant] = creerContexteEnseignant();
+    $admin = User::factory()->administrateur()->create();
+
+    $this->actingAs($enseignant)->get(route('enseignant.classes.index'))->assertOk()->assertDontSee('Registre CSCMT');
+    $this->actingAs($admin)->get(route('eleves.index'))->assertOk()->assertDontSee('Registre CSCMT');
+});

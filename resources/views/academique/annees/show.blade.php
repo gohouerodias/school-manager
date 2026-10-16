@@ -278,6 +278,10 @@
                             data-classe-entiere="{{ $estClasseEntiere ? '1' : '0' }}"
                             data-titulaire-url="{{ route('academique.classes.titulaire.update', $classe) }}"
                             data-matiere-ids="{{ $classe->matieres->pluck('id')->implode(',') }}"
+                            data-programme-vide="{{ $itemsProgramme->isEmpty() ? '1' : '0' }}"
+                            data-message-programme-vide="{{ $estMaternelle
+                                ? "Aucun domaine d'évaluation au programme de {$classe->nom} : impossible d'y affecter un enseignant. Ajoutez d'abord des domaines à « {$classe->niveau->libelle} » (onglet « Programme par niveau » → « Ajouter des domaines (maternelle) »)."
+                                : "Aucune matière au programme de {$classe->nom} : impossible d'y affecter un enseignant. Ajoutez d'abord des matières à « {$classe->niveau->libelle} » (onglet « Programme par niveau » → « Ajouter une matière au programme »)." }}"
                             data-enseignants="{{ $enseignantsPayload->toJson() }}"
                         >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -317,7 +321,11 @@
                                 @endunless
                             </span>
                         @empty
-                            <span class="table-empty-state" style="padding:0;">{{ $estMaternelle ? 'Aucun domaine' : 'Aucune matière' }} au programme de cette classe.</span>
+                            <div class="programme-vide-alerte">
+                                ⚠ {{ $estMaternelle ? "Aucun domaine d'évaluation" : 'Aucune matière' }} au programme de cette classe :
+                                <b>impossible d'y affecter un enseignant</b>. Ajoutez d'abord {{ $estMaternelle ? 'des domaines' : 'des matières' }}
+                                à « {{ $classe->niveau->libelle }} » dans l'onglet « Programme par niveau ».
+                            </div>
                         @endforelse
                     </div>
                 </div>
@@ -728,12 +736,16 @@
         @csrf
         <input type="hidden" name="_panel" value="new-classe">
 
-        @error('niveau_id')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
-        @error('lettre')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
+        {{-- Erreurs de CE formulaire seulement (le panneau « Modifier la classe »
+             utilise aussi le champ « lettre »). --}}
+        @if (old('_panel') === 'new-classe')
+            @error('niveau_id')
+                <div class="alert-error">{{ $message }}</div>
+            @enderror
+            @error('lettre')
+                <div class="alert-error">{{ $message }}</div>
+            @enderror
+        @endif
 
         <div class="field">
             <label for="new-classe-niveau">Niveau</label>
@@ -757,6 +769,7 @@
                     <option value="{{ $lettre }}" @selected(old('lettre') === $lettre)>{{ $lettre }}</option>
                 @endforeach
             </select>
+            <div class="classe-lettres-prises" id="new-classe-lettres-prises" style="display:none;"></div>
             <div class="hint">Le nom final est « Niveau + Lettre », ex : « CM1 A ». La classe hérite automatiquement du programme de matières défini ci-dessus pour ce niveau.</div>
         </div>
     </form>
@@ -777,9 +790,11 @@
         <input type="hidden" name="_panel" value="edit-classe">
         <input type="hidden" name="_edit_url" id="edit-classe-edit-url" value="{{ old('_edit_url') }}">
 
-        @error('lettre')
-            <div class="alert-error">{{ $message }}</div>
-        @enderror
+        @if (old('_panel') === 'edit-classe')
+            @error('lettre')
+                <div class="alert-error">{{ $message }}</div>
+            @enderror
+        @endif
 
         <div class="field">
             <label>Niveau</label>
@@ -815,6 +830,10 @@
 <x-slide-panel id="gerer-affectation" title="Affectation">
     <div class="pending-list-title">Enseignants affectés à cette classe</div>
     <div id="gerer-affectation-list" style="margin-bottom:22px;"></div>
+
+    {{-- Rempli par annee-academique-show.js quand la classe n'a ni matière
+         ni domaine au programme : l'affectation serait refusée de toute façon. --}}
+    <div class="programme-vide-alerte" id="gerer-affectation-programme-vide" style="display:none;"></div>
 
     <div id="gerer-affectation-add-section">
         <div class="pending-list-title">Ajouter un enseignant à cette classe</div>

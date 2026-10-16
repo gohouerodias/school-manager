@@ -35,7 +35,6 @@ class NiveauController extends Controller
             'parametre' => ParametreSysteme::query()->first(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Académique' => null,
                 'Niveaux & matières' => null,
             ],
         ]);

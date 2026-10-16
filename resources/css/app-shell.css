@@ -1193,6 +1193,24 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 /* Menu latéral : logo ESSEd (plus large) avec « Registre CSCMT » dessous,
    pour tenir dans les 250 px du menu à côté du bouton ☰. */
 .sidebar-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
-.sidebar-brand .sidebar-logo { height: 32px; max-width: 150px; }
+.sidebar-brand .sidebar-logo { height: 36px; max-width: 160px; }
 .sidebar-brand .sidebar-wordmark { font-size: 12.5px; }
 .sidebar.collapsed .sidebar-brand { display: none; }
+
+/* « Ajouter une classe » : rappel des classes déjà créées pour ce niveau. */
+.classe-lettres-prises {
+    margin-top: 8px; padding: 9px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+    color: var(--red); background: var(--red-tint); border: 1px solid var(--red);
+}
+
+/* Classe sans matière/domaine au programme : affectation impossible. */
+.programme-vide-alerte {
+    padding: 10px 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.5;
+    color: var(--red); background: var(--red-tint); border: 1px solid var(--red); margin-bottom: 14px;
+}
+
+/* Texte d'aide important à ne pas manquer (ex. seuil de passage). */
+.hint.hint-rouge {
+    color: var(--red); background: var(--red-tint); border: 1px solid var(--red); border-left-width: 4px;
+    border-radius: 8px; padding: 9px 12px; font-weight: 500; line-height: 1.5;
+}

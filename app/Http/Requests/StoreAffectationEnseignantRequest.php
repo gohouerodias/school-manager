@@ -86,7 +86,9 @@ class StoreAffectationEnseignantRequest extends FormRequest
                     : $classe->matieres()->count() === 0;
 
                 if ($programmeVide) {
-                    $validator->errors()->add('classe_id', "Cette classe n'a pas encore de programme configuré.");
+                    $validator->errors()->add('classe_id', $classe->niveau->cycle === CycleNiveau::Maternelle
+                        ? "Impossible d'affecter un enseignant à « {$classe->nom} » : aucun domaine d'évaluation n'est encore au programme. Ajoutez d'abord des domaines à « {$classe->niveau->libelle} » (onglet « Programme par niveau »)."
+                        : "Impossible d'affecter un enseignant à « {$classe->nom} » : aucune matière n'est encore au programme. Ajoutez d'abord des matières à « {$classe->niveau->libelle} » (onglet « Programme par niveau »).");
                 }
 
                 // Plusieurs enseignants peuvent partager cette classe, mais

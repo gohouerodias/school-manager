@@ -5,6 +5,7 @@ use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Classe;
 use App\Models\DomaineEvaluation;
+use App\Models\Eleve;
 use App\Models\Examen;
 use App\Models\Inscription;
 use App\Models\Matiere;
@@ -873,4 +874,82 @@ test('the année académique tabs are ordered Classes, Programme, Affectations, 
         ], false)
         ->assertSee('class="tab-btn active" data-tab-btn="classes"', false)
         ->assertSee('<div data-tab-panel="classes">', false);
+});
+
+test('creating a classe that already exists says so explicitly, only in the « Ajouter une classe » panel', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create();
+    $niveau = Niveau::factory()->maternelle()->create(['libelle' => 'Maternelle Test']);
+    Classe::factory()->create(['annee_academique_id' => $annee->id, 'niveau_id' => $niveau->id, 'nom' => 'Maternelle Test A']);
+
+    $this->actingAs($admin)->from(route('academique.annees.show', $annee))
+        ->post(route('academique.annees.classes.store', $annee), ['niveau_id' => $niveau->id, 'lettre' => 'A', '_panel' => 'new-classe'])
+        ->assertSessionHasErrors(['lettre' => 'La classe « Maternelle Test A » existe déjà pour cette année académique. Choisissez une autre lettre (ex. « Maternelle Test B »).']);
+
+    $html = $this->actingAs($admin)->withSession(['_old_input' => ['_panel' => 'new-classe']])
+        ->get(route('academique.annees.show', $annee))->getContent();
+
+    expect(substr_count($html, 'id="new-classe-lettres-prises"'))->toBe(1);
+});
+
+test('a classe with no matière au programme explains that no enseignant can be assigned', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create();
+    Classe::factory()->create(['annee_academique_id' => $annee->id, 'niveau_id' => Niveau::factory()->primaire()->create(['libelle' => 'CE Vide'])->id, 'nom' => 'CE Vide A']);
+
+    $this->actingAs($admin)->get(route('academique.annees.show', $annee))
+        ->assertOk()
+        ->assertSee("impossible d'y affecter un enseignant", false)
+        ->assertSee('data-programme-vide="1"', false);
+});
+
+test('assigning an enseignant to a classe without programme gives an explicit error', function () {
+    $admin = User::factory()->administrateur()->create();
+    $enseignant = User::factory()->enseignant()->create();
+    $annee = AnneeAcademique::factory()->create();
+    $classe = Classe::factory()->create(['annee_academique_id' => $annee->id, 'niveau_id' => Niveau::factory()->primaire()->create(['libelle' => 'CE Vide'])->id, 'nom' => 'CE Vide A']);
+
+    $this->actingAs($admin)->post(route('academique.annees.affectations.store', $annee), [
+        'enseignant_id' => $enseignant->id,
+        'classe_id' => $classe->id,
+    ])->assertSessionHasErrors(['classe_id' => "Impossible d'affecter un enseignant à « CE Vide A » : aucune matière n'est encore au programme. Ajoutez d'abord des matières à « CE Vide » (onglet « Programme par niveau »)."]);
+});
+
+test('the décisions de passage can be filtered by classe', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create();
+    $ci = Classe::factory()->create(['annee_academique_id' => $annee->id, 'nom' => 'CI Filtre']);
+    $cp = Classe::factory()->create(['annee_academique_id' => $annee->id, 'nom' => 'CP Filtre']);
+    Inscription::factory()->create(['classe_id' => $ci->id, 'eleve_id' => Eleve::factory()->create(['nom' => 'Ahouansou', 'prenom' => 'Ciel'])->id]);
+    Inscription::factory()->create(['classe_id' => $cp->id, 'eleve_id' => Eleve::factory()->create(['nom' => 'Dossou', 'prenom' => 'Paul'])->id]);
+
+    $this->actingAs($admin)->get(route('academique.annees.decisions.index', ['anneeAcademique' => $annee, 'classe_id' => $ci->id]))
+        ->assertOk()
+        ->assertSee('Ahouansou')
+        ->assertDontSee('Dossou')
+        ->assertSee('name="classe_id"', false);
+
+    $this->actingAs($admin)->get(route('academique.annees.decisions.index', $annee))
+        ->assertOk()
+        ->assertSee('Ahouansou')
+        ->assertSee('Dossou');
+});
+
+test('the académique pages no longer show « Académique » in their breadcrumb', function () {
+    $admin = User::factory()->administrateur()->create();
+    $annee = AnneeAcademique::factory()->create(['est_active' => true]);
+
+    foreach ([
+        route('academique.annees.index'),
+        route('academique.annees.show', $annee),
+        route('academique.annees.decisions.index', $annee),
+        route('academique.examens.index'),
+        route('academique.niveaux-matieres.index'),
+        route('eleves.bulletins.index'),
+    ] as $url) {
+        $html = $this->actingAs($admin)->get($url)->assertOk()->getContent();
+        $filAriane = substr($html, strpos($html, 'class="breadcrumbs"'), 800);
+
+        expect($filAriane)->toContain('Tableau de bord')->not->toContain('>Académique<');
+    }
 });

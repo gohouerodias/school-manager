@@ -46,7 +46,6 @@ class ExamenController extends Controller
             'anneeActive' => AnneeAcademique::query()->where('est_active', true)->first(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Académique' => null,
                 'Années académiques' => route('academique.annees.index'),
                 'Examens' => null,
             ],

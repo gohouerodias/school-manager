@@ -30,7 +30,6 @@ class AnneeAcademiqueController extends Controller
             'annees' => AnneeAcademique::query()->orderByDesc('date_debut')->get(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Académique' => null,
                 'Années académiques' => null,
             ],
         ]);
@@ -85,7 +84,6 @@ class AnneeAcademiqueController extends Controller
             'enseignants' => User::query()->where('profil', ProfilUtilisateur::Enseignant->value)->orderBy('name')->get(),
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Académique' => null,
                 'Années académiques' => route('academique.annees.index'),
                 $anneeAcademique->libelle => null,
             ],

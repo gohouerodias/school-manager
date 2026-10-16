@@ -57,6 +57,20 @@ function initGererAffectationPanel() {
         document.querySelector('[data-panel="gerer-affectation"] .panel-head h2').textContent = `Affectation — ${classeNom}`;
         classeIdInput.value = classeId;
 
+        // Sans matière (ou domaine, en maternelle) au programme, aucune
+        // affectation n'est possible : on l'explique au lieu d'afficher un
+        // formulaire qui serait refusé.
+        const programmeVide = trigger.dataset.programmeVide === '1';
+        const alerteProgrammeVide = document.getElementById('gerer-affectation-programme-vide');
+        const sectionAjout = document.getElementById('gerer-affectation-add-section');
+        if (alerteProgrammeVide) {
+            alerteProgrammeVide.textContent = programmeVide ? `⚠ ${trigger.dataset.messageProgrammeVide ?? ''}` : '';
+            alerteProgrammeVide.style.display = programmeVide ? 'block' : 'none';
+        }
+        if (sectionAjout) {
+            sectionAjout.style.display = programmeVide ? 'none' : '';
+        }
+
         list.innerHTML = enseignants.length
             ? enseignants.map((e) => `
                 <div class="pending-item" style="background:var(--paper);">
@@ -268,6 +282,7 @@ function initClasseLettreFilter() {
 
     const lettreOptions = Array.from(lettreSelect.options).filter((option) => option.value !== '');
     const placeholder = lettreSelect.options[0];
+    const avertissement = document.getElementById('new-classe-lettres-prises');
 
     function syncLettres() {
         const selected = niveauSelect.options[niveauSelect.selectedIndex];
@@ -285,11 +300,23 @@ function initClasseLettreFilter() {
 
         placeholder.textContent = '— Sélectionner —';
 
+        // Lettres déjà prises : visibles mais grisées (« A — déjà créée »),
+        // plutôt que masquées — sinon on ne comprend pas pourquoi « A »
+        // n'apparaît pas et le navigateur n'affiche qu'un message générique.
         lettreOptions.forEach((option) => {
             const dejaUtilisee = utilisees.includes(option.value);
-            option.hidden = dejaUtilisee;
+            option.hidden = false;
             option.disabled = dejaUtilisee;
+            option.textContent = dejaUtilisee ? `${option.value} — déjà créée` : option.value;
         });
+
+        if (avertissement) {
+            const libelle = selected?.textContent.trim() ?? '';
+            avertissement.textContent = utilisees.length
+                ? `Déjà créée(s) pour ${libelle} cette année : ${utilisees.map((l) => `${libelle} ${l}`).join(', ')}. Choisissez une autre lettre.`
+                : '';
+            avertissement.style.display = utilisees.length ? 'block' : 'none';
+        }
 
         if (lettreSelect.value && utilisees.includes(lettreSelect.value)) {
             lettreSelect.value = '';

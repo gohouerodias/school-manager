@@ -53,7 +53,7 @@ class StoreClasseRequest extends FormRequest
                 ->exists();
 
             if ($existe) {
-                $validator->errors()->add('lettre', "La classe « {$nom} » existe déjà pour cette année.");
+                $validator->errors()->add('lettre', "La classe « {$nom} » existe déjà pour cette année académique. Choisissez une autre lettre (ex. « {$niveau->libelle} B »).");
             }
         });
     }

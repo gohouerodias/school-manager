@@ -11,6 +11,7 @@ use App\Models\JournalAction;
 use App\Models\ParametreSysteme;
 use App\Services\BulletinGenerationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -24,12 +25,20 @@ use Illuminate\View\View;
  */
 class DecisionPassageController extends Controller
 {
-    public function index(AnneeAcademique $anneeAcademique): View
+    public function index(Request $request, AnneeAcademique $anneeAcademique): View
     {
         $seuil = ParametreSysteme::query()->value('seuil_passage') ?? 10;
 
+        // Filtre par classe (?classe_id=…) : dans l'adresse, pour qu'après
+        // avoir enregistré une décision on revienne sur la même classe.
+        $classes = $anneeAcademique->classes()->with('niveau')->get()
+            ->sortBy(fn ($classe) => [$classe->niveau->ordre, $classe->nom])
+            ->values();
+        $classeFiltre = $classes->firstWhere('id', $request->integer('classe_id'));
+
         $inscriptions = Inscription::query()
             ->whereHas('classe', fn ($query) => $query->where('annee_academique_id', $anneeAcademique->id))
+            ->when($classeFiltre, fn ($query) => $query->where('classe_id', $classeFiltre->id))
             ->with(['eleve', 'classe'])
             ->get()
             ->sortBy(fn (Inscription $i) => $i->classe->nom.$i->eleve->nom)
@@ -50,9 +59,10 @@ class DecisionPassageController extends Controller
             'anneeAcademique' => $anneeAcademique,
             'seuil' => $seuil,
             'lignes' => $inscriptions,
+            'classes' => $classes,
+            'classeFiltre' => $classeFiltre,
             'breadcrumbs' => [
                 'Tableau de bord' => route('dashboard'),
-                'Académique' => null,
                 'Années académiques' => route('academique.annees.index'),
                 $anneeAcademique->libelle => route('academique.annees.show', $anneeAcademique),
                 'Décisions de passage' => null,

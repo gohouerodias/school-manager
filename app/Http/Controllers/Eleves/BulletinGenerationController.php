@@ -169,7 +169,7 @@ class BulletinGenerationController extends Controller
 
     /**
      * Administrateur : les bulletins se rattachent à l'année académique en
-     * cours (Académique / Années académiques / 2025-2026 / Bulletins), comme
+     * cours (Années académiques / 2025-2026 / Bulletins), comme
      * les examens. Secrétariat (sans accès au menu Académique) : sous
      * « Dossier élève et documents ».
      *
@@ -183,7 +183,6 @@ class BulletinGenerationController extends Controller
         if ($request->user()->profil === ProfilUtilisateur::Administrateur && $annee) {
             return [
                 'Tableau de bord' => route('dashboard'),
-                'Académique' => null,
                 'Années académiques' => route('academique.annees.index'),
                 $annee->libelle => route('academique.annees.show', $annee).'?onglet=bulletins',
                 'Bulletins' => null,

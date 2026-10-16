@@ -31,7 +31,7 @@
         <div class="field">
             <label for="seuil-passage">Seuil de passage en classe supérieure (moyenne annuelle /20)</label>
             <input type="number" id="seuil-passage" name="seuil_passage" step="0.01" min="0" max="20" value="{{ old('seuil_passage', $parametre?->seuil_passage ?? 10) }}" required style="max-width: 160px;">
-            <div class="hint">À partir de cette moyenne, le système propose automatiquement "Admis" lors des décisions de passage — la direction garde la main pour valider ou modifier chaque cas (voir Années académiques → Décisions de passage).</div>
+            <div class="hint hint-rouge">À partir de cette moyenne, le système propose automatiquement "Admis" lors des décisions de passage — la direction garde la main pour valider ou modifier chaque cas (voir Années académiques → Décisions de passage).</div>
         </div>
 
         <div class="field">
