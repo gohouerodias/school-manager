@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Durée de vie de la session : voir resources/js/session-expiree.js. --}}
+    <meta name="session-lifetime" content="{{ config('session.lifetime') }}">
     {{-- When a POST fails validation, the submitting form flashes its own
          "_panel" id (see the hidden input in each <x-slide-panel> form); this
          lets JS reopen that exact panel on reload so the @error messages

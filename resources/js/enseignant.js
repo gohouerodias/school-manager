@@ -17,6 +17,7 @@ import './saisie-domaines';
 import './observations-annuelles';
 import { initNotificationsMenu } from './notifications-menu';
 import { initSidebar } from './sidebar';
+import { initSessionExpiree } from './session-expiree';
 
 /**
  * Onglets « Notes du mois » / « Bulletin annuel — Observations » des
@@ -58,6 +59,8 @@ function initSheetTabs() {
 document.addEventListener('DOMContentLoaded', initSheetTabs);
 // Menu en tiroir sur téléphone (même script que l'espace administrateur).
 document.addEventListener('DOMContentLoaded', initSidebar);
+// Session expirée → page de connexion automatiquement.
+document.addEventListener('DOMContentLoaded', initSessionExpiree);
 
 // Cloche des notifications ("Notes incomplètes" — voir
 // NotifierNotesIncompletesCommand), dont les enseignants sont les seuls

@@ -10,6 +10,10 @@
     <h1>Connexion</h1>
     <p class="sub">Accédez à votre espace numérique de gestion des dossiers élèves</p>
 
+    @if (session('session_expiree'))
+        <div class="session-expiree">Votre session a expiré après une longue période d'inactivité. Reconnectez-vous pour continuer.</div>
+    @endif
+
     @if (session('status'))
         <div class="status-ok">{{ session('status') }}</div>
     @endif

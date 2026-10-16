@@ -113,3 +113,9 @@
     .row-between { flex-wrap: wrap; gap: 8px; }
     .row-between .remember, .forgot { white-space: nowrap; }
 }
+
+/* Page de connexion après une session expirée. */
+.session-expiree {
+    background: #FCEEDA; color: #8A4B08; border: 1px solid #EFA03B; border-left-width: 4px;
+    border-radius: 10px; padding: 11px 14px; font-size: 13px; font-weight: 500; margin-bottom: 16px; line-height: 1.45;
+}

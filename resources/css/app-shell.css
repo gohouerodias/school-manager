@@ -1193,7 +1193,7 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 /* Menu latéral : logo ESSEd (plus large) avec « Registre CSCMT » dessous,
    pour tenir dans les 250 px du menu à côté du bouton ☰. */
 .sidebar-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
-.sidebar-brand .sidebar-logo { height: 36px; max-width: 160px; }
+.sidebar-brand .sidebar-logo { height: 42px; max-width: 180px; }
 .sidebar-brand .sidebar-wordmark { font-size: 12.5px; }
 .sidebar.collapsed .sidebar-brand { display: none; }
 

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Durée de vie de la session : voir resources/js/session-expiree.js. --}}
+    <meta name="session-lifetime" content="{{ config('session.lifetime') }}">
     <title>@yield('title', 'Espace enseignant') — CSCMT</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('logo-cscmt.jpg') }}">
     @vite(['resources/css/enseignant.css', 'resources/js/enseignant.js'])

@@ -33,8 +33,10 @@ import { initAnneeEdit } from './annees';
 import { initBulletinsGeneration, initBulletinsAnnuelsGeneration } from './bulletins';
 import { initBulletinApercu } from './bulletin-apercu';
 import { initExamensStatistiquesChart } from './stats-charts';
+import { initSessionExpiree } from './session-expiree';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initSessionExpiree();
     initPageLoader();
     initPasswordToggles();
     initSlidePanels();

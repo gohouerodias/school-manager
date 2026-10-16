@@ -6,11 +6,14 @@ use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\EnsureTwoFactorVerified;
 use App\Http\Middleware\EnsureUserHasProfile;
 use App\Support\LimitesEnvoi;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -44,5 +47,38 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return back()->withErrors(['envoi' => $message]);
+        });
+
+        // Session expirée (page laissée ouverte longtemps) : retour direct à
+        // la page de connexion avec une explication, au lieu d'une erreur
+        // « 419 Page expirée » ou d'un échec silencieux. Les requêtes en
+        // arrière-plan reçoivent un 401/419 JSON : resources/js/
+        // session-expiree.js recharge alors la page.
+        $messageSessionExpiree = "Votre session a expiré après une longue période d'inactivité. Reconnectez-vous pour continuer.";
+
+        // Laravel convertit le jeton expiré en HttpException 419 avant
+        // d'appeler ces règles : on reconnaît donc le 419 et sa cause.
+        $exceptions->render(function (HttpException $exception, Request $request) use ($messageSessionExpiree) {
+            if (! $exception->getPrevious() instanceof TokenMismatchException) {
+                return null;
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $messageSessionExpiree], 419);
+            }
+
+            return redirect()->route('login')->with('session_expiree', true);
+        });
+
+        $exceptions->render(function (AuthenticationException $exception, Request $request) use ($messageSessionExpiree) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $messageSessionExpiree], 401);
+            }
+
+            // Le navigateur renvoie encore l'ancien cookie de session : c'est
+            // une session expirée (et pas une première visite).
+            $sessionExpiree = $request->hasCookie(config('session.cookie'));
+
+            return redirect()->guest(route('login'))->with('session_expiree', $sessionExpiree);
         });
     })->create();

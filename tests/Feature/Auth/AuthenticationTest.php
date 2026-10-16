@@ -3,6 +3,8 @@
 use App\Enums\StatutUtilisateur;
 use App\Models\User;
 use App\Services\TwoFactorAuthenticator;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Route;
 
 test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
@@ -175,4 +177,45 @@ test('every page is sent with the security headers', function () {
         ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
         ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+});
+
+test('an expired session sends back to the login page with an explanation', function () {
+    $response = $this->withCookie(config('session.cookie'), 'ancienne-session')
+        ->get(route('eleves.index'));
+
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHas('session_expiree', true);
+
+    $this->withSession(['session_expiree' => true])->get(route('login'))
+        ->assertOk()
+        ->assertSee('Votre session a expiré');
+});
+
+test('a first visit to a protected page goes to login without the expiry message', function () {
+    $this->get(route('eleves.index'))
+        ->assertRedirect(route('login'))
+        ->assertSessionHas('session_expiree', false);
+});
+
+test('a background request with an expired session gets a 401 that the page turns into a reload', function () {
+    $this->getJson(route('eleves.index'))
+        ->assertUnauthorized()
+        ->assertJsonFragment(['message' => "Votre session a expiré après une longue période d'inactivité. Reconnectez-vous pour continuer."]);
+});
+
+test('an expired CSRF token (419) sends back to the login page instead of an error page', function () {
+    Route::middleware('web')->post('/test-jeton-expire', fn () => throw new TokenMismatchException);
+
+    $this->post('/test-jeton-expire')
+        ->assertRedirect(route('login'))
+        ->assertSessionHas('session_expiree', true);
+
+    $this->postJson('/test-jeton-expire')->assertStatus(419);
+});
+
+test('logged-in pages tell the browser how long the session lasts', function () {
+    $user = User::factory()->administrateur()->create();
+
+    $this->actingAs($user)->get(route('eleves.index'))
+        ->assertSee('<meta name="session-lifetime" content="'.config('session.lifetime').'">', false);
 });
