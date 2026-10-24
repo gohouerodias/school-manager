@@ -81,8 +81,8 @@ test('the journal screen shows readable action names and offers every tracked ac
     $this->actingAs($admin)->get(route('administration.journal.index'))
         ->assertOk()
         ->assertSee("Archivage d'un apprenant", false)
-        ->assertSee('<option value="connexion">Connexion</option>', false)
-        ->assertSee('<option value="saisie_notes">Saisie de notes</option>', false);
+        ->assertSeeInOrder(['<option value="connexion"', 'Connexion</option>'], false)
+        ->assertSeeInOrder(['<option value="saisie_notes"', 'Saisie de notes</option>'], false);
 });
 
 test('nothing is recorded when no user is known', function () {

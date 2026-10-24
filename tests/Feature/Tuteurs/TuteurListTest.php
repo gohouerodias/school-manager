@@ -23,8 +23,10 @@ test('administrators and agents de scolarité can view the tuteurs list', functi
 
 test('the tuteurs list is filtered server-side by nom, prénom, téléphone or email', function () {
     $admin = User::factory()->administrateur()->create();
-    $match = ParentTuteur::factory()->create(['nom' => 'Ahouansou', 'prenom' => 'Grégoire', 'telephone' => '+229 97 00 00 00']);
-    $other = ParentTuteur::factory()->create(['nom' => 'Dossou', 'prenom' => 'Sylvie', 'telephone' => '+229 96 00 00 00']);
+    // E-mails fixés : un e-mail aléatoire contenant « 96 » faisait échouer
+    // la recherche par téléphone de temps en temps (recherche mot par mot).
+    $match = ParentTuteur::factory()->create(['nom' => 'Ahouansou', 'prenom' => 'Grégoire', 'telephone' => '+229 97 00 00 00', 'email' => 'gregoire@exemple.bj']);
+    $other = ParentTuteur::factory()->create(['nom' => 'Dossou', 'prenom' => 'Sylvie', 'telephone' => '+229 96 00 00 00', 'email' => 'sylvie@exemple.bj']);
 
     $byNom = $this->actingAs($admin)->get(route('tuteurs.index', ['search' => 'Ahouansou']));
     $byNom->assertOk();
