@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ActionJournal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDocumentEleveRequest;
 use App\Models\DocumentNumerique;
 use App\Models\Eleve;
+use App\Models\JournalAction;
+use App\Models\TypeDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -53,6 +56,8 @@ class DocumentController extends Controller
                 'date_ajout' => now()->toDateString(),
             ]);
 
+            JournalAction::enregistrer(ActionJournal::AjoutDocument, "« {$existant->typeDocument->libelle} » remplacé — {$eleve->nomComplet()}");
+
             return back()->with('toast', "Le document « {$existant->typeDocument->libelle} » a été remplacé sur la fiche de {$eleve->nomComplet()}.");
         }
 
@@ -64,6 +69,9 @@ class DocumentController extends Controller
             'chemin_fichier' => $chemin,
             'date_ajout' => now()->toDateString(),
         ]);
+
+        $typeLibelle = TypeDocument::query()->whereKey($validated['type_document_id'])->value('libelle');
+        JournalAction::enregistrer(ActionJournal::AjoutDocument, "« {$typeLibelle} » — {$eleve->nomComplet()}");
 
         return back()->with('toast', "Document ajouté à la fiche de {$eleve->nomComplet()}.");
     }
@@ -77,6 +85,7 @@ class DocumentController extends Controller
         abort_unless($document->eleve_id === $eleve->id, 404);
 
         Storage::disk('local')->delete($document->chemin_fichier);
+        JournalAction::enregistrer(ActionJournal::SuppressionDocument, "« {$document->typeDocument?->libelle} » — {$eleve->nomComplet()}");
         $document->delete();
 
         return back()->with('toast', "Document supprimé de la fiche de {$eleve->nomComplet()}.");

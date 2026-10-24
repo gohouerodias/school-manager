@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Administration;
 
+use App\Enums\ActionJournal;
 use App\Http\Controllers\Controller;
 use App\Models\JournalAction;
 use App\Models\User;
@@ -60,7 +61,10 @@ class JournalActionController extends Controller
             'dateDebut' => $dateDebut,
             'dateFin' => $dateFin,
             'utilisateurs' => User::query()->orderBy('name')->get(['id', 'name']),
-            'actionsDisponibles' => JournalAction::query()->distinct()->orderBy('action')->pluck('action'),
+            // Toutes les actions suivies (même pas encore survenues), avec leur libellé.
+            'actionsDisponibles' => collect(ActionJournal::cases())
+                ->mapWithKeys(fn (ActionJournal $action) => [$action->value => $action->label()])
+                ->all(),
         ]);
     }
 }

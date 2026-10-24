@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ActionJournal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateEleveClasseRequest;
 use App\Models\Classe;
 use App\Models\Eleve;
 use App\Models\Inscription;
+use App\Models\JournalAction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -38,6 +40,7 @@ class EleveClasseController extends Controller
 
         if ($classeId === null) {
             $inscriptionActuelle?->delete();
+            JournalAction::enregistrer(ActionJournal::ChangementClasse, "{$eleve->nomComplet()} : retiré(e) de sa classe");
 
             return back()->with('toast', "{$eleve->nomComplet()} n'est plus assigné(e) à aucune classe.");
         }
@@ -49,6 +52,12 @@ class EleveClasseController extends Controller
                 'classe_id' => "Cette classe n'appartient pas à l'année académique active.",
             ]);
         }
+
+        $ancienneClasse = $inscriptionActuelle?->classe?->nom;
+        JournalAction::enregistrer(
+            ActionJournal::ChangementClasse,
+            "{$eleve->nomComplet()} : ".($ancienneClasse ?? 'sans classe')." → {$classe->niveau->libelle} — {$classe->nom}"
+        );
 
         if ($inscriptionActuelle) {
             $inscriptionActuelle->update(['classe_id' => $classe->id]);

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ActionJournal;
 use App\Enums\StatutEleve;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveEleveWizardRequest;
 use App\Models\ChampPersonnalise;
 use App\Models\DocumentNumerique;
 use App\Models\Eleve;
+use App\Models\JournalAction;
 use App\Models\Niveau;
 use App\Models\ParentTuteur;
 use App\Models\TypeDocument;
@@ -117,6 +119,7 @@ class EleveWizardController extends Controller
         ];
 
         $brouillon = $request->enregistreEnBrouillon();
+        $creation = $eleve === null;
 
         if ($eleve) {
             // A brouillon stays a brouillon on « Sauvegarder en brouillon »
@@ -132,6 +135,11 @@ class EleveWizardController extends Controller
             $donneesEleve['statut'] = $brouillon ? StatutEleve::Brouillon : StatutEleve::Actif;
             $eleve = Eleve::create($donneesEleve);
         }
+
+        JournalAction::enregistrer(
+            $creation ? ActionJournal::CreationEleve : ActionJournal::ModificationEleve,
+            "Fiche de {$eleve->nomComplet()}".($eleve->statut === StatutEleve::Brouillon ? ' (brouillon)' : '')
+        );
 
         foreach ($validated['champs'] ?? [] as $champId => $valeur) {
             if ($valeur === null || $valeur === '') {

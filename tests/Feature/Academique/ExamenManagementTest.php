@@ -245,45 +245,6 @@ test('a non-administrateur cannot delete an examen', function () {
     $this->assertDatabaseHas('examens', ['id' => $examen->id]);
 });
 
-test('the année académique fiche shows its own examens under an Examens tab, with a "Créer" button when it is active', function () {
-    $admin = User::factory()->administrateur()->create();
-    $anneeAcademique = AnneeAcademique::factory()->create(['est_active' => true]);
-    $examen = Examen::factory()->create(['annee_academique_id' => $anneeAcademique->id]);
-
-    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
-
-    $response->assertOk();
-    $response->assertSee('data-tab-btn="examens"', false);
-    $response->assertSee($examen->date_examen->format('d/m/Y'));
-    $response->assertSee('Créer un examen');
-    $response->assertSee('data-panel-open="new-examen"', false);
-});
-
-test('the année académique fiche hides the "Créer un examen" button when the année is not active, but still lists its examens', function () {
-    $admin = User::factory()->administrateur()->create();
-    $anneeAcademique = AnneeAcademique::factory()->create(['est_active' => false]);
-    $examen = Examen::factory()->create(['annee_academique_id' => $anneeAcademique->id]);
-
-    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
-
-    $response->assertOk();
-    $response->assertSee($examen->date_examen->format('d/m/Y'));
-    $response->assertDontSee('data-panel-open="new-examen"', false);
-    $response->assertSee("n'est pas active", false);
-});
-
-test('the année académique fiche never shows another année’s examens under its own Examens tab', function () {
-    $admin = User::factory()->administrateur()->create();
-    $anneeAcademique = AnneeAcademique::factory()->create();
-    $autreAnnee = AnneeAcademique::factory()->create();
-    Examen::factory()->create(['annee_academique_id' => $autreAnnee->id, 'date_examen' => '2030-05-15']);
-
-    $response = $this->actingAs($admin)->get(route('academique.annees.show', $anneeAcademique));
-
-    $response->assertOk();
-    $response->assertDontSee('15/05/2030');
-});
-
 test('the date limite de saisie can carry a time', function () {
     $admin = User::factory()->administrateur()->create();
     AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-10-01', 'date_fin' => '2027-07-31']);
@@ -331,19 +292,6 @@ test('the saisie closes at the exact time of the deadline, not at the end of the
         ->and($ferme->delaiSaisieDepasse())->toBeTrue();
 });
 
-test('the « Examens » menu opens the Examens tab of the current année, so the breadcrumb leads back to it', function () {
-    $admin = User::factory()->administrateur()->create();
-    $anneeActive = AnneeAcademique::factory()->create(['est_active' => true, 'libelle' => '2026-2027']);
-
-    $this->actingAs($admin)->get(route('academique.niveaux-matieres.index'))
-        ->assertOk()
-        ->assertSee(route('academique.annees.show', $anneeActive).'?onglet=examens', false);
-
-    $this->actingAs($admin)->get(route('academique.annees.show', $anneeActive).'?onglet=examens')
-        ->assertOk()
-        ->assertSeeInOrder(['Années académiques</a>', 'breadcrumb-sep', '2026-2027'], false);
-});
-
 test('a second monthly examen in the same month for the same système is refused', function () {
     $admin = User::factory()->administrateur()->create();
     $annee = AnneeAcademique::factory()->create(['est_active' => true, 'date_debut' => '2026-09-01', 'date_fin' => '2027-07-31']);
@@ -387,4 +335,17 @@ test('an examen cannot be moved onto a month that already has one, but can be ed
     $this->actingAs($admin)->patch(route('academique.examens.update', $novembre), [
         'date_examen' => '2026-11-09', 'date_limite_saisie' => '2026-11-16T18:00',
     ])->assertSessionHasNoErrors();
+});
+
+test('the « Examens » menu item opens the Examens page, where exams are created and edited', function () {
+    $admin = User::factory()->administrateur()->create();
+    AnneeAcademique::factory()->create(['est_active' => true]);
+
+    $this->actingAs($admin)->get(route('academique.niveaux-matieres.index'))
+        ->assertOk()
+        ->assertSee('href="'.route('academique.examens.index').'" class="nav-subitem"', false);
+
+    $this->actingAs($admin)->get(route('academique.examens.index'))
+        ->assertOk()
+        ->assertSee('Créer un examen');
 });

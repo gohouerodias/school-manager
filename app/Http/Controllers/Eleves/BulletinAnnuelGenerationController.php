@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ActionJournal;
 use App\Enums\StatutGenerationBulletin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DemanderGenerationBulletinAnnuelRequest;
@@ -9,6 +10,7 @@ use App\Jobs\GenererBulletinsAnnuelsClasseJob;
 use App\Models\Classe;
 use App\Models\DemandeGenerationBulletinAnnuel;
 use App\Models\Inscription;
+use App\Models\JournalAction;
 use App\Services\BulletinGenerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -88,6 +90,7 @@ class BulletinAnnuelGenerationController extends Controller
         );
 
         GenererBulletinsAnnuelsClasseJob::lancer($demande);
+        JournalAction::enregistrer(ActionJournal::GenerationBulletinsAnnuels, $classe->nom.($regeneration ? ' (régénération)' : ''));
 
         $toast = $regeneration
             ? "Régénération du bulletin annuel de {$classe->nom} démarrée — suivez la progression ci-dessous."

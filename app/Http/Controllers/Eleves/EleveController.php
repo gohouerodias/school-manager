@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ActionJournal;
 use App\Enums\StatutEleve;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArchiverEleveRequest;
@@ -12,6 +13,7 @@ use App\Models\Classe;
 use App\Models\DocumentNumerique;
 use App\Models\Eleve;
 use App\Models\Inscription;
+use App\Models\JournalAction;
 use App\Models\Niveau;
 use App\Models\TypeDocument;
 use App\Models\ValeurChampPersonnalise;
@@ -173,12 +175,15 @@ class EleveController extends Controller
             );
         }
 
+        JournalAction::enregistrer(ActionJournal::ModificationEleve, "Fiche de {$eleve->nomComplet()}");
+
         return back()->with('toast', "La fiche de {$eleve->nomComplet()} a été mise à jour.");
     }
 
     public function archiver(ArchiverEleveRequest $request, Eleve $eleve): RedirectResponse
     {
         $eleve->archiver($request->validated('motif'));
+        JournalAction::enregistrer(ActionJournal::ArchivageEleve, "{$eleve->nomComplet()} — motif : {$eleve->motif_archivage}");
 
         return back()->with('toast', "La fiche de {$eleve->nomComplet()} a été archivée.");
     }
@@ -186,6 +191,7 @@ class EleveController extends Controller
     public function desarchiver(Eleve $eleve): RedirectResponse
     {
         $eleve->desarchiver();
+        JournalAction::enregistrer(ActionJournal::DesarchivageEleve, $eleve->nomComplet());
 
         return back()->with('toast', "La fiche de {$eleve->nomComplet()} a été désarchivée.");
     }

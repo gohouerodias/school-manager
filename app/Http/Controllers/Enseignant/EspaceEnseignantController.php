@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Enseignant;
 
+use App\Enums\ActionJournal;
 use App\Enums\CycleNiveau;
 use App\Enums\StatutBulletin;
 use App\Enums\TypeEvaluation;
@@ -25,6 +26,7 @@ use App\Models\DomaineEvaluation;
 use App\Models\EvaluationDomaine;
 use App\Models\Examen;
 use App\Models\Inscription;
+use App\Models\JournalAction;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -450,6 +452,8 @@ class EspaceEnseignantController extends Controller
             ]
         );
 
+        JournalAction::enregistrer(ActionJournal::SaisieNotes, "1 note — {$classe->nom}, {$examen->libellePeriode()}");
+
         return response()->json([
             'ok' => true,
             'valeur' => $note->valeur,
@@ -532,6 +536,10 @@ class EspaceEnseignantController extends Controller
             $enregistrees++;
         }
 
+        if ($enregistrees > 0) {
+            JournalAction::enregistrer(ActionJournal::SaisieNotes, "{$enregistrees} note(s) — {$classe->nom}, {$examen->libellePeriode()}");
+        }
+
         return response()->json(['ok' => true, 'enregistrees' => $enregistrees]);
     }
 
@@ -601,6 +609,10 @@ class EspaceEnseignantController extends Controller
             }
 
             $enregistrees++;
+        }
+
+        if ($enregistrees > 0) {
+            JournalAction::enregistrer(ActionJournal::SaisieEvaluations, "{$enregistrees} évaluation(s) — {$classe->nom}, {$examen->libellePeriode()}");
         }
 
         return response()->json(['ok' => true, 'enregistrees' => $enregistrees]);
@@ -770,6 +782,8 @@ class EspaceEnseignantController extends Controller
             'valide_at' => now(),
         ]);
 
+        JournalAction::enregistrer(ActionJournal::ValidationBulletin, "{$inscription->eleve->nomComplet()} — {$classe->nom}, {$examen->libellePeriode()}");
+
         return response()->json(['ok' => true, 'statut' => $bulletin->statut->value]);
     }
 
@@ -802,6 +816,8 @@ class EspaceEnseignantController extends Controller
         if ($bulletin) {
             $bulletin->update(['statut' => StatutBulletin::Brouillon, 'valide_par_id' => null, 'valide_at' => null]);
         }
+
+        JournalAction::enregistrer(ActionJournal::DevalidationBulletin, "{$inscription->eleve->nomComplet()} — {$classe->nom}, {$examen->libellePeriode()}");
 
         return response()->json(['ok' => true, 'statut' => StatutBulletin::Brouillon->value]);
     }

@@ -148,6 +148,40 @@ test('the décisions de passage recalculer button persists moyennes for every no
     ]);
 });
 
+test('the décisions de passage recalculer button fills the décision retenue with the system result, without overwriting an existing decision', function () {
+    $admin = User::factory()->administrateur()->create();
+    ParametreSysteme::factory()->create(['seuil_passage' => 10]);
+    ['classe' => $classe, 'inscription' => $inscription] = setupClasseAvecMatieresPourRecalcul();
+    $anneeAcademique = $classe->anneeAcademique;
+
+    $autreInscription = Inscription::factory()->create(['eleve_id' => Eleve::factory()->create()->id, 'classe_id' => $classe->id, 'decision' => 'exclu']);
+
+    $examen = Examen::factory()->create(['annee_academique_id' => $anneeAcademique->id]);
+    Bulletin::factory()->valide()->create(['inscription_id' => $inscription->id, 'examen_id' => $examen->id, 'moyenne_generale' => 8]);
+    Bulletin::factory()->valide()->create(['inscription_id' => $autreInscription->id, 'examen_id' => $examen->id, 'moyenne_generale' => 15]);
+
+    $this->actingAs($admin)->post(route('academique.annees.decisions.recalculer', $anneeAcademique))->assertRedirect();
+
+    expect($inscription->fresh()->decision->value)->toBe('redouble')
+        ->and($autreInscription->fresh()->decision->value)->toBe('exclu');
+});
+
+test('the admin can still modify the décision retenue after the system filled it', function () {
+    $admin = User::factory()->administrateur()->create();
+    ParametreSysteme::factory()->create(['seuil_passage' => 10]);
+    ['inscription' => $inscription] = setupClasseAvecMatieresPourRecalcul();
+    $examen = Examen::factory()->create(['annee_academique_id' => $inscription->classe->annee_academique_id]);
+    Bulletin::factory()->valide()->create(['inscription_id' => $inscription->id, 'examen_id' => $examen->id, 'moyenne_generale' => 8]);
+    $inscription->update(['decision' => 'redouble']);
+
+    $this->actingAs($admin)->patch(route('academique.inscriptions.decision.update', $inscription), [
+        'decision' => 'admis',
+        'motif' => 'Décision du conseil des maîtres.',
+    ])->assertRedirect();
+
+    expect($inscription->fresh()->decision->value)->toBe('admis');
+});
+
 test('a non-administrateur cannot use the décisions de passage recalculer button', function () {
     $agent = User::factory()->agentScolarite()->create();
     $anneeAcademique = AnneeAcademique::factory()->create();

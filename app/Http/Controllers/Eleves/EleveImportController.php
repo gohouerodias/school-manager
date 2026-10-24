@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Eleves;
 
+use App\Enums\ActionJournal;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportElevesRequest;
 use App\Imports\ElevesImport;
+use App\Models\JournalAction;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -26,6 +28,14 @@ class EleveImportController extends Controller
         $import = new ElevesImport;
 
         Excel::import($import, $request->file('fichier'));
+
+        JournalAction::enregistrer(ActionJournal::ImportEleves, sprintf(
+            '%s : %d fiche(s) créée(s), %d mise(s) à jour, %d ligne(s) en erreur',
+            $request->file('fichier')->getClientOriginalName(),
+            $import->crees,
+            $import->misAJour,
+            count($import->erreurs),
+        ));
 
         return view('eleves.import-rapport', [
             'crees' => $import->crees,

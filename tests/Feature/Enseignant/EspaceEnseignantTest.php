@@ -14,6 +14,7 @@ use App\Models\ClasseMatiere;
 use App\Models\Eleve;
 use App\Models\Examen;
 use App\Models\Inscription;
+use App\Models\JournalAction;
 use App\Models\Matiere;
 use App\Models\Niveau;
 use App\Models\Note;
@@ -982,4 +983,17 @@ test('the side menu shows only the ESSEd logo, without the « Registre CSCMT » 
 
     $this->actingAs($enseignant)->get(route('enseignant.classes.index'))->assertOk()->assertDontSee('Registre CSCMT');
     $this->actingAs($admin)->get(route('eleves.index'))->assertOk()->assertDontSee('Registre CSCMT');
+});
+
+test('saving notes and validating a bulletin are recorded in the journal', function () {
+    ['classe' => $classe, 'matiere' => $matiere, 'enseignant' => $enseignant, 'eleve' => $eleve, 'examen' => $examen] = creerContexteEnseignant();
+
+    $this->actingAs($enseignant)->patchJson(route('enseignant.classes.notes.batch-update', $classe), [
+        'examen_id' => $examen->id,
+        'notes' => [['eleve_id' => $eleve->id, 'matiere_id' => $matiere->id, 'critere_minimal' => 15, 'critere_perfectionnement' => 2]],
+    ])->assertOk();
+
+    $saisie = JournalAction::query()->where('action', 'saisie_notes')->latest('id')->first();
+    expect($saisie?->user_id)->toBe($enseignant->id)
+        ->and($saisie->details)->toContain('1 note(s)')->toContain($classe->nom);
 });

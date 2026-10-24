@@ -859,7 +859,7 @@ test('a matière freed by removing its enseignant can then be given to another o
     $this->assertDatabaseHas('affectations_enseignant', ['enseignant_id' => $autreProf->id, 'classe_id' => $classe->id, 'matiere_id' => $francais->id]);
 });
 
-test('the année académique tabs are ordered Classes, Programme, Affectations, Examens, Bulletins — Classes open first', function () {
+test('the année académique tabs are ordered Classes, Programme, Affectations, Bulletins — Classes open first', function () {
     $admin = User::factory()->administrateur()->create();
     $anneeAcademique = AnneeAcademique::factory()->create();
 
@@ -869,7 +869,6 @@ test('the année académique tabs are ordered Classes, Programme, Affectations, 
             'data-tab-btn="classes">Classes',
             'data-tab-btn="programme">Programme par niveau',
             'data-tab-btn="affectations">Affectations enseignants',
-            'data-tab-btn="examens">Examens',
             'data-tab-btn="bulletins">Bulletins',
         ], false)
         ->assertSee('class="tab-btn active" data-tab-btn="classes"', false)

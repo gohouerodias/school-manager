@@ -32,7 +32,6 @@ import { initDecisionPassage } from './decision-passage';
 import { initAnneeEdit } from './annees';
 import { initBulletinsGeneration, initBulletinsAnnuelsGeneration } from './bulletins';
 import { initBulletinApercu } from './bulletin-apercu';
-import { initExamensStatistiquesChart } from './stats-charts';
 import { initSessionExpiree } from './session-expiree';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -71,5 +70,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initBulletinsGeneration();
     initBulletinsAnnuelsGeneration();
     initBulletinApercu();
-    initExamensStatistiquesChart();
 });

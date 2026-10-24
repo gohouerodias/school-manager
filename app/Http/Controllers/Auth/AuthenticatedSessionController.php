@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\ActionJournal;
 use App\Enums\StatutUtilisateur;
 use App\Http\Controllers\Controller;
+use App\Models\JournalAction;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,13 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            // Tentative sur un compte existant : tracée dans le journal (une
+            // adresse inconnue n'a pas de compte auquel la rattacher).
+            $compteVise = User::query()->where('email', $credentials['email'])->first();
+            if ($compteVise) {
+                JournalAction::enregistrer(ActionJournal::ConnexionEchouee, 'Mot de passe incorrect', $compteVise);
+            }
+
             throw ValidationException::withMessages([
                 'email' => 'Identifiants incorrects. Vérifiez votre adresse e-mail et votre mot de passe.',
             ]);
@@ -37,6 +46,7 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
 
         if ($user->statut === StatutUtilisateur::Archive) {
+            JournalAction::enregistrer(ActionJournal::ConnexionEchouee, 'Compte archivé', $user);
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -48,12 +58,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->forget('2fa_verified');
         $user->update(['derniere_connexion_at' => now()]);
+        JournalAction::enregistrer(ActionJournal::Connexion, 'Connexion réussie', $user);
 
         return redirect()->intended($this->nextStepAfterLogin($user));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        JournalAction::enregistrer(ActionJournal::Deconnexion, 'Déconnexion');
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

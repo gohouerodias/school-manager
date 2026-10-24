@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Academique;
 
+use App\Enums\ActionJournal;
 use App\Enums\DecisionAnnuelle;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateDecisionPassageRequest;
@@ -81,19 +82,14 @@ class DecisionPassageController extends Controller
             'motif_decision' => $request->validated('motif'),
         ]);
 
-        JournalAction::create([
-            'user_id' => $request->user()->id,
-            'action' => 'decision_passage',
-            'date_heure' => now(),
-            'details' => sprintf(
-                'Décision de passage de %s : %s → %s (moyenne annuelle %s)%s',
-                $inscription->eleve->nomComplet(),
-                $decisionPrecedente?->label() ?? 'aucune',
-                $inscription->decision->label(),
-                $moyenne !== null ? number_format($moyenne, 2).'/20' : 'non calculable',
-                $request->validated('motif') ? ' — motif : '.$request->validated('motif') : ''
-            ),
-        ]);
+        JournalAction::enregistrer(ActionJournal::DecisionPassage, sprintf(
+            'Décision de passage de %s : %s → %s (moyenne annuelle %s)%s',
+            $inscription->eleve->nomComplet(),
+            $decisionPrecedente?->label() ?? 'aucune',
+            $inscription->decision->label(),
+            $moyenne !== null ? number_format($moyenne, 2).'/20' : 'non calculable',
+            $request->validated('motif') ? ' — motif : '.$request->validated('motif') : ''
+        ));
 
         return back()->with('toast', "Décision enregistrée pour {$inscription->eleve->nomComplet()}.");
     }
