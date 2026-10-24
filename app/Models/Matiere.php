@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Matiere extends Model
@@ -12,7 +13,16 @@ class Matiere extends Model
 
     protected $fillable = [
         'nom',
+        'champ_formation_id',
     ];
+
+    /**
+     * @return BelongsTo<ChampFormation, $this>
+     */
+    public function champFormation(): BelongsTo
+    {
+        return $this->belongsTo(ChampFormation::class, 'champ_formation_id');
+    }
 
     /**
      * @return BelongsToMany<Classe, $this>

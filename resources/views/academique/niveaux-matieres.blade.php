@@ -115,6 +115,57 @@
 
 <section class="config-section">
     <div class="config-section-head">
+        <h2>Champs de formation</h2>
+        <button type="button" class="btn primary" data-panel-open="new-champ">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter un champ
+        </button>
+    </div>
+    <div class="config-section-note">Catégories qui regroupent les matières sur le bulletin (ex. Français, EA, ES, EST, EPS). Rattachez ensuite chaque matière à son champ depuis le tableau « Matières » ci-dessous.</div>
+
+    <x-data-table id="champs-formation-table">
+        <x-slot:head>
+            <th>Nom</th>
+            <th>Matières</th>
+            <th></th>
+        </x-slot:head>
+
+        @forelse ($champsFormation as $champ)
+            <tr>
+                <td><b>{{ $champ->nom }}</b></td>
+                <td>{{ $champ->matieres_count }}</td>
+                <td>
+                    <div class="row-actions-group">
+                        <button
+                            type="button"
+                            class="row-edit"
+                            title="Modifier"
+                            data-panel-open="edit-champ"
+                            data-edit-champ-trigger
+                            data-edit-url="{{ route('academique.champs-formation.update', $champ) }}"
+                            data-edit-nom="{{ $champ->nom }}"
+                        >✎</button>
+                        <form method="POST" action="{{ route('academique.champs-formation.destroy', $champ) }}"
+                              data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
+                              data-confirm-title="Supprimer ce champ de formation"
+                              data-confirm-message="Supprimer le champ « {{ $champ->nom }} » ? Ses matières resteront, mais ne seront plus classées.">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="row-delete" title="Supprimer">🗑</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="3" class="table-empty-state">Aucun champ de formation pour l'instant.</td>
+            </tr>
+        @endforelse
+    </x-data-table>
+</section>
+
+<section class="config-section">
+    <div class="config-section-head">
         <h2>Matières</h2>
         <button type="button" class="btn primary" data-panel-open="new-matiere">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -125,12 +176,14 @@
     <x-data-table id="matieres-table">
         <x-slot:head>
             <th>Nom</th>
+            <th>Champ de formation</th>
             <th></th>
         </x-slot:head>
 
         @foreach ($matieres as $matiere)
             <tr>
                 <td><b>{{ $matiere->nom }}</b></td>
+                <td>{{ $matiere->champFormation?->nom ?? '—' }}</td>
                 <td>
                     <div class="row-actions-group">
                         <button
@@ -141,6 +194,7 @@
                             data-edit-matiere-trigger
                             data-edit-url="{{ route('academique.matieres.update', $matiere) }}"
                             data-edit-nom="{{ $matiere->nom }}"
+                            data-edit-champ="{{ $matiere->champ_formation_id }}"
                         >✎</button>
                         <form method="POST" action="{{ route('academique.matieres.destroy', $matiere) }}"
                               data-confirm-submit data-confirm-danger="1" data-confirm-label="Supprimer"
@@ -301,6 +355,16 @@
             <label for="new-matiere-nom">Nom de la matière</label>
             <input type="text" id="new-matiere-nom" name="nom" placeholder="Ex : Mathématiques" value="{{ old('nom') }}" required>
         </div>
+
+        <div class="field">
+            <label for="new-matiere-champ">Champ de formation</label>
+            <select class="role-select" id="new-matiere-champ" name="champ_formation_id">
+                <option value="">— Aucun —</option>
+                @foreach ($champsFormation as $champ)
+                    <option value="{{ $champ->id }}" @selected((string) old('champ_formation_id') === (string) $champ->id)>{{ $champ->nom }}</option>
+                @endforeach
+            </select>
+        </div>
     </form>
 
     <x-slot:footer>
@@ -325,11 +389,67 @@
             <label for="edit-matiere-nom">Nom de la matière</label>
             <input type="text" id="edit-matiere-nom" name="nom" value="{{ old('nom') }}" required>
         </div>
+
+        <div class="field">
+            <label for="edit-matiere-champ">Champ de formation</label>
+            <select class="role-select" id="edit-matiere-champ" name="champ_formation_id">
+                <option value="">— Aucun —</option>
+                @foreach ($champsFormation as $champ)
+                    <option value="{{ $champ->id }}" @selected((string) old('champ_formation_id') === (string) $champ->id)>{{ $champ->nom }}</option>
+                @endforeach
+            </select>
+        </div>
     </form>
 
     <x-slot:footer>
         <button type="button" class="btn ghost" data-panel-close="edit-matiere">Annuler</button>
         <button type="submit" form="edit-matiere-form" class="btn dark">Enregistrer</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Ajouter un champ de formation --}}
+<x-slide-panel id="new-champ" title="Ajouter un champ de formation">
+    <form method="POST" action="{{ route('academique.champs-formation.store') }}" id="new-champ-form">
+        @csrf
+        <input type="hidden" name="_panel" value="new-champ">
+
+        @error('nom')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="new-champ-nom">Nom du champ</label>
+            <input type="text" id="new-champ-nom" name="nom" placeholder="Ex : Français" value="{{ old('nom') }}" required>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="new-champ">Annuler</button>
+        <button type="submit" form="new-champ-form" class="btn dark">Ajouter</button>
+    </x-slot:footer>
+</x-slide-panel>
+
+{{-- Modifier un champ de formation --}}
+<x-slide-panel id="edit-champ" title="Modifier le champ de formation">
+    <form method="POST" action="{{ old('_edit_url', '') }}" id="edit-champ-form">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="_panel" value="edit-champ">
+        <input type="hidden" name="_edit_url" id="edit-champ-edit-url" value="{{ old('_edit_url') }}">
+
+        @error('nom')
+            <div class="alert-error">{{ $message }}</div>
+        @enderror
+
+        <div class="field">
+            <label for="edit-champ-nom">Nom du champ</label>
+            <input type="text" id="edit-champ-nom" name="nom" value="{{ old('nom') }}" required>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" class="btn ghost" data-panel-close="edit-champ">Annuler</button>
+        <button type="submit" form="edit-champ-form" class="btn dark">Enregistrer</button>
     </x-slot:footer>
 </x-slide-panel>
 

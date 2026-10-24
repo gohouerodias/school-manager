@@ -87,29 +87,60 @@
         // critère de perfectionnement /2 = total /20, comme sur le carnet.
         $avecCriteres = collect($matieres)->contains(fn ($m) => ($m['critere_minimal'] ?? null) !== null || ($m['critere_perfectionnement'] ?? null) !== null);
         $formatCritere = fn ($v) => $v !== null ? rtrim(rtrim(number_format($v, 2), '0'), '.') : '—';
+        // « Champ de formation » (catégorie de matières, voir ChampFormation) :
+        // colonne affichée seulement si au moins une matière en a un, avec
+        // une cellule fusionnée (rowspan) pour les matières consécutives
+        // d'un même champ — la fiche est déjà triée par champ.
+        $avecChamps = collect($matieres)->contains(fn ($m) => ($m['champ'] ?? null) !== null);
+        $rowspanChamp = [];
+        if ($avecChamps) {
+            $matieresListe = collect($matieres)->values();
+            foreach ($matieresListe as $i => $m) {
+                $champ = $m['champ'] ?? null;
+                $precedent = $i > 0 ? ($matieresListe[$i - 1]['champ'] ?? null) : null;
+                if ($champ !== null && $i > 0 && $precedent === $champ) {
+                    continue;
+                }
+                $taille = 1;
+                while ($champ !== null && isset($matieresListe[$i + $taille]) && ($matieresListe[$i + $taille]['champ'] ?? null) === $champ) {
+                    $taille++;
+                }
+                $rowspanChamp[$i] = $taille;
+            }
+        }
+        $colspanLibelle = 1 + ($avecChamps ? 1 : 0) + ($avecCriteres ? 2 : 0);
+        $totalNotes = collect($matieres)->whereNotNull('note')->sum('note');
     @endphp
     <table class="bulletin-table">
         <thead>
-            @if ($avecCriteres)
-                <tr><th>Matière</th><th style="text-align:center;">Crit. minimal / 18</th><th style="text-align:center;">Crit. perf. / 2</th><th style="text-align:center;">Total / 20</th></tr>
-            @else
-                <tr><th>Matière</th><th style="text-align:center;">Note / 20</th></tr>
-            @endif
+            <tr>
+                @if ($avecChamps)<th>Champ de formation</th>@endif
+                <th>Matière</th>
+                @if ($avecCriteres)
+                    <th style="text-align:center;">Crit. minimal / 18</th><th style="text-align:center;">Crit. perf. / 2</th><th style="text-align:center;">Total / 20</th>
+                @else
+                    <th style="text-align:center;">Note / 20</th>
+                @endif
+                <th>Appréciation</th>
+            </tr>
         </thead>
         <tbody>
             @foreach ($matieres as $matiere)
-                @if ($avecCriteres)
-                    <tr>
-                        <td>{{ $matiere['nom'] }}</td>
+                <tr>
+                    @if ($avecChamps && isset($rowspanChamp[$loop->index]))
+                        <td @if ($rowspanChamp[$loop->index] > 1) rowspan="{{ $rowspanChamp[$loop->index] }}" @endif><b>{{ $matiere['champ'] ?? '' }}</b></td>
+                    @endif
+                    <td>{{ $matiere['nom'] }}</td>
+                    @if ($avecCriteres)
                         <td class="num">{{ $formatCritere($matiere['critere_minimal'] ?? null) }}</td>
                         <td class="num">{{ $formatCritere($matiere['critere_perfectionnement'] ?? null) }}</td>
-                        <td class="num">{{ $matiere['note'] !== null ? number_format($matiere['note'], 2) : '—' }}</td>
-                    </tr>
-                @else
-                    <tr><td>{{ $matiere['nom'] }}</td><td class="num">{{ $matiere['note'] !== null ? number_format($matiere['note'], 2) : '—' }}</td></tr>
-                @endif
+                    @endif
+                    <td class="num">{{ $matiere['note'] !== null ? number_format($matiere['note'], 2) : '—' }}</td>
+                    <td>{{ $matiere['appreciation'] ?? '—' }}</td>
+                </tr>
             @endforeach
-            <tr class="total-row"><td @if ($avecCriteres) colspan="3" @endif>Moyenne</td><td class="num">{{ $moyenne !== null ? number_format($moyenne, 2) : '—' }}</td></tr>
+            <tr class="total-row"><td colspan="{{ $colspanLibelle }}">Total</td><td class="num">{{ collect($matieres)->whereNotNull('note')->isNotEmpty() ? rtrim(rtrim(number_format($totalNotes, 2), '0'), '.') : '—' }}</td><td></td></tr>
+            <tr class="total-row"><td colspan="{{ $colspanLibelle }}">Moyenne</td><td class="num">{{ $moyenne !== null ? number_format($moyenne, 2) : '—' }}</td><td></td></tr>
         </tbody>
     </table>
 
@@ -167,7 +198,7 @@
 
 <table class="bulletin-manual-grid">
     <tr>
-        <td><div class="bulletin-manual-zone">Visa du Directeur<br><span style="font-style:normal;">(signature manuscrite à l'impression)</span></div></td>
+        <td><div class="bulletin-manual-zone">Visa du Directeur</div></td>
         <td><div class="bulletin-manual-zone">Observations des parents<br><span style="font-style:normal;">(à remplir après remise du bulletin)</span></div></td>
     </tr>
 </table>

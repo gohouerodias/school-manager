@@ -9,6 +9,7 @@ use App\Models\Bulletin;
 use App\Models\Classe;
 use App\Models\ClasseDomaine;
 use App\Models\ClasseMatiere;
+use App\Models\CommentaireMatiere;
 use App\Models\DemandeGenerationBulletin;
 use App\Models\DemandeGenerationBulletinAnnuel;
 use App\Models\EvaluationDomaine;
@@ -224,7 +225,7 @@ class BulletinGenerationService
     {
         $classeMatieres = ClasseMatiere::query()
             ->where('classe_id', $classe->id)
-            ->with('matiere')
+            ->with('matiere.champFormation')
             ->get();
 
         $notes = Note::query()
@@ -234,11 +235,28 @@ class BulletinGenerationService
             ->get()
             ->keyBy('classe_matiere_id');
 
+        // Appréciation par matière (colonne « Appréciation » du carnet papier) :
+        // le commentaire de l'enseignant pour cet apprenant et cet examen.
+        $commentaires = CommentaireMatiere::query()
+            ->whereIn('classe_matiere_id', $classeMatieres->pluck('id'))
+            ->where('examen_id', $examen->id)
+            ->where('eleve_id', $inscription->eleve_id)
+            ->get()
+            ->keyBy('classe_matiere_id');
+
         return $classeMatieres
-            ->sortBy(fn (ClasseMatiere $cm) => $cm->matiere->nom)
+            // Champs de formation dans l'ordre défini par l'admin (matières
+            // sans champ à la fin), puis ordre alphabétique dans chaque champ.
+            ->sortBy([
+                fn (ClasseMatiere $a, ClasseMatiere $b) => ($a->matiere->champFormation?->ordre ?? PHP_INT_MAX) <=> ($b->matiere->champFormation?->ordre ?? PHP_INT_MAX),
+                fn (ClasseMatiere $a, ClasseMatiere $b) => ($a->matiere->champFormation?->id ?? 0) <=> ($b->matiere->champFormation?->id ?? 0),
+                fn (ClasseMatiere $a, ClasseMatiere $b) => $a->matiere->nom <=> $b->matiere->nom,
+            ])
             ->map(fn (ClasseMatiere $cm) => [
                 'nom' => $cm->matiere->nom,
+                'champ' => $cm->matiere->champFormation?->nom,
                 'note' => $notes->get($cm->id)?->valeur,
+                'appreciation' => $commentaires->get($cm->id)?->commentaire,
                 // Primaire : détail critère minimal (/18) + perfectionnement (/2).
                 'critere_minimal' => $notes->get($cm->id)?->critere_minimal,
                 'critere_perfectionnement' => $notes->get($cm->id)?->critere_perfectionnement,

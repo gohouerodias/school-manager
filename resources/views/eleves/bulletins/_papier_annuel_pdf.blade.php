@@ -104,7 +104,7 @@
 
 <table class="bulletin-manual-grid">
     <tr>
-        <td><div class="bulletin-manual-zone">Titulaire de la classe<br><span style="font-style:normal;">(signature manuscrite à l'impression)</span></div></td>
-        <td><div class="bulletin-manual-zone">Le Directeur / La Directrice<br><span style="font-style:normal;">(signature manuscrite à l'impression)</span></div></td>
+        <td><div class="bulletin-manual-zone">Titulaire de la classe</div></td>
+        <td><div class="bulletin-manual-zone">Le Directeur / La Directrice</div></td>
     </tr>
 </table>

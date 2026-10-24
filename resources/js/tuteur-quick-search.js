@@ -27,10 +27,14 @@
  * (étape 3's "Ajouter un parent / tuteur").
  *
  * @param {string} idPrefix
- * @param {{ rechercheUrl?: string, onSelect?: (tuteur: object) => void }} options
+ * Option `prefill: false` : choisir une suggestion n'écrit rien dans le
+ * formulaire et appelle seulement `onSelect(tuteur)` (utilisé par le wizard
+ * pour ajouter directement le tuteur existant à la liste).
+ *
+ * @param {{ rechercheUrl?: string, onSelect?: (tuteur: object) => void, prefill?: boolean }} options
  * @returns {{ getMatch: () => object|null, reset: () => void }}
  */
-export function initTuteurQuickSearch(idPrefix, { rechercheUrl, onSelect } = {}) {
+export function initTuteurQuickSearch(idPrefix, { rechercheUrl, onSelect, prefill = true } = {}) {
     const nomPrenomInput = document.getElementById(`${idPrefix}-nom-prenom`);
     const telephoneInput = document.getElementById(`${idPrefix}-telephone`);
     const emailInput = document.getElementById(`${idPrefix}-email`);
@@ -63,6 +67,17 @@ export function initTuteurQuickSearch(idPrefix, { rechercheUrl, onSelect } = {})
     }
 
     function selectTuteur(tuteur) {
+        // Mode « ajout direct » (étape 3 du wizard) : le tuteur choisi est
+        // ajouté tel quel par `onSelect`, sans pré-remplir le formulaire ni
+        // afficher la bannière — le formulaire reste réservé à un nouveau
+        // tuteur.
+        if (!prefill) {
+            clearSuggestions();
+            onSelect?.(tuteur);
+
+            return;
+        }
+
         matched = tuteur;
         nomPrenomInput.value = tuteur.nom_prenom;
         if (telephoneInput) {

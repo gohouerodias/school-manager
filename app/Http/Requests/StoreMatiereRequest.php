@@ -19,6 +19,7 @@ class StoreMatiereRequest extends FormRequest
     {
         return [
             'nom' => ['required', 'string', 'max:150', Rule::unique('matieres', 'nom')],
+            'champ_formation_id' => ['nullable', 'integer', Rule::exists('champs_formation', 'id')],
         ];
     }
 

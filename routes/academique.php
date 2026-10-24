@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Academique\AffectationEnseignantController;
 use App\Http\Controllers\Academique\AnneeAcademiqueController;
+use App\Http\Controllers\Academique\ChampFormationController;
 use App\Http\Controllers\Academique\ClasseController;
 use App\Http\Controllers\Academique\DecisionPassageController;
 use App\Http\Controllers\Academique\DomaineEvaluationController;
@@ -32,6 +33,10 @@ Route::middleware(['auth', 'account.active', '2fa', 'password.changed', 'profile
         Route::post('matieres', [MatiereController::class, 'store'])->name('matieres.store');
         Route::patch('matieres/{matiere}', [MatiereController::class, 'update'])->name('matieres.update');
         Route::delete('matieres/{matiere}', [MatiereController::class, 'destroy'])->name('matieres.destroy');
+
+        Route::post('champs-formation', [ChampFormationController::class, 'store'])->name('champs-formation.store');
+        Route::patch('champs-formation/{champFormation}', [ChampFormationController::class, 'update'])->name('champs-formation.update');
+        Route::delete('champs-formation/{champFormation}', [ChampFormationController::class, 'destroy'])->name('champs-formation.destroy');
 
         Route::post('domaines', [DomaineEvaluationController::class, 'store'])->name('domaines.store');
         Route::patch('domaines/{domaineEvaluation}', [DomaineEvaluationController::class, 'update'])->name('domaines.update');

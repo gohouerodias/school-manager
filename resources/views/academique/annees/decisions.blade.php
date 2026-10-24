@@ -68,6 +68,9 @@
                     @if ($inscription->motif_decision)
                         <div class="hint">Motif : {{ $inscription->motif_decision }}</div>
                     @endif
+                @elseif ($ligne['proposition'])
+                    <span class="chip">{{ $ligne['proposition']->label() }}</span>
+                    <div class="hint">Résultat du système — cliquez sur ✎ pour le modifier.</div>
                 @else
                     <span class="chip">En attente</span>
                 @endif

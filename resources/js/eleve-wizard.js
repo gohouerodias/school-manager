@@ -384,8 +384,27 @@ function initTuteurPendingList(form) {
     // "Modifier le tuteur" panels (see resources/js/tuteur-quick-search.js) —
     // its fields (#wizard-tuteur-nom-prenom, -telephone, -email, -suggestions,
     // -match) already follow the "{prefix}-*" naming it expects.
+    // Choisir un tuteur existant dans les suggestions l'ajoute directement à
+    // la liste (lien de parenté modifiable dans la liste), sans remplir le
+    // formulaire : celui-ci ne sert qu'à saisir un nouveau tuteur.
     const quickSearch = initTuteurQuickSearch('wizard-tuteur', {
         rechercheUrl: form.dataset.tuteurRechercheUrl,
+        prefill: false,
+        onSelect: (tuteur) => {
+            if (!pending.some((item) => String(item.existingId) === String(tuteur.id))) {
+                pending.push({
+                    existingId: tuteur.id,
+                    nomPrenom: tuteur.nom_prenom,
+                    lien: lienSelect.value,
+                    telephone: tuteur.telephone || '',
+                    email: tuteur.email || '',
+                });
+                renderPending();
+            }
+
+            nomPrenomInput.value = '';
+            quickSearch.reset();
+        },
     });
 
     // Rehydrates the pending list from old('tuteurs') (see wizard.blade.php's
@@ -404,12 +423,23 @@ function initTuteurPendingList(form) {
                 <div class="pending-item">
                     <div>
                         <span class="pmail">${escapeHTML(item.nomPrenom)}${item.existingId ? ' (déjà enregistré)' : ''}</span><br>
-                        <span class="prole">${escapeHTML(item.lien)}${item.telephone ? ' · ' + escapeHTML(item.telephone) : ''}</span>
+                        <select class="role-select" data-lien-index="${index}" style="margin-top:4px; padding:4px 8px; width:auto;">
+                            ${['Père', 'Mère', 'Tuteur légal', 'Autre']
+                                .map((lien) => `<option value="${lien}"${lien === item.lien ? ' selected' : ''}>${lien}</option>`)
+                                .join('')}
+                        </select>
+                        <span class="prole">${item.telephone ? escapeHTML(item.telephone) : ''}</span>
                     </div>
                     <button type="button" class="premove" data-remove-index="${index}">✕</button>
                 </div>`
             )
             .join('');
+
+        pendingList.querySelectorAll('[data-lien-index]').forEach((select) => {
+            select.addEventListener('change', () => {
+                pending[Number(select.dataset.lienIndex)].lien = select.value;
+            });
+        });
 
         pendingList.querySelectorAll('[data-remove-index]').forEach((btn) => {
             btn.addEventListener('click', () => {

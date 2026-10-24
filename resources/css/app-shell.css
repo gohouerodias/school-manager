@@ -1052,6 +1052,12 @@ td .dropdown-select:has(.statut-assign-select) .dropdown-select-trigger { min-wi
 .bulletin-grid2.bulletin-grid2-single { grid-template-columns: 1fr; }
 .bulletin-grid2 .row { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--line); padding: 3px 0; }
 .bulletin-grid2 .row b { color: var(--ink); }
+/* "Décision" (texte long, ex. « Renforcer en lecture et en écriture ») :
+   valeur alignée à gauche juste après le libellé plutôt que collée à droite,
+   pour qu'elle tienne sur moins de lignes. */
+.bulletin-grid2 .row-decision { justify-content: flex-start; gap: 14px; }
+.bulletin-grid2 .row-decision span { flex-shrink: 0; }
+.bulletin-grid2 .row-decision b { text-align: left; }
 .bulletin-comment-box { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; background: var(--paper); }
 .bulletin-comment-box .label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--gold); margin-bottom: 6px; }
 .bulletin-symbol-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14.5px; font-weight: 700; color: var(--green-deep); }

@@ -112,6 +112,30 @@ class DecisionPassageController extends Controller
     {
         $count = $service->recalculerMoyennesAnnuellesPourAnnee($anneeAcademique);
 
-        return back()->with('toast', "Moyennes annuelles recalculées pour {$count} apprenant(s).");
+        // Le résultat du système (Admis / Redouble selon le seuil) devient la
+        // décision retenue des apprenants qui n'en ont pas encore : l'admin
+        // peut ensuite la modifier à la main (✎), et une décision déjà
+        // saisie n'est jamais écrasée.
+        $seuil = ParametreSysteme::query()->value('seuil_passage') ?? 10;
+        $decisionsAjoutees = 0;
+
+        Inscription::query()
+            ->whereHas('classe', fn ($query) => $query->where('annee_academique_id', $anneeAcademique->id))
+            ->whereNull('decision')
+            ->get()
+            ->each(function (Inscription $inscription) use ($seuil, &$decisionsAjoutees) {
+                $moyenne = $inscription->calculerMoyenneAnnuelle();
+
+                if ($moyenne === null) {
+                    return;
+                }
+
+                $inscription->update([
+                    'decision' => $moyenne >= $seuil ? DecisionAnnuelle::Admis : DecisionAnnuelle::Redouble,
+                ]);
+                $decisionsAjoutees++;
+            });
+
+        return back()->with('toast', "Moyennes annuelles recalculées pour {$count} apprenant(s) ; {$decisionsAjoutees} décision(s) proposée(s) par le système.");
     }
 }

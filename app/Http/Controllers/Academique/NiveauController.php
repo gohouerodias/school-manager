@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Academique;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNiveauRequest;
 use App\Http\Requests\UpdateNiveauRequest;
+use App\Models\ChampFormation;
 use App\Models\DomaineEvaluation;
 use App\Models\Matiere;
 use App\Models\Niveau;
@@ -30,7 +31,8 @@ class NiveauController extends Controller
     {
         return view('academique.niveaux-matieres', [
             'niveaux' => Niveau::query()->orderBy('ordre')->get(),
-            'matieres' => Matiere::query()->orderBy('nom')->get(),
+            'matieres' => Matiere::query()->with('champFormation')->orderBy('nom')->get(),
+            'champsFormation' => ChampFormation::query()->withCount('matieres')->orderBy('ordre')->orderBy('nom')->get(),
             'domaines' => DomaineEvaluation::query()->orderBy('nom')->get(),
             'parametre' => ParametreSysteme::query()->first(),
             'breadcrumbs' => [

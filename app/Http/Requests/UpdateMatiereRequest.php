@@ -19,6 +19,7 @@ class UpdateMatiereRequest extends FormRequest
     {
         return [
             'nom' => ['required', 'string', 'max:150', Rule::unique('matieres', 'nom')->ignore($this->route('matiere'))],
+            'champ_formation_id' => ['nullable', 'integer', Rule::exists('champs_formation', 'id')],
         ];
     }
 

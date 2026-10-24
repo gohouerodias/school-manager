@@ -7,6 +7,7 @@
 export function initAcademiqueSettings() {
     initNiveauEdit();
     initMatiereEdit();
+    initChampEdit();
     initDomaineEdit();
 }
 
@@ -41,9 +42,33 @@ function initMatiereEdit() {
     }
 
     const nomInput = document.getElementById('edit-matiere-nom');
+    const champSelect = document.getElementById('edit-matiere-champ');
     const editUrlHidden = document.getElementById('edit-matiere-edit-url');
 
     document.querySelectorAll('[data-edit-matiere-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            form.action = trigger.dataset.editUrl;
+            if (editUrlHidden) {
+                editUrlHidden.value = trigger.dataset.editUrl;
+            }
+            nomInput.value = trigger.dataset.editNom ?? '';
+            if (champSelect) {
+                champSelect.value = trigger.dataset.editChamp ?? '';
+            }
+        });
+    });
+}
+
+function initChampEdit() {
+    const form = document.getElementById('edit-champ-form');
+    if (!form) {
+        return;
+    }
+
+    const nomInput = document.getElementById('edit-champ-nom');
+    const editUrlHidden = document.getElementById('edit-champ-edit-url');
+
+    document.querySelectorAll('[data-edit-champ-trigger]').forEach((trigger) => {
         trigger.addEventListener('click', () => {
             form.action = trigger.dataset.editUrl;
             if (editUrlHidden) {

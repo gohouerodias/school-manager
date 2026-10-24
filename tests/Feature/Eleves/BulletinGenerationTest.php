@@ -7,8 +7,10 @@ use App\Jobs\GenererBulletinsClasseJob;
 use App\Models\AffectationEnseignant;
 use App\Models\AnneeAcademique;
 use App\Models\Bulletin;
+use App\Models\ChampFormation;
 use App\Models\Classe;
 use App\Models\ClasseMatiere;
+use App\Models\CommentaireMatiere;
 use App\Models\DemandeGenerationBulletin;
 use App\Models\Eleve;
 use App\Models\Examen;
@@ -232,6 +234,52 @@ test('the paper preview shows the apprenant and the matière', function () {
     $response->assertOk();
     $response->assertSee('Ahouansou');
     $response->assertSee('Mathématiques');
+});
+
+test('the paper preview shows each matière appreciation and the total of the notes', function () {
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();
+    $classeMatiere = ClasseMatiere::where('classe_id', $classe->id)->firstOrFail();
+
+    Note::factory()->create([
+        'eleve_id' => $inscriptions[0]->eleve_id,
+        'classe_matiere_id' => $classeMatiere->id,
+        'examen_id' => $examen->id,
+        'valeur' => 14,
+        'critere_minimal' => null,
+        'critere_perfectionnement' => null,
+    ]);
+    CommentaireMatiere::create([
+        'eleve_id' => $inscriptions[0]->eleve_id,
+        'classe_matiere_id' => $classeMatiere->id,
+        'examen_id' => $examen->id,
+        'enseignant_id' => User::factory()->enseignant()->create()->id,
+        'commentaire' => 'Très satisfaisant en calcul',
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('eleves.bulletins.apercu', [
+        'classe' => $classe, 'examen' => $examen, 'inscription' => $inscriptions[0],
+    ]));
+
+    $response->assertOk();
+    $response->assertSee('Appréciation');
+    $response->assertSee('Très satisfaisant en calcul');
+    $response->assertSeeInOrder(['Total', '14']);
+});
+
+test('the paper preview groups matières under their champ de formation', function () {
+    $admin = User::factory()->administrateur()->create();
+    ['classe' => $classe, 'examen' => $examen, 'inscriptions' => $inscriptions] = setupClasseAvecBulletins();
+    $champ = ChampFormation::factory()->create(['nom' => 'Champ Lettres']);
+    Matiere::query()->update(['champ_formation_id' => $champ->id]);
+
+    $response = $this->actingAs($admin)->get(route('eleves.bulletins.apercu', [
+        'classe' => $classe, 'examen' => $examen, 'inscription' => $inscriptions[0],
+    ]));
+
+    $response->assertOk();
+    $response->assertSee('Champ de formation');
+    $response->assertSee('Champ Lettres');
 });
 
 test('the statut endpoint reports live progress while a generation is en cours', function () {
